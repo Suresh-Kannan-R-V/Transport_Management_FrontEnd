@@ -25,7 +25,7 @@ export default function Sidebar({ className }: { className?: string }) {
   const handleLogout = async () => {
     setShowLogout(false)
     logout();
-    navigate("/auth/login");
+    navigate("/auth/web-qr-login");
   };
 
   return (

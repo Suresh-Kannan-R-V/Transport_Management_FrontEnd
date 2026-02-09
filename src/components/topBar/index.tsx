@@ -1,7 +1,8 @@
 import { Bell, Menu, X } from "lucide-react";
 import { FILE_BASE_URL } from "../../api/base";
 import { useCommonStore, useUserStore } from "../../store";
-import { cn } from "../../utils/helper";
+import { cn, getTokenRemainingTime, privateGet } from "../../utils/helper";
+import React from "react";
 
 /* 🔹 Role config */
 const roleConfig: Record<
@@ -32,6 +33,21 @@ export default function Topbar() {
     ? roleConfig[user.userRole]
     : null;
 
+  const [remainingTime, setRemainingTime] = React.useState("00:00:00");
+
+  React.useEffect(() => {
+    setRemainingTime(getTokenRemainingTime());
+
+    const interval = setInterval(() => {
+      setRemainingTime(getTokenRemainingTime());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const type = privateGet("type");
+
+
   return (
     <header className="bg-white flex items-center justify-between px-4 py-1 rounded-2xl shadow-md">
       <div className="flex items-center gap-3">
@@ -51,6 +67,11 @@ export default function Topbar() {
       </div>
 
       <div className="flex items-center gap-1">
+        {type === 'WEB' && (
+          <div className="px-4 py-1 rounded-full font-mono font-bold text-sm bg-indigo-100 text-indigo-500">
+            {remainingTime}
+          </div>
+        )}
         <div className="cursor-pointer p-2 rounded-md text-gray-500 hover:text-indigo-500 hover:bg-indigo-500/20 ease-in-out duration-300">
           <Bell size={18} strokeWidth={2.5} />
         </div>

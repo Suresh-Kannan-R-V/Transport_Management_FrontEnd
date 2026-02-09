@@ -1,38 +1,54 @@
-// import { Navigate, Outlet } from "react-router-dom";
-// import { useEffect } from "react";
-// import { useUserStore } from "../store";
+import { useEffect } from "react";
+import { Navigate, Outlet } from "react-router-dom";
 
-// const ProtectedRoute = () => {
-//   const { token, user, fetchProfile, loading } = useUserStore();
+const getTokenExpiry = (token) => {
+    try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        return payload.exp * 1000; // convert to ms
+    } catch {
+        return null;
+    }
+};
 
-//   useEffect(() => {
-//     if (token && !user) {
-//       fetchProfile(); // Rehydrate user on refresh
-//     }
-//   }, [token, user, fetchProfile]);
+const ProtectedRoute = () => {
+    const token = localStorage.getItem("token");
 
-//   // No token → go to login
-//   if (!token) {
-//     return <Navigate to="/auth/login" replace />;
-//   }
+    if (!token) {
+        return <Navigate to="/auth/web-qr-login" replace />;
+    }
 
-//   // Token exists but profile not loaded yet
-//   if (loading || !user) {
-//     return <div className="p-6">Loading...</div>;
-//   }
+    const expiryTime = getTokenExpiry(token);
 
-//   return <Outlet />;
-// };
+    if (!expiryTime || Date.now() >= expiryTime) {
+        localStorage.removeItem("token");
+        return <Navigate to="/auth/web-qr-login" replace />;
+    }
 
+    useEffect(() => {
+        const timeout = expiryTime - Date.now();
 
-// const PublicRoute = () => {
-//   const { token } = useUserStore();
+        const timer = setTimeout(() => {
+            localStorage.removeItem("token");
+            window.location.replace("/auth/web-qr-login");
+        }, timeout);
 
-//   if (token) {
-//     return <Navigate to="/dashboard" replace />;
-//   }
+        return () => clearTimeout(timer);
+    }, [expiryTime]);
 
-//   return <Outlet />;
-// };
+    // ✅ Valid token → allow
+    return <Outlet />;
+};
 
-// export { PublicRoute, ProtectedRoute };
+const PublicRoute = () => {
+    const token = localStorage.getItem("token");
+
+    // 🚫 Already logged in → dashboard
+    if (token) {
+        return <Navigate to="/dashboard" replace />;
+    }
+
+    return <Outlet />;
+};
+
+export { ProtectedRoute, PublicRoute };
+

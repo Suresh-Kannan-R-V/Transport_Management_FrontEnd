@@ -1,5 +1,5 @@
 import { Navigate } from "react-router-dom";
-import { Dashboard, Login, NotFound } from "../screens";
+import { Dashboard, Login, NotFound, WebQrLogin } from "../screens";
 
 const privateRoutes = [
   {
@@ -20,6 +20,10 @@ const publicRoutes = [
   {
     path: "login",
     element: <Login />,
+  },
+  {
+    path: "web-qr-login",
+    element: <WebQrLogin />,
   },
   // { path: "/forgot-password", element: <ForgotPassword /> },
   // { path: "/reset-password/:token", element: <ResetPassword /> },

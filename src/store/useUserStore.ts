@@ -2,46 +2,35 @@ import { create } from "zustand";
 import { BASE_URL } from "../api/base";
 
 export interface User {
-  user_id: number;
-  Institute_id: number;
-  name: string;
+  id: string;
   email: string;
-  phoneNumber: string;
-  imageUrl?: string | null;
-  userRole: number;
+  role: string;
 }
 
 interface UserState {
-  token: string | null;
   role: string | null;
   user: User | null;
   loading: boolean;
 
-  setToken: (token: string | null) => void;
-  setRole: (role: string | null) => void;
-  setUser: (user: User | null) => void;
   fetchProfile?: () => Promise<void>;
   logout: () => void;
+
+  setFields: <K extends keyof UserState>(
+    key: K,
+    value: UserState[K]
+  ) => void;
 }
 
 export const useUserStore = create<UserState>((set, get) => ({
-  token: localStorage.getItem("token"),
-  role: localStorage.getItem("role"),
+  role: null,
   user: null,
   loading: false,
 
-  setToken: (token) => {
-    if (token) localStorage.setItem("token", token);
-    else localStorage.removeItem("token");
-    set({ token });
-  },
-  setRole: (role) => {
-    if (role) localStorage.setItem("role", role);
-    else localStorage.removeItem("role");
-    set({ role });
-  },
-
-  setUser: (user) => set({ user }),
+  setFields: (key, value) =>
+    set((state) => ({
+      ...state,
+      [key]: value,
+    })),
 
   // fetchProfile: async () => {
   //   const { token, role } = get();
@@ -76,6 +65,7 @@ export const useUserStore = create<UserState>((set, get) => ({
   // },
   logout: () => {
     localStorage.removeItem("token");
-    set({ token: null, user: null });
+    localStorage.removeItem("user");
+    set({ role: null, user: null });
   },
 }));

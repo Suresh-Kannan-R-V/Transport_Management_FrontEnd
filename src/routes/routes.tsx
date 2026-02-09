@@ -2,12 +2,12 @@ import { useRoutes } from "react-router-dom";
 import { Layout as AuthLayout } from "../layout/auth";
 import Layout from "../layout/pages";
 import { privateRoutes, publicRoutes } from "./allRoute";
-// import { ProtectedRoute, PublicRoute } from "./middleware";
+import { ProtectedRoute, PublicRoute } from "./middleware";
 
 export const AppRoutes = () => {
   return useRoutes([
     {
-      // element: <PublicRoute />, // ✅ middleware wrapper
+      element: <PublicRoute />, // ✅ middleware wrapper
       children: [
         {
           path: "/auth",
@@ -17,7 +17,7 @@ export const AppRoutes = () => {
       ],
     },
     {
-      // element: <ProtectedRoute />, // ✅ middleware wrapper
+      element: <ProtectedRoute />, // ✅ middleware wrapper
       children: [
         {
           path: "/",
