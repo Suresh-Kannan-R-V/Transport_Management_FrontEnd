@@ -32,7 +32,7 @@ export default function Sidebar({ className }: { className?: string }) {
     <>
       {isOpen && (
         <div
-          className="fixed inset-0 z-20 bg-black/10 lg:hidden"
+          className="fixed inset-0 z-20 bg-black/10 md:hidden"
           onClick={() => setState("isOpen", false)}
         />
       )}

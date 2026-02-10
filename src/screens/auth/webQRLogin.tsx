@@ -132,9 +132,7 @@ export const WebQrLogin = () => {
                         </p>
                     </>
                 )}
-                {status === "EXPIRED" && (
-                    <p className="px-4 py-1 rounded-full bg-red-100 text-red-500 font-mono font-bold text-sm">Session timed out. Click above to try again.</p>
-                )}
+            
                 <p className={cn("px-4 py-1 rounded-full font-mono font-bold text-sm bg-indigo-100 text-indigo-500",
                     status === "EXPIRED" && "bg-red-100 text-red-500",
                     status === "ACTIVE" && "hidden"
