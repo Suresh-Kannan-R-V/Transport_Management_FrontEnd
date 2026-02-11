@@ -44,7 +44,7 @@ export default function Topbar() {
   console.log(role);
 
   return (
-    <header className="bg-white flex items-center justify-between px-4 py-1 rounded-2xl shadow-md">
+    <header className="bg-white flex items-center justify-between px-4 py-1  shadow-md">
       <div className="flex items-center gap-3">
         <div
           onClick={() => setState("isOpen", !isOpen)}

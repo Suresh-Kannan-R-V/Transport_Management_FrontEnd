@@ -1,7 +1,13 @@
 import {
+  CalendarCheck2,
+  Car,
+  CircleCheckBig,
+  Compass,
+  GitPullRequest,
   LayoutDashboard,
   LogOut,
-  Settings
+  Settings,
+  Truck,
 } from "lucide-react";
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -9,7 +15,12 @@ import { useCommonStore, useUserStore } from "../../store";
 import { cn } from "../../utils/helper";
 
 const menu = [
-  { name: "Workspace", icon: LayoutDashboard, path: "/dashboard" },
+  { name: "DashBoard", icon: LayoutDashboard, path: "/dashboard" },
+  { name: "Assignment", icon: CircleCheckBig, path: "/assignment" },
+  { name: "Driver", icon: Car, path: "/driver" },
+  { name: "Mission", icon: Compass, path: "/mission" },
+  { name: "Request", icon: GitPullRequest, path: "/request" },
+  { name: "Schedule", icon: CalendarCheck2, path: "/schedule" },
   { name: "Settings", icon: Settings, path: "/settings" },
 ];
 
@@ -23,7 +34,7 @@ export default function Sidebar({ className }: { className?: string }) {
   const logout = useUserStore((state) => state.logout);
 
   const handleLogout = async () => {
-    setShowLogout(false)
+    setShowLogout(false);
     logout();
     navigate("/auth/web-qr-login");
   };
@@ -39,33 +50,41 @@ export default function Sidebar({ className }: { className?: string }) {
 
       <aside
         className={cn(
-          "z-50 flex flex-col items-center justify-center",
+          "z-50 flex flex-col items-center justify-center bg-white px-1",
           "lg:static lg:translate-x-0 lg:w-fit lg:min-h-80",
           "fixed top-16 left-4",
           isOpen ? "-translate-x-1" : "-translate-x-10 hidden",
 
-          className
+          className,
         )}
       >
-        <div className={cn("bg-white dark:bg-slate-900/90 p-4 px-1 min-h-80 transition-transform duration-300 rounded-2xl flex flex-col items-center",
-          "border border-white/40 dark:border-slate-700/50 shadow-2xl",
-        )}>
-
-          <nav className={`flex flex-col gap-3 grow border-b border-slate-200 dark:border-slate-800`}>
+        <div className="absolute top-3 bg-indigo-100 p-2 rounded-lg" >
+          <Truck fill="#4f39f6" className="text-indigo-600" />
+        </div>
+        <div
+          className={cn(
+            " p-4 px-1 min-h-80 transition-transform duration-300 flex flex-col items-center",
+            "border border-white/40 dark:border-slate-700/50",
+          )}
+        >
+          <nav className={`flex flex-col gap-3 grow pb-10 border-b-2 border-slate-200`}>
             {menu.map((item) => (
               <SidebarItem
                 key={item.name}
                 item={item}
-                isActive={location.pathname === item.path || location.pathname.startsWith(item.path + '/')}
+                isActive={
+                  location.pathname === item.path ||
+                  location.pathname.startsWith(item.path + "/")
+                }
                 onClick={() => {
                   navigate(item.path);
                   if (window.innerWidth < 768) setState("isOpen", false);
                 }}
               />
             ))}
-
           </nav>
           <SidebarItem
+          
             item={{ name: "Logout", icon: LogOut, path: "" }}
             isLogout={true}
             isActive={false}
@@ -75,13 +94,30 @@ export default function Sidebar({ className }: { className?: string }) {
       </aside>
 
       {showLogout && (
-        <div className="fixed inset-0 z-10 flex items-center justify-center bg-slate-900/60 backdrop-blur-md">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md"
+          onClick={() => setShowLogout(false)}
+        >
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 w-full max-w-sm shadow-2xl">
-            <h2 className="text-slate-900 dark:text-white text-xl font-bold">Confirm Logout</h2>
-            <p className="text-slate-500 dark:text-slate-400 mt-2">Are you sure you want to end your session?</p>
+            <h2 className="text-slate-900 dark:text-white text-xl font-bold">
+              Confirm Logout
+            </h2>
+            <p className="text-slate-500 dark:text-slate-400 mt-2">
+              Are you sure you want to end your session?
+            </p>
             <div className="flex gap-3 mt-8">
-              <button onClick={() => setShowLogout(false)} className="cursor-pointer flex-1 px-4 py-2.5 text-sm font-medium text-indigo-500 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-800 rounded-lg transition-colors">Cancel</button>
-              <button onClick={handleLogout} className="cursor-pointer flex-1 px-4 py-2.5 text-sm font-medium bg-rose-600 text-white rounded-lg shadow-lg shadow-rose-600/20 hover:bg-rose-700 transition-colors">Logout</button>
+              <button
+                onClick={() => setShowLogout(false)}
+                className="cursor-pointer flex-1 px-4 py-2.5 text-sm font-medium text-indigo-500 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-800 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleLogout}
+                className="cursor-pointer flex-1 px-4 py-2.5 text-sm font-medium bg-rose-600 text-white rounded-lg shadow-lg shadow-rose-600/20 hover:bg-rose-700 transition-colors"
+              >
+                Logout
+              </button>
             </div>
           </div>
         </div>
@@ -90,11 +126,17 @@ export default function Sidebar({ className }: { className?: string }) {
   );
 }
 
-
-
-
-
-const SidebarItem = ({ item, isActive, onClick, isLogout = false }: { item: typeof menu[0]; isActive: boolean; onClick: () => void; isLogout?: boolean }) => {
+const SidebarItem = ({
+  item,
+  isActive,
+  onClick,
+  isLogout = false,
+}: {
+  item: (typeof menu)[0];
+  isActive: boolean;
+  onClick: () => void;
+  isLogout?: boolean;
+}) => {
   const Icon = item.icon;
 
   return (
@@ -106,14 +148,18 @@ const SidebarItem = ({ item, isActive, onClick, isLogout = false }: { item: type
         isActive && !isLogout && "bg-indigo-500/20 dark:bg-indigo-500/20",
         // Logout (Red) Hover and Active
         isLogout && "hover:bg-red-500/10 dark:hover:bg-red-500/20",
-        isActive && isLogout && "bg-red-500/20 dark:bg-red-500/20"
+        isActive && isLogout && "bg-red-500/20 dark:bg-red-500/20",
       )}
     >
       <div
         className={cn(
           "relative z-10 transition-all duration-300",
-          isLogout ? "text-rose-500" : "text-slate-500 dark:text-slate-400 group-hover:text-indigo-500 group-hover:scale-110",
-          isActive && !isLogout && "text-indigo-600 dark:text-indigo-400 scale-110"
+          isLogout
+            ? "text-rose-500"
+            : "text-slate-500 dark:text-slate-400 group-hover:text-indigo-500 group-hover:scale-110",
+          isActive &&
+            !isLogout &&
+            "text-indigo-600 dark:text-indigo-400 scale-110",
         )}
       >
         <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
@@ -124,7 +170,7 @@ const SidebarItem = ({ item, isActive, onClick, isLogout = false }: { item: type
           "size-0 opacity-0 origin-left transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]",
           "group-hover:size-fit group-hover:opacity-100 group-hover:px-4 group-hover:py-2.5",
           "rounded-md shadow-lg",
-          isLogout ? "bg-red-500" : "bg-indigo-600"
+          isLogout ? "bg-red-500" : "bg-indigo-600",
         )}
       >
         <span className="text-xs font-semibold uppercase text-white">

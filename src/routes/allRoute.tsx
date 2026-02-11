@@ -1,14 +1,54 @@
 import { Navigate } from "react-router-dom";
-import { Dashboard, Login, NotFound, WebQrLogin } from "../screens";
+import { Dashboard, NotFound, WebQrLogin } from "../screens";
+import { Assignment } from "../screens/pages/Assignment";
+import { Driver } from "../screens/pages/Driver";
+import { Mission } from "../screens/pages/Missions";
+import { Request } from "../screens/pages/Request";
+import { Schedule } from "../screens/pages/Schedule";
+import { Setting } from "../screens/pages/Setting";
+import { LogoutUsers } from "../screens/pages/Setting/LogOutUser";
+import { AddUser } from "../screens/pages/Setting/AddUser";
 
 const privateRoutes = [
   {
     index: true,
-    element: <Navigate to="/auth/login" />,
+    element: <Navigate to="/auth/web-qr-login" />,
   },
   {
     path: "dashboard",
     element: <Dashboard />,
+  },
+  {
+    path: "assignment",
+    element: <Assignment />,
+  },
+  {
+    path: "driver",
+    element: <Driver />,
+  },
+  {
+    path: "mission",
+    element: <Mission />,
+  },
+  {
+    path: "request",
+    element: <Request />,
+  },
+  {
+    path: "schedule",
+    element: <Schedule />,
+  },
+  {
+    path: "settings",
+    element: <Setting />,
+  },
+  {
+    path: "settings/add-users",
+    element: <AddUser />,
+  },
+  {
+    path: "settings/logout-users",
+    element: <LogoutUsers />,
   },
   {
     path: "*",
@@ -17,10 +57,6 @@ const privateRoutes = [
 ];
 
 const publicRoutes = [
-  {
-    path: "login",
-    element: <Login />,
-  },
   {
     path: "web-qr-login",
     element: <WebQrLogin />,

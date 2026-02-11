@@ -1,10 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React from "react";
+import { HeroUIProvider } from "@heroui/react";
 import { AppRoutes } from "./routes/routes";
-import { useUserStore } from "./store";
 
 function App() {
-  return <AppRoutes />;
+  return (
+    <HeroUIProvider>
+      <AppRoutes />
+    </HeroUIProvider>
+  );
 }
 
 export default App;
