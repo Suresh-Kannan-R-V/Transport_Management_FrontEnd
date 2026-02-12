@@ -35,7 +35,7 @@ export const GenericTable = <T extends { id: string | number }>({
   return (
     <div
       className={cn(
-        "w-full h-full bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden font-sans flex flex-col",
+        "size-full rounded-2xl shadow-md border border-gray-100 overflow-hidden font-sans flex flex-col",
         containerClassName,
       )}
     >
@@ -47,7 +47,7 @@ export const GenericTable = <T extends { id: string | number }>({
           base: "flex-1 overflow-auto scrollbar-hide",
           // Changed h-full to h-auto so rows don't stretch vertically
           table: "min-w-full border-separate border-spacing-0 h-auto",
-          thead: "z-30",
+          thead: "z-10",
           th: [
             "bg-indigo-50",
             "text-indigo-600",
@@ -75,10 +75,9 @@ export const GenericTable = <T extends { id: string | number }>({
             <TableColumn
               key={column.key}
               className={cn(
-                column.key === "sno" ? "pl-8 w-[60px]" : "",
-                column.key === "actions"
-                  ? "sticky right-0 z-40 bg-indigo-50 font-bold pr-8 text-center"
-                  : "",
+                column.key === "sno" && "pl-8 w-[60px]",
+                column.key === "actions" &&
+                  "sticky right-0 z-10 bg-indigo-50 font-bold pr-8 text-center",
               )}
             >
               {column.label}
@@ -88,7 +87,7 @@ export const GenericTable = <T extends { id: string | number }>({
         <TableBody
           items={items}
           loadingContent={
-            <div className="flex items-center justify-center absolute inset-0 bg-white/50 z-50">
+            <div className="flex items-center justify-center absolute inset-0 bg-white/50 z-10">
               <Spinner color="primary" label="Loading data..." />
             </div>
           }
@@ -106,14 +105,14 @@ export const GenericTable = <T extends { id: string | number }>({
                 {(columnKey) => (
                   <TableCell
                     className={cn(
-                      "text-slate-600 text-sm h-14 text-center", // Smaller text for compact look
-                      columnKey === "sno" && "pl-8",
+                      "text-slate-600 text-sm h-14 font-semibold",
+                      columnKey === "sno" && "pl-8 font-bold",
                       columnKey === "actions" &&
-                        "sticky right-0 z-20 bg-indigo-50 text-white pr-8 group-data-[hover=true]:bg-indigo-600 transition-colors shadow-[-4px_0_10px_rgba(0,0,0,0.05)]",
+                        "sticky right-0 z-10 bg-indigo-50 text-white pr-8 group-data-[hover=true]:bg-indigo-600 transition-colors text-center",
                     )}
                   >
                     {columnKey === "sno"
-                      ? index + 1
+                      ? `${index + 1})`
                       : renderCell(item, columnKey, index)}
                   </TableCell>
                 )}

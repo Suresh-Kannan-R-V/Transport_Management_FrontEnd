@@ -50,7 +50,7 @@ export default function Sidebar({ className }: { className?: string }) {
 
       <aside
         className={cn(
-          "z-50 flex flex-col items-center justify-center bg-white px-1",
+          "z-50 flex flex-col items-center justify-center bg- px-1 pl-2",
           "lg:static lg:translate-x-0 lg:w-fit lg:min-h-80",
           "fixed top-16 left-4",
           isOpen ? "-translate-x-1" : "-translate-x-10 hidden",
@@ -58,16 +58,14 @@ export default function Sidebar({ className }: { className?: string }) {
           className,
         )}
       >
-        <div className="absolute top-3 bg-indigo-100 p-2 rounded-lg" >
-          <Truck fill="#4f39f6" className="text-indigo-600" />
-        </div>
+        
         <div
           className={cn(
-            " p-4 px-1 min-h-80 transition-transform duration-300 flex flex-col items-center",
+            " p-4 px-1 min-h-80 transition-transform duration-300 flex flex-col items-center bg-white rounded-2xl shadow-md",
             "border border-white/40 dark:border-slate-700/50",
           )}
         >
-          <nav className={`flex flex-col gap-3 grow pb-10 border-b-2 border-slate-200`}>
+          <nav className={`flex flex-col gap-3 grow pb-10 mb-2 border-b-2 border-slate-200`}>
             {menu.map((item) => (
               <SidebarItem
                 key={item.name}

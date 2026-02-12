@@ -6,10 +6,11 @@ export interface User {
   id: number;
   role_id: number;
   name: string;
+  user_name:string;
   email: string;
+  password:string;
   phone: string;
   isLogin: boolean;
-  status: string;
   created_at: string;
   Role: {
     id: number;
@@ -51,9 +52,7 @@ export const useUserStore = create<UserState>((set) => ({
         }
       );
 
-      const result = await response.json();
-      console.log(result);
-      
+      const result = await response.json();    
 
       if (result.success) {
         set({

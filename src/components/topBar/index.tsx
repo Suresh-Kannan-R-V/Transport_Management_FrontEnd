@@ -1,4 +1,4 @@
-import { Bell, Copy, Menu, X } from "lucide-react";
+import { Bell, Copy, Menu, Truck, X } from "lucide-react";
 import { FILE_BASE_URL } from "../../api/base";
 import { useCommonStore, useUserStore } from "../../store";
 import { cn, getTokenRemainingTime, privateGet } from "../../utils/helper";
@@ -41,11 +41,12 @@ export default function Topbar() {
 
   const type = privateGet("type");
 
-  console.log(role);
-
   return (
     <header className="bg-white flex items-center justify-between px-4 py-1  shadow-md">
       <div className="flex items-center gap-3">
+        <div className="bg-indigo-100 p-2 rounded-lg hidden md:block">
+          <Truck className="text-indigo-600" />
+        </div>
         <div
           onClick={() => setState("isOpen", !isOpen)}
           className="cursor-pointer p-2 rounded-md text-indigo-500 hover:bg-indigo-500/20 block md:hidden"
@@ -57,7 +58,9 @@ export default function Topbar() {
           )}
         </div>
         <div>
-          <p className="hidden sm:block font-semibold">Transport Management System</p>
+          <p className="hidden sm:block font-semibold">
+            Transport Management System
+          </p>
           <p className="block sm:hidden font-semibold">TMS</p>
         </div>
       </div>

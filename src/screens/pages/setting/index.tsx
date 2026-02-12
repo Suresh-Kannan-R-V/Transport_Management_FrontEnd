@@ -36,7 +36,7 @@ export const Setting = () => {
             key={index}
             isPressable
             onPress={() => navigate(option.path)}
-            className="border border-gray-100 shadow-sm hover:shadow-md transition-all group overflow-hidden"
+            className="rounded-xl border-2 border-gray-100 shadow-sm hover:shadow-md hover:bg-indigo-50/20 hover:border-indigo-500 transition-all group overflow-hidden"
           >
             <CardBody className="p-6 flex flex-row items-start gap-5">
               {/* Icon Container */}

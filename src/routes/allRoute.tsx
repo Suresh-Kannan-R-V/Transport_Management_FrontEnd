@@ -3,11 +3,11 @@ import { Dashboard, NotFound, WebQrLogin } from "../screens";
 import { Assignment } from "../screens/pages/Assignment";
 import { Driver } from "../screens/pages/Driver";
 import { Mission } from "../screens/pages/Missions";
-import { Request } from "../screens/pages/Request";
+import { RequestPage } from "../screens/pages/Request";
 import { Schedule } from "../screens/pages/Schedule";
 import { Setting } from "../screens/pages/Setting";
-import { LogoutUsers } from "../screens/pages/Setting/LogOutUser";
 import { AddUser } from "../screens/pages/Setting/AddUser";
+import { LogoutUsers } from "../screens/pages/Setting/LogOutUser";
 
 const privateRoutes = [
   {
@@ -32,7 +32,7 @@ const privateRoutes = [
   },
   {
     path: "request",
-    element: <Request />,
+    element: <RequestPage />,
   },
   {
     path: "schedule",
@@ -66,3 +66,4 @@ const publicRoutes = [
 ];
 
 export { privateRoutes, publicRoutes };
+
