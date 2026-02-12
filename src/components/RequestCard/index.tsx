@@ -24,7 +24,7 @@ export const RequestCard = ({
   vehicleType,
 }: RequestCardProps) => {
   return (
-    <div className="bg-white rounded-4xl shadow-md border-1 border-slate-200 overflow-hidden flex flex-col h-full">
+    <div className="bg-white rounded-4xl shadow-md border-1 border-slate-200 hover:border-2 hover:border-indigo-400 overflow-hidden flex flex-col h-full">
       <div>
         <div className="flex justify-between items-center px-5 py-4 pb-3 border-b-2 border-slate-200">
           <div className="flex gap-4">
@@ -57,9 +57,7 @@ export const RequestCard = ({
           <div className="relative">
             <div className="absolute top-1 size-3 rounded-full border-[3px] border-white bg-indigo-500 shadow-[0_0_0_2px_rgba(99,102,241)]" />
             <div className="flex justify-between items-start ml-7 pt-0.5">
-              <h4 className="font-bold text-sm">
-                {pickup}
-              </h4>
+              <h4 className="font-bold text-sm">{pickup}</h4>
               <span className="text-[12px] font-bold text-slate-500">
                 {date}
               </span>
@@ -70,9 +68,7 @@ export const RequestCard = ({
             <div className="absolute -left-1 top-1">
               <MapPin className="text-indigo-600 fill-indigo-200" size={20} />
             </div>
-            <h4 className="font-bold text-sm pt-0.5 ml-7">
-              {destination}
-            </h4>
+            <h4 className="font-bold text-sm pt-0.5 ml-7">{destination}</h4>
           </div>
         </div>
       </div>
