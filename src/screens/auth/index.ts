@@ -1,0 +1,4 @@
+export { Register } from './Register';
+export { ForgotPassword } from './ForgotPassword';
+export { ResetPassword } from './ResetPassword';
+export { WebQrLogin } from './webQRLogin';
