@@ -1,3 +1,5 @@
-export const Assignment = () => {
-    return<div>Assignment</div>;
-}
+const Assignment = () => {
+  return <div>Assignment</div>;
+};
+
+export default Assignment;

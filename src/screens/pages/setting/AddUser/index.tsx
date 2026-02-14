@@ -19,7 +19,7 @@ import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { FormInput } from "../../../../components";
 
-export const AddUser = () => {
+const AddUser = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("create");
   const [loading, setLoading] = useState(false);
@@ -348,3 +348,4 @@ export const AddUser = () => {
     </div>
   );
 };
+export default AddUser;

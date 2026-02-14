@@ -67,7 +67,7 @@ const RouteInput = ({ value, onChange, placeholder, className }: any) => {
   );
 };
 
-export const NewRequest = () => {
+const NewRequest = () => {
   const store = useRequestStore();
 
   const handleDragEnd = (result: DropResult) => {
@@ -289,3 +289,5 @@ export const NewRequest = () => {
     </div>
   );
 };
+
+export default NewRequest;

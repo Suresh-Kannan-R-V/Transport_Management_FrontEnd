@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { RequestCard } from "../../../components";
 import { cn } from "../../../utils/helper";
 
-export const RequestPage = () => {
+const RequestPage = () => {
   const navigate = useNavigate();
 
   const requests = [
@@ -154,3 +154,5 @@ export const RequestPage = () => {
     </div>
   );
 };
+
+export default RequestPage;

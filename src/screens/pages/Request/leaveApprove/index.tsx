@@ -77,7 +77,7 @@ const AVAILABLE_DRIVERS = [
   { label: "Jessica Pearson", value: "jessica" },
 ];
 
-export const LeaveApprovePage = () => {
+const LeaveApprovePage = () => {
   const [leaves, setLeaves] = useState(INITIAL_LEAVES);
   const [filterValue] = useState("");
   const [page, setPage] = useState(1);
@@ -436,3 +436,5 @@ export const LeaveApprovePage = () => {
     </div>
   );
 };
+
+export default LeaveApprovePage;

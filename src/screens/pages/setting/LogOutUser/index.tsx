@@ -32,7 +32,7 @@ const COLUMNS = [
   { key: "actions", label: "SESSION ACTIONS" },
 ];
 
-export const LogoutUsers = () => {
+const LogoutUsers = () => {
   const navigate = useNavigate();
 
   const [users, setUsers] = useState<User[]>([]);
@@ -243,3 +243,4 @@ export const LogoutUsers = () => {
     </div>
   );
 };
+export default LogoutUsers;

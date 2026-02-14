@@ -38,7 +38,7 @@ const utilizationData = [
 const cn = (...classes: (string | boolean | undefined)[]) =>
   classes.filter(Boolean).join(" ");
 
-export const Dashboard = () => {
+const Dashboard = () => {
   const user = useUserStore((state) => state.user);
 
   return (

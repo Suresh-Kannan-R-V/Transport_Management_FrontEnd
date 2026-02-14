@@ -2,7 +2,7 @@ import { Card, CardBody, cn } from "@heroui/react";
 import { ArrowRight, LogOut, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-export const Setting = () => {
+const Setting = () => {
   const navigate = useNavigate();
 
   const settingsOptions = [
@@ -25,8 +25,12 @@ export const Setting = () => {
   return (
     <div className="p-8 max-w-5xl mx-auto font-sans">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-800">Transport Admin Settings</h1>
-        <p className="text-slate-500 text-sm">Manage your team and security preferences</p>
+        <h1 className="text-2xl font-bold text-slate-800">
+          Transport Admin Settings
+        </h1>
+        <p className="text-slate-500 text-sm">
+          Manage your team and security preferences
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -39,10 +43,12 @@ export const Setting = () => {
           >
             <CardBody className="p-6 flex flex-row items-start gap-5">
               {/* Icon Container */}
-              <div className={cn(
-                "p-4 rounded-2xl flex-shrink-0 transition-transform group-hover:scale-110",
-                option.color
-              )}>
+              <div
+                className={cn(
+                  "p-4 rounded-2xl flex-shrink-0 transition-transform group-hover:scale-110",
+                  option.color,
+                )}
+              >
                 {option.icon}
               </div>
 
@@ -50,9 +56,9 @@ export const Setting = () => {
               <div className="flex-1 space-y-1">
                 <h3 className="text-lg font-bold text-slate-800 flex items-center justify-between">
                   {option.title}
-                  <ArrowRight 
-                    size={18} 
-                    className="text-slate-300 group-hover:text-indigo-600 group-hover:translate-x-1 transition-all" 
+                  <ArrowRight
+                    size={18}
+                    className="text-slate-300 group-hover:text-indigo-600 group-hover:translate-x-1 transition-all"
                   />
                 </h3>
                 <p className="text-sm text-slate-500 leading-relaxed">
@@ -66,3 +72,5 @@ export const Setting = () => {
     </div>
   );
 };
+
+export default Setting;
