@@ -1,15 +1,19 @@
 import { Navigate } from "react-router-dom";
-import { Dashboard, NotFound, WebQrLogin } from "../screens";
-import { Assignment } from "../screens/pages/assignment";
-import { Driver } from "../screens/pages/driver";
-import { Mission } from "../screens/pages/missions";
-import { RequestPage } from "../screens/pages/request";
-import { Schedule } from "../screens/pages/schedule";
-import { LeaveApprovePage } from "../screens/pages/request/leaveApprove";
-import { NewRequest } from "../screens/pages/request/newRequest";
-import { Setting } from "../screens/pages/setting";
-import { AddUser } from "../screens/pages/setting/addUser";
-import { LogoutUsers } from "../screens/pages/setting/logOutUser";
+import {
+  AddUser,
+  Assignment,
+  Dashboard,
+  Driver,
+  LeaveApprovePage,
+  LogoutUsers,
+  Mission,
+  NewRequest,
+  NotFound,
+  RequestPage,
+  Schedule,
+  Setting,
+  WebQrLogin,
+} from "../screens";
 
 const privateRoutes = [
   {
