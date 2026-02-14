@@ -8,6 +8,8 @@ import { Schedule } from "../screens/pages/Schedule";
 import { Setting } from "../screens/pages/Setting";
 import { AddUser } from "../screens/pages/Setting/AddUser";
 import { LogoutUsers } from "../screens/pages/Setting/LogOutUser";
+import { LeaveApprovePage } from "../screens/pages/Request/leaveApprove";
+import { NewRequest } from "../screens/pages/Request/newRequest";
 
 const privateRoutes = [
   {
@@ -33,6 +35,14 @@ const privateRoutes = [
   {
     path: "request",
     element: <RequestPage />,
+  },
+  {
+    path: "request/new-request",
+    element: <NewRequest />,
+  },
+  {
+    path: "request/leave-approve",
+    element: <LeaveApprovePage />,
   },
   {
     path: "schedule",
@@ -66,4 +76,3 @@ const publicRoutes = [
 ];
 
 export { privateRoutes, publicRoutes };
-

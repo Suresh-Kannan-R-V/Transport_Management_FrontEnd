@@ -1,14 +1,15 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Outlet } from "react-router-dom";
 
 import React from "react";
 import { Toaster } from "react-hot-toast";
-import { useCommonStore, useUserStore } from "../../store";
 import Sidebar from "../../components/sideBar";
 import Topbar from "../../components/topBar";
+import { useCommonStore, useUserStore } from "../../store";
 import { cn } from "../../utils/helper";
 
 const Layout = () => {
-  const isOpen = useCommonStore((state) => state.isOpen);
+  // const isOpen = useCommonStore((state) => state.isOpen);
   const setCommonStates = useCommonStore((state) => state.setCommonStates);
   const fetchProfile = useUserStore((state) => state.fetchProfile);
 

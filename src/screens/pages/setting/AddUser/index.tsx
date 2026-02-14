@@ -1,24 +1,23 @@
-import React, { useState } from "react";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { Button } from "@heroui/react";
 import axios from "axios";
-import { toast } from "react-hot-toast";
 import {
-  UserPlus,
+  ArrowLeft,
+  Info,
+  KeyRound,
+  Lock,
   Mail,
   Phone,
-  UserCircle,
-  ShieldCheck,
   RefreshCw,
-  Info,
-  Lock,
-  ArrowLeft,
-  KeyRound,
-  Copy,
-  Plus,
-  UserRound,
+  ShieldCheck,
+  UserCircle,
+  UserPlus,
+  UserRound
 } from "lucide-react";
+import React, { useState } from "react";
+import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { FormInput } from "../../../../components";
-import { Button } from "@heroui/react";
 
 export const AddUser = () => {
   const navigate = useNavigate();
@@ -40,11 +39,6 @@ export const AddUser = () => {
     { label: "Driver", value: "3" },
     { label: "Faculty", value: "4" },
   ];
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success("Copied to clipboard!", { id: "copy-toast" });
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

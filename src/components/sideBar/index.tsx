@@ -6,8 +6,7 @@ import {
   GitPullRequest,
   LayoutDashboard,
   LogOut,
-  Settings,
-  Truck,
+  Settings
 } from "lucide-react";
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -43,7 +42,7 @@ export default function Sidebar({ className }: { className?: string }) {
     <>
       {isOpen && (
         <div
-          className="fixed inset-0 z-20 bg-black/10 md:hidden"
+          className="fixed inset-0 z-20 bg-black/10 lg:hidden"
           onClick={() => setState("isOpen", false)}
         />
       )}

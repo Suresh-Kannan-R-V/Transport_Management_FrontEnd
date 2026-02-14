@@ -1,10 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useRef, useState } from "react";
+import toast from "react-hot-toast";
 import QRCode from "react-qr-code";
 import { useNavigate } from "react-router-dom";
 import { checkWebSession, createWebSession } from "../../api/auth";
 import { cn } from "../../utils/helper";
-import { useUserStore } from "../../store";
-import toast from "react-hot-toast";
 
 const POLL_INTERVAL = 2000;
 const SESSION_DURATION = 120; // 2 minutes
@@ -12,8 +12,8 @@ const SESSION_DURATION = 120; // 2 minutes
 export const WebQrLogin = () => {
   const navigate = useNavigate();
 
-  const role = useUserStore((state) => state.role);
-  const user = useUserStore((state) => state.user);
+  // const role = useUserStore((state) => state.roleName);
+  // const user = useUserStore((state) => state.user);
 
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [status, setStatus] = useState<

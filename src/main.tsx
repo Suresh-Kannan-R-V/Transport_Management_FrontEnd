@@ -1,10 +1,9 @@
-import React from "react";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
+import { GOOGLE_CLIENT_ID } from "./api/base.ts";
 import App from "./App.tsx";
 import "./index.css";
-import { GoogleOAuthProvider } from "@react-oauth/google";
-import { GOOGLE_CLIENT_ID } from "./api/base.ts";
 
 
 ReactDOM.createRoot(document.getElementById("root")!).render(

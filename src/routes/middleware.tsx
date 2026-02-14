@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 
-const getTokenExpiry = (token) => {
+const getTokenExpiry = (token: string) => {
     try {
         const payload = JSON.parse(atob(token.split(".")[1]));
         return payload.exp * 1000; // convert to ms

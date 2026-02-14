@@ -1,9 +1,9 @@
 import {
-    Button,
-    Dropdown,
-    DropdownItem,
-    DropdownMenu,
-    DropdownTrigger,
+  Button,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
 } from "@heroui/react";
 import { Copy, Filter, RefreshCcw, Users } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
@@ -12,6 +12,15 @@ import { useNavigate } from "react-router-dom";
 import { FILE_BASE_URL } from "../../../../api/base";
 import { BackButton, GenericTable } from "../../../../components";
 import { cn } from "../../../../utils/helper";
+
+interface User {
+  id: string | number;
+  user_name: string;
+  name: string;
+  email: string;
+  isLogin: boolean;
+  Role: { name: string };
+}
 
 const COLUMNS = [
   { key: "id", label: "USER ID" },
@@ -26,7 +35,7 @@ const COLUMNS = [
 export const LogoutUsers = () => {
   const navigate = useNavigate();
 
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState("all"); // all, active, inactive
   const [sortOrder, setSortOrder] = useState("none");
@@ -59,7 +68,7 @@ export const LogoutUsers = () => {
     fetchUsers();
   }, [fetchUsers]);
 
-  const handleLogout = async (id: any) => {
+  const handleLogout = async (id: string | number) => {
     try {
       const res = await fetch(`${FILE_BASE_URL}/auth/admin/logout-user/${id}`, {
         method: "POST",
@@ -71,7 +80,7 @@ export const LogoutUsers = () => {
         toast.success(`${id} is Logout Success`);
         fetchUsers(); // Refresh the list
       }
-    } catch (error) {
+    } catch {
       alert("Action failed.");
     }
   };
@@ -94,7 +103,7 @@ export const LogoutUsers = () => {
     return result;
   }, [users, filterStatus, sortOrder]);
 
-  const renderCell = (user: any, columnKey: React.Key) => {
+  const renderCell = (user: User, columnKey: React.Key) => {
     switch (columnKey) {
       case "user_name":
         return (
@@ -148,7 +157,7 @@ export const LogoutUsers = () => {
       case "role":
         return `${user.Role.name}`;
       default:
-        return user[columnKey as keyof any];
+        return String(user[columnKey as keyof User] ?? "");
     }
   };
 

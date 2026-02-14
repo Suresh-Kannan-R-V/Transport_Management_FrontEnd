@@ -1,24 +1,25 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Bell, Copy, Menu, Truck, X } from "lucide-react";
+import React from "react";
 import { FILE_BASE_URL } from "../../api/base";
 import { useCommonStore, useUserStore } from "../../store";
 import { cn, getTokenRemainingTime, privateGet } from "../../utils/helper";
-import React from "react";
 
 /* 🔹 Role config */
-const roleConfig: Record<number, { label: string; className: string }> = {
-  1: {
-    label: "Admin",
-    className: "bg-yellow-200 text-gray-800",
-  },
-  2: {
-    label: "Driver",
-    className: "bg-blue-200 text-blue-800",
-  },
-  3: {
-    label: "Customer",
-    className: "bg-green-200 text-green-800",
-  },
-};
+// const roleConfig: Record<number, { label: string; className: string }> = {
+//   1: {
+//     label: "Admin",
+//     className: "bg-yellow-200 text-gray-800",
+//   },
+//   2: {
+//     label: "Driver",
+//     className: "bg-blue-200 text-blue-800",
+//   },
+//   3: {
+//     label: "Customer",
+//     className: "bg-green-200 text-green-800",
+//   },
+// };
 
 export default function Topbar() {
   const isOpen = useCommonStore((state) => state.isOpen);
@@ -44,12 +45,12 @@ export default function Topbar() {
   return (
     <header className="bg-white flex items-center justify-between px-4 py-1  shadow-md">
       <div className="flex items-center gap-3">
-        <div className="bg-indigo-100 p-2 rounded-lg hidden md:block">
+        <div className="bg-indigo-100 p-2 rounded-lg hidden lg:block">
           <Truck className="text-indigo-600" />
         </div>
         <div
           onClick={() => setState("isOpen", !isOpen)}
-          className="cursor-pointer p-2 rounded-md text-indigo-500 hover:bg-indigo-500/20 block md:hidden"
+          className="cursor-pointer p-2 rounded-md text-indigo-500 hover:bg-indigo-500/20 block lg:hidden"
         >
           {!isOpen ? (
             <Menu size={18} strokeWidth={2.5} />
@@ -89,7 +90,7 @@ const ProfileSection = ({ user, role }: { user: any; role: any }) => {
     : "https://i.pravatar.cc/40";
 
   return (
-    <div className="group relative flex flex-col items-center justify-center p-2 cursor-pointer w-full">
+    <div className="group relative flex flex-col items-center justify-center p-2 cursor-pointer w-full h-12">
       <div className="flex items-center w-full justify-center lg:justify-start gap-3">
         <div className="relative shrink-0 transition-transform duration-300 group-hover:scale-105">
           <img
