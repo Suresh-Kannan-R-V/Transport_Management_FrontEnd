@@ -1,36 +1,26 @@
-import { Button, Card } from "@heroui/react";
-import { ChevronRight, Plus, Search, User } from "lucide-react";
+import { Button, Card, Pagination, Skeleton, Spinner } from "@heroui/react";
+import { ChevronRight, FilterIcon, Plus, Search, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { RequestCard } from "../../../components";
 import { cn } from "../../../utils/helper";
+import { useEffect } from "react";
+import { useRequestPageStore } from "../../../store";
 
 const RequestPage = () => {
   const navigate = useNavigate();
+  const {
+    items,
+    loading,
+    totalPages,
+    currentPage,
+    setPage,
+    setSearch,
+    fetchRequests,
+  } = useRequestPageStore();
 
-  const requests = [
-    {
-      name: "Dr. Sarah Jenkins",
-      requestId: "REQ-8821",
-      status: "Pending" as const,
-      pickup: "Central Station, NY",
-      destination: "JFK Airport, Terminal 4",
-      date: "Oct 24, 2023",
-      guests: 2,
-      vehicleType: "Mini Sedan (4)",
-      travelType: "One Way" as const,
-    },
-    {
-      name: "Prof. James Wilson",
-      requestId: "REQ-7652",
-      status: "Confirmed" as const,
-      pickup: "Grand Hyatt Hotel",
-      destination: "City Tour Loop",
-      date: "Oct 28, 2023",
-      guests: 4,
-      vehicleType: "Luxury SUV (7)",
-      travelType: "Multi Day" as const,
-    },
-  ];
+  useEffect(() => {
+    fetchRequests();
+  }, []);
 
   const leaves = [
     {
@@ -73,6 +63,7 @@ const RequestPage = () => {
             <input
               type="text"
               placeholder="Quick search missions..."
+              onChange={(e) => setSearch(e.target.value)}
               className="pl-12 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-sm w-72 shadow-sm"
             />
           </div>
@@ -91,15 +82,55 @@ const RequestPage = () => {
             <h2 className="text-xl font-semibold text-slate-500">
               Active Requests
             </h2>
-            <Button className="flex items-center gap-1 text-indigo-500 rounded-lg font-semibold text-xs hover:underline hover:text-indigo-600 cursor-pointer duration-200">
-              View All <ChevronRight size={16} />
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                isIconOnly
+                startContent={<FilterIcon size={18} />}
+                className="border border-slate-300 text-slate-500 p-0 rounded-lg hover:text-indigo-600 cursor-pointer"
+              />
+
+              <Button className="flex items-center gap-1 text-indigo-500 rounded-lg font-semibold text-xs hover:underline hover:text-indigo-600 cursor-pointer duration-200">
+                View All <ChevronRight size={16} />
+              </Button>
+            </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {requests.map((req) => (
-              <RequestCard key={req.requestId} {...req} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="h-[calc(100vh-380px)] overflow-hidden">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {[...Array(2)].map((_, i) => (
+                  <Skeleton
+                    key={i}
+                    isLoaded={lo}
+                    className="rounded-4xl h-48"
+                  ></Skeleton>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="h-[calc(100vh-380px)] custom-scrollbar">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 ">
+                  {items.map((req) => (
+                    <RequestCard key={req.id} item={req} />
+                  ))}
+                </div>
+              </div>
+              <div className="flex justify-center mt-2 w-full">
+                <Pagination
+                  total={totalPages}
+                  initialPage={1}
+                  page={currentPage}
+                  onChange={(page) => setPage(page)}
+                  classNames={{
+                    wrapper: "gap-2",
+                    item: "bg-white text-slate-600 border border-slate-200 rounded-xl hover:bg-indigo-50",
+                    cursor:
+                      "bg-indigo-100 text-indigo-600 font-bold rounded-lg",
+                  }}
+                />
+              </div>
+            </>
+          )}
         </div>
 
         <div className="col-span-12 lg:col-span-4">

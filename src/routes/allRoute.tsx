@@ -14,6 +14,7 @@ import {
   Setting,
   WebQrLogin,
 } from "../screens";
+import VehicleManagement from "../screens/pages/setting/vehicleManagement";
 
 const privateRoutes = [
   {
@@ -63,6 +64,10 @@ const privateRoutes = [
   {
     path: "settings/logout-users",
     element: <LogoutUsers />,
+  },
+  {
+    path: "settings/vehicle-management",
+    element: <VehicleManagement />,
   },
   {
     path: "*",

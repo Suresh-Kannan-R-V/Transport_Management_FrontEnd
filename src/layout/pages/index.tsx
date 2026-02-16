@@ -36,11 +36,7 @@ const Layout = () => {
         <div className="flex flex-col flex-1 transition-all duration-300 p-4 px-2.5 overflow-hidden h-full">
           <main className="p-4 pr-0 bg-white rounded-2xl h-[calc(100vh-95px)]">
             <div
-              className={cn(
-                "h-full overflow-scroll pr-3",
-                "[&::-webkit-scrollbar]:size-1 [&::-webkit-scrollbar-track]:bg-transparent",
-                "[&::-webkit-scrollbar-thumb]:bg-indigo-600 [&::-webkit-scrollbar-thumb]:rounded-full",
-              )}
+              className={cn("h-full overflow-scroll pr-3 custom-scrollbar ")}
             >
               <Outlet />
             </div>

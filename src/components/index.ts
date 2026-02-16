@@ -3,4 +3,7 @@ export * from "./topBar";
 export * from "./table";
 export * from "./RequestCard";
 export * from "./formInput";
+export * from "./MapComponent";
 export * from "./BackButton";
+export * from "./countryCodeSelector";
+export * from "./AddressSearchInput";

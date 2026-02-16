@@ -1,5 +1,5 @@
 import { Card, CardBody, cn } from "@heroui/react";
-import { ArrowRight, LogOut, Users } from "lucide-react";
+import { ArrowRight, Car, LogOut, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Setting = () => {
@@ -19,6 +19,13 @@ const Setting = () => {
       icon: <LogOut className="text-rose-600" size={24} />,
       path: "/settings/logout-users",
       color: "bg-rose-50",
+    },
+    {
+      title: "Vehicle Management",
+      description: "",
+      icon: <Car className="text-amber-600" size={24} />,
+      path: "/settings/vehicle-management",
+      color: "bg-amber-100/70",
     },
   ];
 

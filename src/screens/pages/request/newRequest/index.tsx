@@ -4,71 +4,74 @@ import {
   Droppable,
   type DropResult,
 } from "@hello-pangea/dnd";
-import "leaflet/dist/leaflet.css";
+import { Button, DatePicker } from "@heroui/react";
 import {
+  Calendar,
+  Footprints,
   GripVertical,
   MapPin,
-  Phone,
-  ShieldCheck,
+  Plus,
   Trash2,
   Upload,
-  Users,
+  User,
+  UsersRound,
 } from "lucide-react";
-import { memo, useMemo, useState } from "react";
-import { MapContainer, Marker, TileLayer, useMap } from "react-leaflet";
-import { useRequestStore } from "../../../../store/RequestStore";
-
-const MemoizedMap = memo(({ stops }: { stops: any[] }) => {
-  return (
-    <MapContainer
-      {...({
-        center: [11.4965, 77.2764],
-        zoom: 13,
-        zoomControl: true,
-        attributionControl: false,
-      } as any)}
-      style={{ height: "100%", width: "100%" }}
-    >
-      <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
-      {stops.map(
-        (stop, i) =>
-          stop.lat && <Marker key={i} position={[stop.lat, stop.lon!]} />,
-      )}
-      <MapAutoCenter stops={stops} />
-    </MapContainer>
-  );
-});
-
-const MapAutoCenter = ({ stops }: { stops: any[] }) => {
-  const map = useMap();
-  useMemo(() => {
-    const valid = stops.filter((s) => s.lat);
-    if (valid.length > 0) {
-      const coords = valid.map((s) => [s.lat, s.lon] as [number, number]);
-      map.fitBounds(coords, { padding: [20, 20], maxZoom: 15 });
-    }
-  }, [stops, map]);
-  return null;
-};
-
-const RouteInput = ({ value, onChange, placeholder, className }: any) => {
-  const [localValue, setLocalValue] = useState(value);
-
-  const handleBlur = () => onChange(localValue);
-
-  return (
-    <input
-      className={className}
-      value={localValue}
-      onChange={(e) => setLocalValue(e.target.value)}
-      onBlur={handleBlur}
-      placeholder={placeholder}
-    />
-  );
-};
+import {
+  now,
+  getLocalTimeZone,
+  parseAbsoluteToLocal,
+} from "@internationalized/date";
+import { AddressSearchInput, CountrySelector } from "../../../../components";
+import MapViewer from "../../../../components/MapComponent";
+import { cn } from "../../../../utils/helper";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+import { useMemo } from "react";
+import { useRequestCreationStore } from "../../../../store";
 
 const NewRequest = () => {
-  const store = useRequestStore();
+  const store = useRequestCreationStore();
+
+  const navigate = useNavigate();
+  const currentDateTime = useMemo(() => now(getLocalTimeZone()), []);
+
+  const endMinValue = useMemo(() => {
+    if (!store.startDate) return currentDateTime;
+    try {
+      return parseAbsoluteToLocal(new Date(store.startDate).toISOString());
+    } catch {
+      return currentDateTime;
+    }
+  }, [store.startDate, currentDateTime]);
+
+  const pickerStyles = {
+    label: "text-[10px] font-bold text-indigo-600 uppercase ml-1",
+    inputWrapper:
+      "bg-slate-50 !bg-opacity-100 border-slate-200 rounded-xl shadow-sm hover:border-indigo-400 transition-all focus:ring focus:ring-indigo-600",
+    popoverContent: "bg-white border border-slate-200 shadow-xl rounded-xl",
+    calendar: "bg-red-500",
+  };
+
+  const handleCancel = () => {
+    store.reset();
+    navigate("/request");
+  };
+
+  const handleCreateRequest = async () => {
+    const result = await store.submitRequest();
+
+    if (result.success) {
+      toast.success(result.message);
+      navigate("/request");
+    } else {
+      toast.error("Error: " + result.message);
+    }
+  };
+
+  const isMandatory = (index: number) => {
+    if (store.passengerCount === 1) return index === 0;
+    return index < 2;
+  };
 
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
@@ -78,42 +81,49 @@ const NewRequest = () => {
     store.reorderStops(items);
   };
 
-  const validatePhoneCount = () => {
-    const filledPhones = store.guestNames.filter(
-      (g) => g.phone.trim().length > 0,
-    ).length;
-    return store.passengerCount === 1 ? filledPhones === 1 : filledPhones >= 2;
-  };
-
   return (
-    <div className="flex overflow-hidden font-sans">
-      <div className="w-1/2 flex flex-col border-r border-slate-200">
-        <div className="h-[35%] relative border-b-4 border-white">
-          <MemoizedMap stops={store.stops} />
+    <div className="font-sans grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <div className="lg:col-span-5 flex flex-col gap-2 overflow-hidden">
+        <div className="h-64 shrink-0 bg-white shadow-md rounded-3xl overflow-hidden border-4 border-white">
+          <MapViewer stops={store.stops} />
         </div>
 
-        <div className="h-[65%] overflow-y-auto p-8 bg-white">
-          <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
-            <MapPin className="text-indigo-600" size={22} /> Travel & Route
-          </h2>
+        <div className="rounded-2xl p-2">
+          <div className="flex items-center justify-between bg-white rounded-lg">
+            <h2 className="text-lg font-bold text-slate-800 mb-2 flex items-center gap-2">
+              <MapPin className="text-indigo-600" size={20} /> Route Plan
+            </h2>
 
-          <div className="space-y-6">
-            <div className="flex gap-2 bg-slate-100 p-1.5 rounded-2xl">
-              {["One Way", "Two Way", "Multi Day"].map((t) => (
-                <button
-                  key={t}
-                  onClick={() => store.setField("travelType", t)}
-                  className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${
-                    store.travelType === t
-                      ? "bg-white text-indigo-600 shadow-sm"
-                      : "text-slate-400"
-                  }`}
-                >
-                  {t}
-                </button>
-              ))}
+            <div className="flex gap-4 text-sm">
+              <div className="flex items-center gap-3 bg-indigo-100 py-1.5 px-4 mb-1.5 rounded-lg">
+                <p className="text-indigo-600 uppercase text-[10px] font-bold tracking-wider">
+                  Distance :
+                </p>
+                <p className="font-semibold text-slate-900">
+                  {store.distance || "0.00"} km
+                </p>
+              </div>
+              <div className="flex items-center gap-3 bg-indigo-100 py-1.5 px-4 mb-1.5 rounded-lg">
+                <p className="text-indigo-600 uppercase text-[10px] font-bold tracking-wider">
+                  Est. Time :
+                </p>
+                <p className="font-semibold text-slate-900">
+                  {(() => {
+                    const totalMinutes = parseFloat(store.duration || "0");
+                    if (totalMinutes < 60) {
+                      return `${totalMinutes.toFixed(0)} min`;
+                    } else {
+                      const hours = Math.floor(totalMinutes / 60);
+                      const mins = Math.round(totalMinutes % 60);
+                      return `${hours}h ${mins > 0 ? `${mins}m` : ""}`;
+                    }
+                  })()}
+                </p>
+              </div>
             </div>
+          </div>
 
+          <div className="h-[calc(100vh-500px)] overflow-y-auto pr-1.5 custom-scrollbar">
             <DragDropContext onDragEnd={handleDragEnd}>
               <Droppable droppableId="stops">
                 {(provided) => (
@@ -132,31 +142,46 @@ const NewRequest = () => {
                           <div
                             ref={p.innerRef}
                             {...p.draggableProps}
-                            className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100"
+                            className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100"
                           >
                             <div {...p.dragHandleProps}>
                               <GripVertical
                                 className="text-slate-300"
-                                size={18}
+                                size={16}
                               />
                             </div>
                             <div
-                              className={`w-2.5 h-2.5 rounded-full ${idx === 0 ? "bg-green-500" : idx === store.stops.length - 1 ? "bg-red-500" : "bg-indigo-400"}`}
+                              className={cn(
+                                "w-2 h-2 rounded-full",
+                                idx === 0
+                                  ? "bg-green-500"
+                                  : idx === store.stops.length - 1
+                                    ? "bg-red-500"
+                                    : "bg-indigo-400",
+                              )}
                             />
-
-                            <RouteInput
-                              className="bg-transparent flex-1 font-bold outline-none text-sm"
+                            <AddressSearchInput
                               value={stop.address}
                               onChange={(val: string) =>
                                 store.updateStop(idx, val)
                               }
-                              placeholder="Enter location..."
+                              onSelect={(
+                                addr: string,
+                                lat: number,
+                                lon: number,
+                              ) => store.updateStop(idx, addr, lat, lon)}
+                              placeholder={
+                                idx === 0
+                                  ? "Start"
+                                  : idx === store.stops.length - 1
+                                    ? "End"
+                                    : "Stop"
+                              }
                             />
-
                             {idx !== 0 && idx !== store.stops.length - 1 && (
                               <button onClick={() => store.removeStop(idx)}>
                                 <Trash2
-                                  size={16}
+                                  size={14}
                                   className="text-slate-300 hover:text-red-500"
                                 />
                               </button>
@@ -170,120 +195,268 @@ const NewRequest = () => {
                 )}
               </Droppable>
             </DragDropContext>
-
-            <button
-              onClick={store.addStop}
-              className="w-full py-2 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 font-bold text-xs uppercase hover:bg-slate-50"
-            >
-              + Add Stop
-            </button>
           </div>
+
+          <button
+            onClick={store.addStop}
+            className="mt-2 w-full py-2 border-2 border-dashed border-indigo-600 rounded-xl text-indigo-500 font-bold text-xs uppercase hover:bg-slate-50 transition-colors"
+          >
+            + Add Intermediate Stop
+          </button>
         </div>
       </div>
 
-      {/* RIGHT SIDE */}
-      <div className="w-1/2 bg-white p-10 overflow-y-auto">
-        <header className="mb-8">
-          <h2 className="text-2xl font-black text-slate-800">
-            Passenger Details
-          </h2>
-          <p className="text-slate-400 text-sm font-medium">
-            Manage guests and vehicle capacity
-          </p>
-        </header>
-
-        <div className="space-y-8">
-          {/* Passenger Count Container */}
-          <div className="bg-indigo-50 p-6 rounded-[2rem] flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">
-                Total Passengers
-              </p>
-              <input
-                type="number"
-                value={store.passengerCount}
-                onChange={(e) =>
-                  store.setField("passengerCount", e.target.value)
-                }
-                className="bg-transparent text-3xl font-black text-indigo-900 outline-none w-24"
-              />
-            </div>
-            <Users className="text-indigo-200" size={48} />
-          </div>
-
+      <div className="lg:col-span-7 flex flex-col overflow-hidden">
+        <div className="flex-1 rounded-3xl px-2 pt-1 overflow-y-auto custom-scrollbar">
+          <input
+            className="w-full mb-4 p-3 shadow-sm bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-indigo-500"
+            placeholder="Route Name"
+            value={store.routeName}
+            onChange={(e) => store.setField("routeName", e.target.value)}
+          />
           <section>
-            <div className="flex justify-between items-end mb-4">
-              <h3 className="font-bold text-slate-700 uppercase text-xs tracking-wider">
-                Guest Information
+            <div className="flex justify-between items-center">
+              <h3 className="font-bold uppercase text-sm flex gap-2 ">
+                <Footprints size={18} className="text-indigo-600" />
+                Travel Configuration
               </h3>
-              {store.isBulkUpload && (
-                <span className="text-[10px] font-bold bg-amber-100 text-amber-600 px-2 py-1 rounded-md">
-                  Bulk Mode Enabled
-                </span>
-              )}
-            </div>
 
-            {store.isBulkUpload ? (
-              <div className="border-2 border-dashed border-slate-200 rounded-3xl p-10 text-center hover:bg-slate-50 transition-colors cursor-pointer">
-                <Upload className="mx-auto text-slate-300 mb-4" size={40} />
-                <p className="font-bold text-slate-600">
-                  Upload Guest List (CSV/XLSX)
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {store.guestNames.map((guest, idx) => (
-                  <div key={idx} className="grid grid-cols-2 gap-3">
-                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                      <label className="text-[9px] font-bold text-slate-400 uppercase">
-                        Name
-                      </label>
-                      <input
-                        value={guest.name}
-                        onChange={(e) =>
-                          store.updateGuest(idx, "name", e.target.value)
-                        }
-                        className="w-full bg-transparent font-bold text-sm outline-none"
-                        placeholder="Guest Name"
-                      />
-                    </div>
-                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                      <label className="text-[9px] font-bold text-slate-400 uppercase flex justify-between">
-                        Phone{" "}
-                        {(idx < 2 || store.passengerCount === 1) && (
-                          <span className="text-red-400">*</span>
-                        )}
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <Phone size={12} className="text-slate-300" />
-                        <input
-                          value={guest.phone}
-                          onChange={(e) =>
-                            store.updateGuest(idx, "phone", e.target.value)
-                          }
-                          className="w-full bg-transparent font-bold text-sm outline-none"
-                          placeholder="+91 ..."
-                        />
-                      </div>
-                    </div>
-                  </div>
+              <div className="flex bg-slate-100 p-1 rounded-lg shadow-sm">
+                {["One Way", "Two Way", "Multi Day"].map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => store.setField("travelType", t)}
+                    className={cn(
+                      "px-4 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer",
+                      store.travelType === t
+                        ? "bg-white text-indigo-600 shadow-sm"
+                        : "text-slate-400",
+                    )}
+                  >
+                    {t}
+                  </button>
                 ))}
               </div>
-            )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mb-4 mt-1">
+              <div className="space-y-1">
+                <DatePicker
+                  label="Start Date & Time"
+                  labelPlacement="outside"
+                  showMonthAndYearPickers
+                  hideTimeZone
+                  defaultValue={now(getLocalTimeZone())}
+                  minValue={currentDateTime}
+                  onChange={(date) =>
+                    store.setField("startDate", date ? date.toString() : "")
+                  }
+                  classNames={pickerStyles}
+                  selectorIcon={
+                    <Calendar size={16} className="text-indigo-600" />
+                  }
+                />
+              </div>
+
+              {/* End Date & Time (Only for Multi Day) */}
+              {store.travelType === "Multi Day" && (
+                <div className="space-y-1">
+                  <DatePicker
+                    label="End Date & Time"
+                    labelPlacement="outside"
+                    variant="bordered"
+                    hideTimeZone
+                    showMonthAndYearPickers
+                    granularity="second"
+                    minValue={endMinValue}
+                    onChange={(date) =>
+                      store.setField("endDate", date ? date.toString() : "")
+                    }
+                    classNames={pickerStyles}
+                    selectorIcon={
+                      <Calendar size={16} className="text-slate-400" />
+                    }
+                  />
+                </div>
+              )}
+            </div>
           </section>
 
-          {!store.isBulkUpload && !validatePhoneCount() && (
-            <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-600 text-xs font-bold">
-              <ShieldCheck size={18} />
-              {store.passengerCount === 1
-                ? "Guest phone number is required."
-                : "At least 2 guest phone numbers are required."}
-            </div>
-          )}
+          <section className="space-y-1.5 mb-2">
+            <div className="flex justify-between items-center ">
+              <div className="flex gap-3 items-center">
+                <h3 className="font-bold uppercase text-sm flex gap-2 ">
+                  <UsersRound size={18} className="text-indigo-600" />
+                  Guest Details
+                </h3>
+                <input
+                  type="number"
+                  className="w-24 p-1 mb-1 text-center bg-slate-50 border border-slate-100 rounded-md text-sm font-bold outline-none focus:ring-2 ring-indigo-500"
+                  placeholder="Count"
+                  value={store.passengerCount}
+                  onChange={(e) =>
+                    store.setField("passengerCount", Number(e.target.value))
+                  }
+                />
+              </div>
 
-          <button className="w-full py-5 bg-indigo-600 text-white rounded-[2rem] font-black text-lg shadow-xl hover:bg-indigo-700 transition-all active:scale-95 uppercase">
-            Create Request
-          </button>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={store.isBulkUpload}
+                    onChange={(e) =>
+                      store.setField("isBulkUpload", e.target.checked)
+                    }
+                    className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <span className="text-xs font-bold text-slate-500">
+                    Bulk Upload
+                  </span>
+                </label>
+
+                {!store.isBulkUpload &&
+                  store.guests.length < Number(store.passengerCount) && (
+                    <button
+                      onClick={store.addGuest}
+                      className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100"
+                    >
+                      <Plus size={16} />
+                    </button>
+                  )}
+              </div>
+            </div>
+            <div className="rounded-2xl h-[calc(100vh-520px)] custom-scrollbar pb-1">
+              {store.isBulkUpload ? (
+                <div className="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center">
+                  <Upload className="mx-auto text-slate-300 mb-2" size={32} />
+                  <p className="text-sm font-bold text-slate-600">
+                    Upload Guest List
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {store.guests.map((guest, idx) => (
+                    <div
+                      key={idx}
+                      className={cn(
+                        "relative transition-all animate-in fade-in slide-in-from-top-1",
+                        !isMandatory(idx) && "pr-10",
+                      )}
+                    >
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Full Name Input */}
+                        <div className="flex flex-col gap-1.5 p-2 px-4 bg-slate-50 rounded-2xl border border-transparent focus-within:border-indigo-500 focus-within:border-2 shadow-sm">
+                          <label className="text-[10px] font-semibold text-indigo-600 uppercase tracking-wider">
+                            Full Name{" "}
+                            {isMandatory(idx) && (
+                              <span className="text-rose-500">*</span>
+                            )}
+                          </label>
+                          <div className="flex items-center gap-2">
+                            <User size={16} className="text-indigo-600" />
+                            <input
+                              value={guest.name}
+                              onChange={(e) =>
+                                store.updateGuest(idx, "name", e.target.value)
+                              }
+                              className="w-full bg-transparent font-medium text-sm outline-none"
+                              placeholder="Guest Name"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Phone Input with Country Selector */}
+                        <div className="flex flex-col gap-1.5 p-2 px-4 bg-slate-50 rounded-2xl border border-transparent focus-within:border-indigo-600 focus-within:border-2 shadow-sm">
+                          <label className="text-[10px] font-semibold text-indigo-600 uppercase tracking-wider">
+                            Phone Number{" "}
+                            {isMandatory(idx) && (
+                              <span className="text-rose-500">*</span>
+                            )}
+                          </label>
+                          <div className="flex items-center gap-0">
+                            <CountrySelector
+                              selectedCode={guest.country_code}
+                              onSelect={(val: string) =>
+                                store.updateGuest(idx, "country_code", val)
+                              }
+                            />
+                            <div className="h-4 w-px bg-slate-400 mx-3" />
+                            <input
+                              value={guest.phone}
+                              onChange={(e) =>
+                                store.updateGuest(idx, "phone", e.target.value)
+                              }
+                              className="w-full bg-transparent font-medium text-sm outline-none"
+                              placeholder="12345 67890"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Remove Button for optional guests */}
+                      {!isMandatory(idx) && (
+                        <button
+                          onClick={() => store.removeGuest(idx)}
+                          className="absolute right-0 top-1/2 -translate-y-1/2 text-rose-500 bg-rose-50 hover:bg-rose-100 rounded-xl p-1.5 transition-all shadow-sm"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Additional Info */}
+          <section className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-indigo-600 uppercase ml-1">
+                Luggage Details{" "}
+                <span className="text-slate-400 text-[9px]">(Optional)</span>
+              </label>
+              <textarea
+                rows={2}
+                value={store.luggageDetails}
+                onChange={(e) =>
+                  store.setField("luggageDetails", e.target.value)
+                }
+                className="w-full min-h-18 custom-scrollbar overflow-y-scroll p-2 bg-slate-50 rounded-xl text-[10px] outline-none resize-none focus-within:border-indigo-500 focus-within:border-2 shadow-sm"
+                placeholder="e.g. 2 Large bags"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-indigo-600 uppercase ml-1">
+                Special Requirements{" "}
+                <span className="text-slate-400 text-[9px]">(Optional)</span>
+              </label>
+              <textarea
+                rows={2}
+                value={store.specialRequirements}
+                onChange={(e) =>
+                  store.setField("specialRequirements", e.target.value)
+                }
+                className="w-full min-h-18 custom-scrollbar overflow-y-scroll p-2 bg-slate-50 rounded-xl text-[10px] outline-none resize-none focus-within:border-indigo-500 focus-within:border-2 shadow-sm"
+                placeholder="e.g. AC, Water bottles"
+              />
+            </div>
+          </section>
+          <div className="flex flex-1 mt-2 gap-4">
+            <Button
+              onPress={handleCancel}
+              className="w-full py-4 bg-indigo-50 text-indigo-600 rounded-xl text-lg shadow-sm hover:bg-indigo-100 transition-all active:scale-95 uppercase tracking-wider"
+            >
+              Cancel
+            </Button>
+            <Button
+              onPress={handleCreateRequest}
+              className="w-full py-4 bg-indigo-600 text-white rounded-xl text-lg shadow-sm hover:bg-indigo-500 transition-all active:scale-95 uppercase tracking-wider"
+            >
+              Create Request
+            </Button>
+          </div>
         </div>
       </div>
     </div>
