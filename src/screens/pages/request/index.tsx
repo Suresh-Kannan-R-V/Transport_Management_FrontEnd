@@ -44,7 +44,7 @@ const RequestPage = () => {
   ];
 
   return (
-    <div className="p-1 sm:p-8 animate-in fade-in duration-500 ">
+    <div className="p-1 sm:pb-0 sm:p-4 animate-in fade-in duration-500 ">
       <div className="flex justify-between items-center mb-4">
         <div>
           <p className="text-indigo-500 text-[10px] uppercase tracking-widest font-extrabold">
@@ -96,15 +96,7 @@ const RequestPage = () => {
           </div>
           {loading ? (
             <div className="h-[calc(100vh-380px)] overflow-hidden">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {[...Array(2)].map((_, i) => (
-                  <Skeleton
-                    key={i}
-                    isLoaded={lo}
-                    className="rounded-4xl h-48"
-                  ></Skeleton>
-                ))}
-              </div>
+              
             </div>
           ) : (
             <>
