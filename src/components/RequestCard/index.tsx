@@ -7,8 +7,10 @@ import {
   Users,
 } from "lucide-react";
 import { cn, formatDateTime } from "../../utils/helper";
+import { useNavigate } from "react-router-dom";
 
 export const RequestCard = ({ item }: { item: any }) => {
+  const navigate = useNavigate();
   // Map backend "pending" to "Pending" etc for your CSS logic
   const displayStatus =
     item.status.charAt(0).toUpperCase() + item.status.slice(1);
@@ -18,9 +20,15 @@ export const RequestCard = ({ item }: { item: any }) => {
     year: "numeric",
   });
 
+  const handleCardClick = () => {
+    const hashedId = btoa(item.id.toString());
+    navigate(`/request/view-request/${hashedId}`);
+  };
+
   return (
     <Card
       isPressable
+      onPress={handleCardClick}
       className="bg-white duration-200 rounded-4xl shadow-md border border-slate-200 hover:border hover:border-indigo-400 overflow-hidden flex flex-col h-full"
     >
       <div>
@@ -52,6 +60,13 @@ export const RequestCard = ({ item }: { item: any }) => {
 
         <div className="relative px-5 pt-3 pb-2 pl-5 space-y-6 mb-1">
           <div className="absolute left-6.5 top-5 h-14 border-l-2 border-dashed border-slate-300" />
+          {/* {item.intermediateStops.length != 0 && (
+            <div className="absolute left-14 top-10.5 flex gap-2">
+              <div className="size-1.5 rounded-full bg-indigo-600 animate-pulse" />
+              <div className="size-1.5 rounded-full bg-indigo-600 animate-pulse" />
+              <div className="size-1.5 rounded-full bg-indigo-600 animate-pulse" />
+            </div>
+          )} */}
           <div>
             <div className="relative">
               <div className="absolute top-1 size-3 rounded-full border-[3px] border-white bg-indigo-500 shadow-[0_0_0_2px_rgba(99,102,241)]" />
@@ -73,9 +88,9 @@ export const RequestCard = ({ item }: { item: any }) => {
                 <h4 className="font-bold text-xs sm:text-sm pt-0.5 ml-7 w-60 text-left truncate">
                   {item.destinationLocation}
                 </h4>
-                <span className="text-[10px] sm:text-xs font-bold text-slate-400">
+                {/* <span className="text-[10px] sm:text-xs font-bold text-slate-400">
                   {formatDateTime(item.start_datetime)}
-                </span>
+                </span> */}
               </div>
             </div>
           </div>

@@ -446,13 +446,13 @@ const NewRequest = () => {
           <div className="flex flex-1 mt-2 gap-4">
             <Button
               onPress={handleCancel}
-              className="w-full py-4 bg-indigo-50 text-indigo-600 rounded-xl text-lg shadow-sm hover:bg-indigo-100 transition-all active:scale-95 uppercase tracking-wider"
+              className="w-full py-4 bg-indigo-50 text-indigo-600 rounded-xl text-lg shadow-sm hover:bg-indigo-100 transition-all active:scale-95 tracking-wider"
             >
               Cancel
             </Button>
             <Button
               onPress={handleCreateRequest}
-              className="w-full py-4 bg-indigo-600 text-white rounded-xl text-lg shadow-sm hover:bg-indigo-500 transition-all active:scale-95 uppercase tracking-wider"
+              className="w-full py-4 bg-indigo-600 text-white rounded-xl text-lg shadow-sm hover:bg-indigo-500 transition-all active:scale-95 tracking-wider"
             >
               Create Request
             </Button>

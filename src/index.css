@@ -11,8 +11,8 @@
 @layer base {
   :root {
     /* Background / Foreground */
-    --background: #0d1b4c;
-    --foreground: #e2e8f0;
+    --background: #ffffff;
+    --foreground: #0f172a;
 
     /* Primary (#0d1b4c inspired scale) */
     --primary-50: #edf6ff;
@@ -92,7 +92,6 @@
    ===================================================== */
 @layer base {
   * {
-    @apply border-primary-900 outline-primary-300/50;
   }
 
   body {

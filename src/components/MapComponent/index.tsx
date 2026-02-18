@@ -1,16 +1,15 @@
-import { useMemo, useEffect, useState } from "react";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  useMap,
-  Polyline,
-} from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { useEffect, useState } from "react";
+import {
+  MapContainer,
+  Marker,
+  Polyline,
+  TileLayer,
+  useMap,
+} from "react-leaflet";
 import { useRequestCreationStore } from "../../store";
 
-// --- Custom Icon Helpers ---
 const createIcon = (color: string) => {
   return new L.Icon({
     iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
@@ -36,7 +35,6 @@ interface Stop {
   address?: string;
 }
 
-// Automatically fits the map view to show all markers
 const MapAutoCenter = ({ stops }: { stops: Stop[] }) => {
   const map = useMap();
   useEffect(() => {
@@ -78,8 +76,6 @@ const MapViewer = ({ stops }: { stops: Stop[] }) => {
               [coord[1], coord[0]] as [number, number],
           );
           setRoadPath(routeCoords);
-
-          // Correct way to update the store with actual OSRM data
           setRouteMetrics(route.distance, route.duration);
         }
       } catch (error) {
@@ -96,11 +92,10 @@ const MapViewer = ({ stops }: { stops: Stop[] }) => {
       zoom={13}
       zoomControl={false}
       attributionControl={false}
-      style={{ height: "100%", width: "100%" }}
+      style={{ height: "100%", width: "100%",zIndex:10 }}
     >
       <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
 
-      {/* Draw the Actual Road Route Line */}
       {roadPath.length > 0 && (
         <Polyline
           positions={roadPath}
@@ -110,7 +105,6 @@ const MapViewer = ({ stops }: { stops: Stop[] }) => {
         />
       )}
 
-      {/* Render Markers */}
       {stops.map((stop, idx) => {
         if (!stop.lat || !stop.lon) return null;
 

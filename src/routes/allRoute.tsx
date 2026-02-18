@@ -15,6 +15,7 @@ import {
   WebQrLogin,
 } from "../screens";
 import VehicleManagement from "../screens/pages/setting/vehicleManagement";
+import ViewRequest from "../screens/pages/request/viewRequest";
 
 const privateRoutes = [
   {
@@ -44,6 +45,10 @@ const privateRoutes = [
   {
     path: "request/new-request",
     element: <NewRequest />,
+  },
+  {
+    path: "request/view-request/:id",
+    element: <ViewRequest />,
   },
   {
     path: "request/leave-approve",

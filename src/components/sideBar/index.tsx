@@ -105,7 +105,7 @@ export default function Sidebar({ className }: { className?: string }) {
             <div className="flex gap-3 mt-8">
               <button
                 onClick={() => setShowLogout(false)}
-                className="cursor-pointer flex-1 px-4 py-2.5 text-sm font-medium text-indigo-500 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-800 rounded-lg transition-colors"
+                className="cursor-pointer flex-1 px-4 py-2.5 text-sm font-medium text-indigo-600 bg-indigo-100 hover:bg-indigo-50 rounded-lg transition-colors"
               >
                 Cancel
               </button>

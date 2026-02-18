@@ -1,15 +1,20 @@
-import { Button, Card, Pagination, Skeleton, Spinner } from "@heroui/react";
+import { Button, Card, Pagination } from "@heroui/react";
 import { ChevronRight, FilterIcon, Plus, Search, User } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { RequestCard } from "../../../components";
-import { cn } from "../../../utils/helper";
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  CustomPagination,
+  RequestCard,
+  TransportLoader,
+} from "../../../components";
 import { useRequestPageStore } from "../../../store";
+import { cn } from "../../../utils/helper";
 
 const RequestPage = () => {
   const navigate = useNavigate();
   const {
     items,
+    totalItems,
     loading,
     totalPages,
     currentPage,
@@ -44,8 +49,8 @@ const RequestPage = () => {
   ];
 
   return (
-    <div className="p-1 sm:p-8 animate-in fade-in duration-500 ">
-      <div className="flex justify-between items-center mb-4">
+    <div className="p-1 sm:p-4 sm:pb-0 animate-in fade-in duration-500 h-full">
+      <div className="flex justify-between items-center mb-1">
         <div>
           <p className="text-indigo-500 text-[10px] uppercase tracking-widest font-extrabold">
             Transport System
@@ -96,39 +101,24 @@ const RequestPage = () => {
           </div>
           {loading ? (
             <div className="h-[calc(100vh-380px)] overflow-hidden">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {[...Array(2)].map((_, i) => (
-                  <Skeleton
-                    key={i}
-                    isLoaded={lo}
-                    className="rounded-4xl h-48"
-                  ></Skeleton>
-                ))}
-              </div>
+              <TransportLoader size={60} />
             </div>
           ) : (
             <>
-              <div className="h-[calc(100vh-380px)] custom-scrollbar">
+              <div className="h-[calc(100vh-300px)] custom-scrollbar">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 ">
                   {items.map((req) => (
                     <RequestCard key={req.id} item={req} />
                   ))}
                 </div>
               </div>
-              <div className="flex justify-center mt-2 w-full">
-                <Pagination
-                  total={totalPages}
-                  initialPage={1}
-                  page={currentPage}
-                  onChange={(page) => setPage(page)}
-                  classNames={{
-                    wrapper: "gap-2",
-                    item: "bg-white text-slate-600 border border-slate-200 rounded-xl hover:bg-indigo-50",
-                    cursor:
-                      "bg-indigo-100 text-indigo-600 font-bold rounded-lg",
-                  }}
-                />
-              </div>
+              <CustomPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={totalItems || items.length}
+                limit={10}
+                onPageChange={(page) => setPage(page)}
+              />
             </>
           )}
         </div>
