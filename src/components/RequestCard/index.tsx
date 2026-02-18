@@ -66,7 +66,7 @@ export const RequestCard = ({ item }: { item: any }) => {
                 <h4 className="font-bold text-xs sm:text-sm w-60 text-left truncate">
                   {item.startLocation}
                 </h4>
-                <span className="text-[10px] sm:text-xs font-bold text-slate-400">
+                <span className="text-[8px] sm:text-[8px] font-semibold text-slate-400">
                   {formatDateTime(item.start_datetime)}
                 </span>
               </div>
