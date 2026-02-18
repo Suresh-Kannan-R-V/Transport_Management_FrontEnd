@@ -1,30 +1,29 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { Button, Card, Chip } from "@heroui/react";
-import {
-  Calendar,
-  Clock,
-  MapPin,
-  Users,
-  Navigation,
-  Phone,
-  User,
-  Briefcase,
-  Mail,
-  ShieldCheck,
-  Car,
-  Info,
-  MessageSquare,
-  Copy,
-  Trash2,
-} from "lucide-react";
-import { cn, formatDateTime, geocodeLocations } from "../../../../utils/helper";
+import { Button } from "@heroui/react";
 import axios from "axios";
+import {
+  Briefcase,
+  Calendar,
+  Car,
+  Clock,
+  Copy,
+  Info,
+  Mail,
+  MapPin,
+  MessageSquare,
+  Phone,
+  ShieldCheck,
+  Trash2,
+  User,
+  Users
+} from "lucide-react";
+import React, { useCallback, useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import { useNavigate, useParams } from "react-router-dom";
+import { FILE_BASE_URL } from "../../../../api/base";
 import { BackButton, TransportLoader } from "../../../../components";
 import MapViewer from "../../../../components/MapComponent";
-import toast from "react-hot-toast";
 import { useUserStore } from "../../../../store";
-import { FILE_BASE_URL } from "../../../../api/base";
+import { cn, formatDateTime, geocodeLocations } from "../../../../utils/helper";
 
 export interface MappedStop {
   id: string;

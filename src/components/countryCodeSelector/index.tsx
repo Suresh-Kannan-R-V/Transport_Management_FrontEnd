@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Search, ChevronDown, X } from "lucide-react";
+import { ChevronDown, Search } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export const CountrySelector = ({ selectedCode, onSelect }: any) => {
   const [countries, setCountries] = useState([]);

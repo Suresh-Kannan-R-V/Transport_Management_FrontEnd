@@ -1,4 +1,4 @@
-import { Button, Card, Pagination } from "@heroui/react";
+import { Button, Card } from "@heroui/react";
 import { ChevronRight, FilterIcon, Plus, Search, User } from "lucide-react";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";

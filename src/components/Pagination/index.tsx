@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Pagination } from "@heroui/react";
 
 interface CustomPaginationProps {
@@ -12,7 +13,7 @@ export const CustomPagination = ({
   currentPage,
   totalPages,
   totalItems,
-  limit = 10,
+  // limit = 10,
   onPageChange,
 }: CustomPaginationProps) => {
   if (totalItems === 0) return null;

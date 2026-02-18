@@ -11,14 +11,6 @@ import { useNavigate } from "react-router-dom";
 
 export const RequestCard = ({ item }: { item: any }) => {
   const navigate = useNavigate();
-  // Map backend "pending" to "Pending" etc for your CSS logic
-  const displayStatus =
-    item.status.charAt(0).toUpperCase() + item.status.slice(1);
-  const formattedDate = new Date(item.start).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
 
   const handleCardClick = () => {
     const hashedId = btoa(item.id.toString());

@@ -88,20 +88,20 @@ const MapViewer = ({ stops }: { stops: Stop[] }) => {
 
   return (
     <MapContainer
-      center={[11.4965, 77.2764]}
-      zoom={13}
-      zoomControl={false}
-      attributionControl={false}
-      style={{ height: "100%", width: "100%",zIndex:10 }}
+      {...({
+        center: [11.4965, 77.2764],
+        zoom: 13,
+        zoomControl: false,
+        attributionControl: false,
+      } as any)}
+      style={{ height: "100%", width: "100%", zIndex: 10 }}
     >
       <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
 
       {roadPath.length > 0 && (
         <Polyline
           positions={roadPath}
-          color="#4f46e5"
-          weight={5}
-          opacity={0.8}
+          pathOptions={{ color: "#4f46e5", weight: 5, opacity: 0.8 }}
         />
       )}
 
@@ -113,7 +113,11 @@ const MapViewer = ({ stops }: { stops: Stop[] }) => {
         else if (idx === stops.length - 1) icon = icons.end;
 
         return (
-          <Marker key={stop.id} position={[stop.lat, stop.lon]} icon={icon} />
+          <Marker
+            key={stop.id}
+            position={[stop.lat, stop.lon]}
+            icon={icon as any}
+          />
         );
       })}
 
