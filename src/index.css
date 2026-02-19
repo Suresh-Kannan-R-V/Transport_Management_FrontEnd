@@ -165,7 +165,8 @@
     }
 
     &::-webkit-scrollbar-thumb {
-      background-color: #4f46e5;
+      background-color: #a9a4fe;
+      /* background-color: #4f46e5; */
       border-radius: 9999px;
     }
 

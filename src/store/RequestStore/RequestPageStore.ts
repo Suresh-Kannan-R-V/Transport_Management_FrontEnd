@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { FILE_BASE_URL } from "../../api/base";
 
+let searchTimeout: ReturnType<typeof setTimeout>;
+
 interface RequestItem {
   id: number;
   routeName: string;
@@ -25,8 +27,10 @@ interface RequestPageState {
   search: string;
   statusFilter: string;
   travelTypeFilter: string;
+  sortBy: string;
+  sortOrder: "ASC" | "DESC";
 
-  // Actions
+  setSort: (column: string, order?: "ASC" | "DESC") => void;
   setSearch: (val: string) => void;
   setFilters: (status?: string, type?: string) => void;
   setPage: (page: number) => void;
@@ -42,18 +46,16 @@ export const useRequestPageStore = create<RequestPageState>((set, get) => ({
   search: "",
   statusFilter: "",
   travelTypeFilter: "",
-
-  setSearch: (search) => {
-    set({ search, currentPage: 1 });
-    get().fetchRequests();
-  },
+  sortBy: "created_at",
+  sortOrder: "DESC",
 
   setFilters: (status, type) => {
     set({
-      statusFilter: status ?? get().statusFilter,
-      travelTypeFilter: type ?? get().travelTypeFilter,
+      statusFilter: status ?? "",
+      travelTypeFilter: type ?? "",
       currentPage: 1,
     });
+
     get().fetchRequests();
   },
 
@@ -62,13 +64,41 @@ export const useRequestPageStore = create<RequestPageState>((set, get) => ({
     get().fetchRequests();
   },
 
+  setSearch: (search) => {
+    set({ search, currentPage: 1 });
+
+    clearTimeout(searchTimeout);
+
+    searchTimeout = setTimeout(() => {
+      get().fetchRequests();
+    }, 500);
+  },
+
+  setSort: (column, order) => {
+    const newOrder =
+      order ??
+      (get().sortBy === column && get().sortOrder === "DESC" ? "ASC" : "DESC");
+
+    set({ sortBy: column, sortOrder: newOrder, currentPage: 1 });
+    get().fetchRequests();
+  },
+
   fetchRequests: async () => {
     set({ loading: true });
-    const { currentPage, search, statusFilter, travelTypeFilter } = get();
+    const {
+      currentPage,
+      search,
+      statusFilter,
+      travelTypeFilter,
+      sortBy,
+      sortOrder,
+    } = get();
 
     const params = new URLSearchParams({
       page: currentPage.toString(),
-      limit: "6", // Show 6 cards per page for grid balance
+      limit: "8",
+      sortBy,
+      sortOrder,
       ...(search && { search }),
       ...(statusFilter && { status: statusFilter }),
       ...(travelTypeFilter && { travel_type: travelTypeFilter }),
@@ -78,9 +108,7 @@ export const useRequestPageStore = create<RequestPageState>((set, get) => ({
       const response = await fetch(
         `${FILE_BASE_URL}/request/get-all?${params}`,
         {
-          headers: {
-            Authorization: `TMS ${localStorage.getItem("token")}`,
-          },
+          headers: { Authorization: `TMS ${localStorage.getItem("token")}` },
         },
       );
       const data = await response.json();
@@ -92,7 +120,7 @@ export const useRequestPageStore = create<RequestPageState>((set, get) => ({
         });
       }
     } catch (error) {
-      console.error("Fetch error:", error);
+      console.error(error);
     } finally {
       set({ loading: false });
     }

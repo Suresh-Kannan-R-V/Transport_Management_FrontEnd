@@ -14,7 +14,7 @@ import {
   ShieldCheck,
   Trash2,
   User,
-  Users
+  Users,
 } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -167,15 +167,6 @@ const ViewRequest = () => {
   const handleAction = async (action: "cancel" | "uncancel" | "delete") => {
     const realId = atob(id || "");
 
-    const confirmMsg =
-      action === "delete"
-        ? "Are you sure you want to permanently delete this request?"
-        : action === "cancel"
-          ? "Do you want to cancel this transport request?"
-          : "Do you want to re-activate (unCancel) this request?";
-
-    if (!window.confirm(confirmMsg)) return;
-
     try {
       const config = {
         headers: { Authorization: `TMS ${localStorage.getItem("token")}` },
@@ -312,9 +303,21 @@ const ViewRequest = () => {
           </div>
 
           <div className="p-3 px-4 pb-5 rounded-3xl bg-white shadow-md border border-slate-100">
-            <h2 className="text-lg font-bold text-slate-800 mb-2 flex items-center gap-2">
-              <MapPin className="text-indigo-600" size={20} /> Route Plan
-            </h2>
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-bold text-slate-800 mb-2 flex items-center gap-2">
+                <MapPin className="text-indigo-600" size={20} /> Route Plan
+              </h2>
+              <div className="flex gap-2">
+                <p className="text-slate-500 text-xs font-medium flex items-center gap-1">
+                  <span className="text-indigo-600 font-bold">Start Date:</span>
+                  {formatDateTime(data.created_at)}
+                </p>
+                <p className="text-slate-500 text-xs font-medium flex items-center gap-1">
+                  <span className="text-indigo-600 font-bold">End Date:</span>
+                  {formatDateTime(data.created_at)}
+                </p>
+              </div>
+            </div>
             <div className="relative space-y-8 pl-2">
               {mappedStops.map((stop, idx) => (
                 <div key={stop.id} className="flex gap-4 relative">

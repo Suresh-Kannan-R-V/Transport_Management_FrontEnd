@@ -1,5 +1,19 @@
-import { Button, Card } from "@heroui/react";
-import { ChevronRight, FilterIcon, Plus, Search, User } from "lucide-react";
+import {
+  Button,
+  Card,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+} from "@heroui/react";
+import {
+  ChevronRight,
+  FilterIcon,
+  Plus,
+  RefreshCcw,
+  Search,
+  User,
+} from "lucide-react";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -20,8 +34,14 @@ const RequestPage = () => {
     currentPage,
     setPage,
     setSearch,
+    setSort,
+    setFilters,
     fetchRequests,
   } = useRequestPageStore();
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+  };
 
   useEffect(() => {
     fetchRequests();
@@ -49,7 +69,7 @@ const RequestPage = () => {
   ];
 
   return (
-    <div className="p-1 sm:p-4 sm:pb-0 animate-in fade-in duration-500 h-full">
+    <div className="p-1 sm:p-4 sm:pb-0 sm:pt-2 animate-in fade-in duration-500 h-full">
       <div className="flex justify-between items-center mb-1">
         <div>
           <p className="text-indigo-500 text-[10px] uppercase tracking-widest font-extrabold">
@@ -68,7 +88,7 @@ const RequestPage = () => {
             <input
               type="text"
               placeholder="Quick search missions..."
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={handleSearchChange}
               className="pl-12 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-sm w-72 shadow-sm"
             />
           </div>
@@ -82,21 +102,73 @@ const RequestPage = () => {
         </div>
       </div>
       <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-12 lg:col-span-8 ">
-          <div className="flex justify-between items-center mb-3">
+        <div className="col-span-12 lg:col-span-9 ">
+          <div className="flex justify-between items-center mb-1">
             <h2 className="text-xl font-semibold text-slate-500">
               Active Requests
             </h2>
             <div className="flex gap-2">
               <Button
                 isIconOnly
-                startContent={<FilterIcon size={18} />}
-                className="border border-slate-300 text-slate-500 p-0 rounded-lg hover:text-indigo-600 cursor-pointer"
+                onPress={() => fetchRequests()}
+                variant="flat"
+                className="bg-white border border-slate-200 text-slate-600 font-semibold rounded-xl h-9 text-xs"
+                startContent={<RefreshCcw size={16} strokeWidth={2} />}
               />
-
-              <Button className="flex items-center gap-1 text-indigo-500 rounded-lg font-semibold text-xs hover:underline hover:text-indigo-600 cursor-pointer duration-200">
-                View All <ChevronRight size={16} />
-              </Button>
+              <Dropdown>
+                <DropdownTrigger>
+                  <Button
+                    variant="flat"
+                    className="bg-white border border-slate-200 text-slate-600 font-semibold rounded-xl h-9 text-xs"
+                    startContent={<FilterIcon size={16} />}
+                  >
+                    Filter & Sort
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu
+                  aria-label="Sort and Filter"
+                  className="min-w-40 bg-white shadow-md rounded-2xl border border-slate-300 -translate-x-18"
+                  classNames={{
+                    base: "p-2",
+                    list: "gap-1",
+                  }}
+                  itemClasses={{
+                    base: [
+                      "rounded-xl text-slate-600 transition-opacity data-[hover=true]:text-indigo-600 data-[hover=true]:bg-indigo-50 data-[selectable=true]:focus:bg-indigo-500 data-[selected=true]:bg-indigo-500 data-[selected=true]:text-white",
+                    ],
+                  }}
+                >
+                  <DropdownItem
+                    key="date-desc"
+                    onClick={() => setSort("created_at")}
+                  >
+                    Newest First
+                  </DropdownItem>
+                  <DropdownItem
+                    key="name-asc"
+                    onClick={() => setSort("route_name", "ASC")}
+                  >
+                    Name (A-Z)
+                  </DropdownItem>
+                  <DropdownItem
+                    key="status-pending"
+                    onClick={() => setFilters("pending", undefined)}
+                  >
+                    Only Pending
+                  </DropdownItem>
+                  <DropdownItem
+                    key="reset"
+                    color="danger"
+                    onClick={() => {
+                      setSearch("");
+                      setFilters("", "");
+                      setSort("created_at");
+                    }}
+                  >
+                    Reset Filters
+                  </DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
             </div>
           </div>
           {loading ? (
@@ -105,7 +177,7 @@ const RequestPage = () => {
             </div>
           ) : (
             <>
-              <div className="h-[calc(100vh-300px)] custom-scrollbar">
+              <div className="h-[calc(100vh-310px)] custom-scrollbar p-1 pr-2">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 ">
                   {items.map((req) => (
                     <RequestCard key={req.id} item={req} />
@@ -115,57 +187,60 @@ const RequestPage = () => {
               <CustomPagination
                 currentPage={currentPage}
                 totalPages={totalPages}
-                totalItems={totalItems || items.length}
+                totalItems={totalItems}
                 limit={10}
-                onPageChange={(page) => setPage(page)}
+                onPageChange={setPage}
               />
             </>
           )}
         </div>
 
-        <div className="col-span-12 lg:col-span-4">
-          <div className="flex justify-between items-center mb-2">
+        <div className="col-span-12 lg:col-span-3">
+          <div className="flex justify-between items-center mb-1">
             <h2 className="text-xl font-semibold text-slate-500">
               Leaves Request
             </h2>
             <Button
+              size="sm"
               onPress={() => navigate("/request/leave-approve")}
-              className="flex items-center gap-1 text-indigo-500 font-semibold rounded-lg text-xs hover:underline hover:text-indigo-600 cursor-pointer duration-200"
+              className="flex items-center pr-0 gap-1 text-indigo-500 font-semibold rounded-lg text-xs hover:underline hover:text-indigo-600 cursor-pointer duration-200"
             >
               View All <ChevronRight size={16} />
             </Button>
           </div>
 
-          <div className="space-y-3">
+          <div className="bg-slate-100/50 p-3 rounded-3xl border border-white space-y-2 shadow-inner">
             {leaves.map((leave, idx) => (
               <Card
                 isPressable
                 key={idx}
-                className="bg-white p-3 rounded-3xl duration-200 border border-slate-100 hover:border-indigo-500 shadow-sm w-full "
+                className="bg-white p-3 rounded-2xl border border-slate-200/60 hover:border-indigo-400 hover:shadow-md transition-all w-full"
               >
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-4">
-                    <div className="bg-indigo-100 p-3 rounded-2xl text-indigo-600">
-                      <User size={20} />
+                <div className="flex justify-between items-center w-full">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-indigo-100 p-2 rounded-lg text-indigo-600 shadow-sm">
+                      <User size={18} />
                     </div>
                     <div className="text-left">
-                      <h4 className="font-bold text-slate-800">{leave.name}</h4>
-                      <p className="text-xs font-semibold text-slate-400">
-                        {leave.duration} ({leave.days})
+                      <h4 className="font-bold text-slate-800 leading-tight">
+                        {leave.name}
+                      </h4>
+                      <p className="text-[10px] font-medium text-slate-500">
+                        {leave.duration} •{" "}
+                        <span className="text-indigo-600">{leave.days}</span>
                       </p>
                     </div>
                   </div>
-                  <div>
-                    <p
-                      className={cn(
-                        "px-3 pt-1 rounded-full text-[11px] font-semibold shadow-sm bg-orange-100 text-orange-500",
-                        leave.status === "Approved" &&
-                          "bg-green-50 text-green-600",
-                      )}
-                    >
-                      {leave.status}
-                    </p>
-                  </div>
+                  <span
+                    className={cn(
+                      "px-3 py-1 rounded-full text-[10px] font-bold capitalize tracking-wider shadow-sm",
+                      leave.status === "Approved"
+                        ? "bg-green-50 text-green-600"
+                        : "bg-orange-50 text-orange-400",
+                    )}
+                  >
+                    {leave.status}
+                  </span>
                 </div>
               </Card>
             ))}

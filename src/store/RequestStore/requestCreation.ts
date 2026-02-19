@@ -236,6 +236,8 @@ export const useRequestCreationStore = create<RequestState>((set, get) => ({
         luggage_details: state.luggageDetails,
       },
     };
+    console.log(payload);
+    
 
     try {
       const response = await fetch(

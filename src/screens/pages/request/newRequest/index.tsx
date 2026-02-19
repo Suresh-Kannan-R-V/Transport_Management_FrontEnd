@@ -26,7 +26,7 @@ import MapViewer from "../../../../components/MapComponent";
 import { cn } from "../../../../utils/helper";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useRequestCreationStore } from "../../../../store";
 
 const NewRequest = () => {
@@ -35,14 +35,20 @@ const NewRequest = () => {
   const navigate = useNavigate();
   const currentDateTime = useMemo(() => now(getLocalTimeZone()), []);
 
+  const parseToZoned = useCallback((dateStr: string | null) => {
+    if (!dateStr || dateStr === "") return null;
+    try {
+      return parseAbsoluteToLocal(new Date(dateStr).toISOString());
+    } catch (e) {
+      console.error("Date parsing error:", e);
+      return null;
+    }
+  }, []);
+
   const endMinValue = useMemo(() => {
     if (!store.startDate) return currentDateTime;
-    try {
-      return parseAbsoluteToLocal(new Date(store.startDate).toISOString());
-    } catch {
-      return currentDateTime;
-    }
-  }, [store.startDate, currentDateTime]);
+    return parseToZoned(store.startDate) || currentDateTime;
+  }, [store.startDate, currentDateTime, parseToZoned]);
 
   const pickerStyles = {
     label: "text-[10px] font-bold text-indigo-600 uppercase ml-1",
@@ -206,8 +212,8 @@ const NewRequest = () => {
         </div>
       </div>
 
-      <div className="lg:col-span-7 flex flex-col overflow-hidden">
-        <div className="flex-1 rounded-3xl px-2 pt-1 overflow-y-auto custom-scrollbar">
+      <div className="lg:col-span-7 flex flex-col overflow-hidden h-full">
+        <div className="rounded-3xl px-2 pt-1 h-[calc(100vh-190px)] pb-2 custom-scrollbar overflow-y-scroll">
           <input
             className="w-full mb-4 p-3 shadow-sm bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-indigo-500"
             placeholder="Route Name"
@@ -246,11 +252,12 @@ const NewRequest = () => {
                   labelPlacement="outside"
                   showMonthAndYearPickers
                   hideTimeZone
-                  defaultValue={now(getLocalTimeZone())}
+                  value={parseToZoned(store.startDate)}
                   minValue={currentDateTime}
-                  onChange={(date) =>
-                    store.setField("startDate", date ? date.toString() : "")
-                  }
+                  onChange={(date) => {
+                    const dateString = date ? date.toDate().toISOString() : "";
+                    store.setField("startDate", dateString);
+                  }}
                   classNames={pickerStyles}
                   selectorIcon={
                     <Calendar size={16} className="text-indigo-600" />
@@ -258,20 +265,21 @@ const NewRequest = () => {
                 />
               </div>
 
-              {/* End Date & Time (Only for Multi Day) */}
               {store.travelType === "Multi Day" && (
                 <div className="space-y-1">
                   <DatePicker
                     label="End Date & Time"
                     labelPlacement="outside"
-                    variant="bordered"
                     hideTimeZone
                     showMonthAndYearPickers
-                    granularity="second"
+                    value={parseToZoned(store.endDate)}
                     minValue={endMinValue}
-                    onChange={(date) =>
-                      store.setField("endDate", date ? date.toString() : "")
-                    }
+                    onChange={(date) => {
+                      const dateString = date
+                        ? date.toDate().toISOString()
+                        : "";
+                      store.setField("endDate", dateString);
+                    }}
                     classNames={pickerStyles}
                     selectorIcon={
                       <Calendar size={16} className="text-slate-400" />
@@ -326,7 +334,7 @@ const NewRequest = () => {
                   )}
               </div>
             </div>
-            <div className="rounded-2xl h-[calc(100vh-520px)] custom-scrollbar pb-1">
+            <div className="rounded-2xl min-h-44">
               {store.isBulkUpload ? (
                 <div className="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center">
                   <Upload className="mx-auto text-slate-300 mb-2" size={32} />
@@ -443,20 +451,20 @@ const NewRequest = () => {
               />
             </div>
           </section>
-          <div className="flex flex-1 mt-2 gap-4">
-            <Button
-              onPress={handleCancel}
-              className="w-full py-4 bg-indigo-50 text-indigo-600 rounded-xl text-lg shadow-sm hover:bg-indigo-100 transition-all active:scale-95 tracking-wider"
-            >
-              Cancel
-            </Button>
-            <Button
-              onPress={handleCreateRequest}
-              className="w-full py-4 bg-indigo-600 text-white rounded-xl text-lg shadow-sm hover:bg-indigo-500 transition-all active:scale-95 tracking-wider"
-            >
-              Create Request
-            </Button>
-          </div>
+        </div>
+        <div className="flex flex-1 mt-2 gap-4">
+          <Button
+            onPress={handleCancel}
+            className="w-full py-4 bg-indigo-50 text-indigo-600 rounded-xl text-lg shadow-sm hover:bg-indigo-100 transition-all active:scale-95 tracking-wider"
+          >
+            Cancel
+          </Button>
+          <Button
+            onPress={handleCreateRequest}
+            className="w-full py-4 bg-indigo-600 text-white rounded-xl text-lg shadow-sm hover:bg-indigo-500 transition-all active:scale-95 tracking-wider"
+          >
+            Create Request
+          </Button>
         </div>
       </div>
     </div>

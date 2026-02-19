@@ -30,7 +30,7 @@ export const RequestCard = ({ item }: { item: any }) => {
               <UserCircle className="text-indigo-600" size={20} />
             </div>
             <div>
-              <h3 className="font-bold text-sm sm:text-base leading-tight truncate">
+              <h3 className="font-bold text-sm sm:text-base leading-tight truncate uppercase">
                 {item.routeName}
               </h3>
               <p className="text-[10px] sm:text-[11px] text-left font-semibold text-slate-400 tracking-widest uppercase">
@@ -40,9 +40,9 @@ export const RequestCard = ({ item }: { item: any }) => {
           </div>
           <p
             className={cn(
-              "px-3 py-0.5 rounded-full text-[11px] font-semibold shadow-sm",
+              "px-3 py-0.5 rounded-full text-[11px] font-semibold shadow-sm capitalize",
               item.status === "Confirmed" && "bg-green-50 text-green-600",
-              item.status === "pending" && "bg-orange-100 text-orange-500",
+              item.status === "pending" && "bg-orange-50 text-orange-400",
               item.status === "Assign" && "bg-red-50 text-red-500",
             )}
           >
@@ -51,14 +51,12 @@ export const RequestCard = ({ item }: { item: any }) => {
         </div>
 
         <div className="relative px-5 pt-3 pb-2 pl-5 space-y-6 mb-1">
-          <div className="absolute left-6.5 top-5 h-14 border-l-2 border-dashed border-slate-300" />
-          {/* {item.intermediateStops.length != 0 && (
-            <div className="absolute left-14 top-10.5 flex gap-2">
-              <div className="size-1.5 rounded-full bg-indigo-600 animate-pulse" />
-              <div className="size-1.5 rounded-full bg-indigo-600 animate-pulse" />
+          <div className="absolute left-6.25 top-5 h-14 border-l-2 border-dashed border-slate-300" />
+          {item.intermediateStops.length != 0 && (
+            <div className="absolute left-6 top-10 flex gap-2">
               <div className="size-1.5 rounded-full bg-indigo-600 animate-pulse" />
             </div>
-          )} */}
+          )}
           <div>
             <div className="relative">
               <div className="absolute top-1 size-3 rounded-full border-[3px] border-white bg-indigo-500 shadow-[0_0_0_2px_rgba(99,102,241)]" />
@@ -80,9 +78,11 @@ export const RequestCard = ({ item }: { item: any }) => {
                 <h4 className="font-bold text-xs sm:text-sm pt-0.5 ml-7 w-60 text-left truncate">
                   {item.destinationLocation}
                 </h4>
-                <span className="text-[9px] sm:text-[10px] font-bold text-slate-400">
-                  {formatDateTime(item.start_datetime)}
-                </span>
+                {item.end_datetime && item.travelType === "Multi Day" && (
+                  <span className="text-[9px] sm:text-[10px] font-bold text-slate-400">
+                    {formatDateTime(item.end_datetime)}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -96,7 +96,7 @@ export const RequestCard = ({ item }: { item: any }) => {
             {item.passengerCount} Guests
           </span>
         </div>
-        <div className="flex items-center gap-2.5 text-slate-500">
+        <div className="flex items-center gap-2.5 text-slate-500 capitalize">
           <ArrowRightLeft size={18} strokeWidth={2} />
           <span className="text-xs font-bold tracking-wide">
             {item.travelType}

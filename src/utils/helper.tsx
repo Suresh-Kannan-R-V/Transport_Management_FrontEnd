@@ -93,7 +93,7 @@ export const formatDateTime = (dateString: string) => {
     month: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-    hour12: false,
+    hour12: true,
   })
     .format(date)
     .replace(",", " -")
