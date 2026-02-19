@@ -1,4 +1,4 @@
-import { Button } from "@heroui/react";
+import { Button, Tooltip } from "@heroui/react";
 import axios from "axios";
 import {
   Briefcase,
@@ -10,6 +10,7 @@ import {
   Mail,
   MapPin,
   MessageSquare,
+  MousePointerClick,
   Phone,
   ShieldCheck,
   Trash2,
@@ -24,6 +25,7 @@ import { BackButton, TransportLoader } from "../../../../components";
 import MapViewer from "../../../../components/MapComponent";
 import { useUserStore } from "../../../../store";
 import { cn, formatDateTime, geocodeLocations } from "../../../../utils/helper";
+import { VehicleAssignmentPopup } from "../assignVechicle";
 
 export interface MappedStop {
   id: string;
@@ -127,6 +129,14 @@ const ViewRequest = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [mappedStops, setMappedStops] = useState<MappedStop[]>([]);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
+
+  const [isAssignOpen, setIsAssignOpen] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<any>(null);
+
+  const handleOpenAssign = (request: any) => {
+    setSelectedRequest(request);
+    setIsAssignOpen(true);
+  };
 
   const roleName = useUserStore((state) => state.roleName);
 
@@ -308,12 +318,16 @@ const ViewRequest = () => {
                 <MapPin className="text-indigo-600" size={20} /> Route Plan
               </h2>
               <div className="flex gap-2">
-                <p className="text-slate-500 text-xs font-medium flex items-center gap-1">
-                  <span className="text-indigo-600 font-bold">Start Date:</span>
+                <p className="text-slate-500 text-xs font-semibold flex items-center gap-1">
                   {formatDateTime(data.created_at)}
                 </p>
-                <p className="text-slate-500 text-xs font-medium flex items-center gap-1">
-                  <span className="text-indigo-600 font-bold">End Date:</span>
+                <div className="flex items-center gap-1 mx-1">
+                  <span className="size-1 bg-indigo-500 rounded-full" />
+                  <span className="size-2 bg-indigo-500 rounded-full" />
+                  <span className="size-2 bg-indigo-500 rounded-full" />
+                  <span className="size-1 bg-indigo-500 rounded-full" />
+                </div>
+                <p className="text-slate-500 text-xs font-semibold flex items-center gap-1">
                   {formatDateTime(data.created_at)}
                 </p>
               </div>
@@ -344,7 +358,7 @@ const ViewRequest = () => {
                           ? "Destination"
                           : `Stop ${idx}`}
                     </p>
-                    <p className="font-semibold text-slate-700 text-sm leading-snug">
+                    <p className="font-semibold text-sm leading-snug">
                       {stop.address}
                     </p>
                   </div>
@@ -439,9 +453,10 @@ const ViewRequest = () => {
 
             <div
               className={cn(
-                "p-5 rounded-3xl border-none shadow-md bg-white",
+                "p-5 rounded-3xl border-none shadow-md bg-white cursor-pointer",
                 !schedule.vehicle && "bg-indigo-50/50",
               )}
+              onClick={() => handleOpenAssign(schedule)}
             >
               <SectionTitle
                 icon={<Car className="text-indigo-600" />}
@@ -473,10 +488,24 @@ const ViewRequest = () => {
                   )}
                 </div>
               ) : (
-                <div className="h-full flex flex-col items-center justify-center opacity-50 text-indigo-600">
-                  <Car size={40} className="mb-2" />
-                  <p className="text-sm">No Vehicle Assigned Yet</p>
-                </div>
+                <>
+                  <div className="h-full flex flex-col items-center justify-center opacity-50 text-indigo-600">
+                    <Car size={50} className="mb-2" strokeWidth={1.5} />
+                    <p className="text-sm flex gap-3">
+                      <MousePointerClick size={18} />
+                      Click to Assign Vehicle for Guest
+                    </p>
+                  </div>
+                  {isAssignOpen && (
+                    <VehicleAssignmentPopup
+                      guests={schedule.guests}
+                      onClose={() => {
+                        setIsAssignOpen(false);
+                        setSelectedRequest(null);
+                      }}
+                    />
+                  )}
+                </>
               )}
             </div>
           </div>
