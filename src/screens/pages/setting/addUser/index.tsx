@@ -12,12 +12,13 @@ import {
   ShieldCheck,
   UserCircle,
   UserPlus,
-  UserRound
+  UserRound,
 } from "lucide-react";
 import React, { useState } from "react";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { FormInput } from "../../../../components";
+import { FILE_BASE_URL } from "../../../../api/base";
 
 const AddUser = () => {
   const navigate = useNavigate();
@@ -44,7 +45,6 @@ const AddUser = () => {
     e.preventDefault();
     setLoading(true);
 
-    // 1. Retrieve and Validate Token
     const token = localStorage.getItem("token");
     if (!token) {
       toast.error("No authorization token found. Please log in.");
@@ -52,7 +52,6 @@ const AddUser = () => {
       return;
     }
 
-    // 2. Setup Headers with TMS prefix
     const config = {
       headers: {
         Authorization: `TMS ${token}`,
@@ -62,27 +61,13 @@ const AddUser = () => {
 
     try {
       if (activeTab === "reset") {
-        // --- PASSWORD RESET LOGIC ---
-        // Ensure userId exists for the URL param
-        if (!formData.userId) {
-          toast.error("User ID is required for reset.");
-          setLoading(false);
-          return;
-        }
-
         const resetPayload = formData.email
           ? { email: formData.email, password: formData.password }
           : { user_name: formData.user_name, password: formData.password };
 
-        // Switched to PUT for an update operation
-        await axios.put(
-          `http://localhost:5000/api/auth/user`,
-          resetPayload,
-          config,
-        );
+        await axios.put(`${FILE_BASE_URL}/auth/user`, resetPayload, config);
         toast.success("Password reset successfully!");
       } else if (activeTab === "unblock") {
-        // --- UNBLOCK LOGIC ---
         const updatePayload = {
           isLogin: true, // Only sending what needs to change
           ...(formData.email
@@ -91,15 +76,10 @@ const AddUser = () => {
         };
 
         // Standardizing to PUT for updating the user status
-        await axios.put(
-          "http://localhost:8055/auth/user",
-          updatePayload,
-          config,
-        );
+        await axios.put(`${FILE_BASE_URL}/auth/user`, updatePayload, config);
 
         toast.success(`User unblocked successfully!`);
       } else {
-        // --- REGISTRATION LOGIC ---
         const payload = {
           name: formData.name,
           email: formData.email,
@@ -111,7 +91,7 @@ const AddUser = () => {
         };
 
         const response = await axios.post(
-          "http://localhost:8055/auth/register",
+          `${FILE_BASE_URL}/auth/register`,
           payload,
           config,
         );
@@ -287,16 +267,6 @@ const AddUser = () => {
 
             {activeTab === "reset" && (
               <>
-                <FormInput
-                  label="User ID"
-                  icon={Info}
-                  placeholder="Numeric User ID"
-                  value={formData.userId}
-                  onChange={(e: any) =>
-                    setFormData({ ...formData, userId: e.target.value })
-                  }
-                  required
-                />
                 <FormInput
                   label="Identifier"
                   icon={UserCircle}

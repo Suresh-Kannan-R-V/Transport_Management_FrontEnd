@@ -5,8 +5,10 @@ import {
   DropdownItem,
   DropdownMenu,
   DropdownTrigger,
+  ScrollShadow,
 } from "@heroui/react";
 import {
+  Car,
   ChevronRight,
   FilterIcon,
   Plus,
@@ -103,7 +105,7 @@ const RequestPage = () => {
       </div>
       <div className="grid grid-cols-12 gap-4">
         <div className="col-span-12 lg:col-span-9 ">
-          <div className="flex justify-between items-center mb-1">
+          <div className="flex justify-between items-center mb-1 mr-4">
             <h2 className="text-xl font-semibold text-slate-500">
               Active Requests
             </h2>
@@ -177,13 +179,20 @@ const RequestPage = () => {
             </div>
           ) : (
             <>
-              <div className="h-[calc(100vh-310px)] custom-scrollbar p-1 pr-2">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 ">
+              <ScrollShadow className="h-[calc(100vh-290px)] custom-scrollbar p-1 pr-2">
+                {items.length == 0 && (
+                  <div className="flex items-center justify-center py-20 px-4 text-center bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-200 h-full">
+                    <h3 className="text-xl font-bold text-slate-800 mb-2">
+                      No Transport Requests Found
+                    </h3>
+                  </div>
+                )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 ">
                   {items.map((req) => (
                     <RequestCard key={req.id} item={req} />
                   ))}
                 </div>
-              </div>
+              </ScrollShadow>
               <CustomPagination
                 currentPage={currentPage}
                 totalPages={totalPages}

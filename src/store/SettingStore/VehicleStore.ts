@@ -2,12 +2,18 @@ import { create } from "zustand";
 import { FILE_BASE_URL, getAuthHeader } from "../../api/base";
 import toast from "react-hot-toast";
 
-interface Vehicle {
+export interface Vehicle {
   id: number;
   vehicle_number: string;
   vehicle_type: string;
   capacity: number;
-  status: "active" | "maintenance";
+  status: "active" | "maintenance" | "assign";
+  current_kilometer?: number;
+  insurance_date?: string | null;
+  pollution_date?: string | null;
+  rc_date?: string | null;
+  fc_date?: string | null;
+  next_service_date?: string | null;
 }
 
 interface VehicleState {
@@ -17,9 +23,12 @@ interface VehicleState {
   loading: boolean;
   // Actions
   fetchVehicles: (params?: string) => Promise<void>;
-  addVehicle: (data: any) => Promise<void>;
+  addVehicle: (data: Omit<Vehicle, "id">) => Promise<void>;
   bulkUpload: (file: File) => Promise<void>;
-  updateVehicle: (id: number, data: any) => Promise<void>;
+  updateVehicle: (
+    id: number,
+    data: Partial<Omit<Vehicle, "id">>,
+  ) => Promise<void>;
   deleteVehicle: (ids: number[]) => Promise<void>;
 }
 
@@ -29,10 +38,6 @@ export const useVehicleStore = create<VehicleState>((set, get) => ({
   currentPage: 1,
   loading: false,
 
-  /**
-   * GET ALL VEHICLES
-   * Matches JSON: { success: true, totalRecords: 5, data: [...] }
-   */
   fetchVehicles: async (params = "") => {
     set({ loading: true });
     try {
@@ -89,21 +94,16 @@ export const useVehicleStore = create<VehicleState>((set, get) => ({
     }
   },
 
-  /**
-   * BULK UPLOAD (CSV/Excel)
-   * Controller expects: req.file (via FormData)
-   */
   bulkUpload: async (file: File) => {
     set({ loading: true });
     const formData = new FormData();
-    formData.append("file", file); // Key must be "file" for the controller's req.file
+    formData.append("file", file);
 
     try {
       const res = await fetch(`${FILE_BASE_URL}/api/vehicles/create`, {
         method: "POST",
         headers: {
           ...getAuthHeader(),
-          // Note: Browser sets Content-Type boundary automatically for FormData
         },
         body: formData,
       });
@@ -122,10 +122,6 @@ export const useVehicleStore = create<VehicleState>((set, get) => ({
     }
   },
 
-  /**
-   * UPDATE VEHICLE
-   * Controller expects: { vehicles: [{ id, ... }] } in req.body
-   */
   updateVehicle: async (id, data) => {
     try {
       const res = await fetch(`${FILE_BASE_URL}/api/vehicles/update`, {
@@ -145,14 +141,16 @@ export const useVehicleStore = create<VehicleState>((set, get) => ({
 
   deleteVehicle: async (ids) => {
     try {
-      const res = await fetch(`${FILE_BASE_URL}/api/vehicles/delete`, {
-        method: "DELETE",
-        headers: {
-          ...getAuthHeader(),
-          "Content-Type": "application/json",
+      const res = await fetch(
+        `${FILE_BASE_URL}/api/vehicles/delete/${ids}`,
+        {
+          method: "DELETE",
+          headers: {
+            ...getAuthHeader(),
+            "Content-Type": "application/json",
+          },
         },
-        body: JSON.stringify({ ids }),
-      });
+      );
 
       if (res.ok) {
         // Refresh the list after deletion

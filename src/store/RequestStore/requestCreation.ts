@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { FILE_BASE_URL } from "../../api/base";
+import * as XLSX from "xlsx";
 
 const PHONE_PATTERNS: Record<string, RegExp> = {
   "+91": /^[6-9]\d{9}$/, // India: 10 digits starting with 6-9
@@ -34,9 +35,10 @@ interface RequestState {
   isBulkUpload: boolean;
   specialRequirements: string;
   luggageDetails: string;
+  guestFile: File | null;
   reset: () => void;
   setRouteMetrics: (distance: number, duration: number) => void;
-  setField: (field: string, value: any) => void;
+  setField: (field: string, value: unknown) => void;
   updateGuest: (index: number, field: keyof Guest, value: string) => void;
   addGuest: () => void;
   removeGuest: (index: number) => void;
@@ -51,6 +53,7 @@ interface RequestState {
   ) => void;
 
   submitRequest: () => Promise<{ success: boolean; message: string }>;
+  sampleGuestBulkFile: () => void;
 }
 
 const initialState = {
@@ -61,13 +64,13 @@ const initialState = {
   stops: [
     {
       id: "start",
-      address: "Bannari Amman Institute",
+      address: "Bannari Amman Institute of Technology",
       lat: 11.4965,
       lon: 77.2764,
     },
     {
       id: "end",
-      address: "Bannari Amman Institute",
+      address: "Bannari Amman Institute of Technology",
       lat: 11.4965,
       lon: 77.2764,
     },
@@ -83,22 +86,39 @@ const initialState = {
 
 export const useRequestCreationStore = create<RequestState>((set, get) => ({
   ...initialState,
+  guestFile: null,
 
   setField: (field, value) =>
     set((state) => {
       if (field === "passengerCount") {
-        const count = Math.max(1, parseInt(value) || 0);
+        const count = Math.max(1, parseInt(String(value)) || 0);
         let newGuests = [...state.guests];
+
+        // Backend requires at least 1 guest if count=1, and at least 2 guests if count >= 2
         const autoNeeded = count === 1 ? 1 : 2;
+
         if (newGuests.length < autoNeeded) {
           for (let i = newGuests.length; i < autoNeeded; i++) {
             newGuests.push({ name: "", phone: "", country_code: "+91" });
           }
         } else if (newGuests.length > count) {
+          // Keep the guest list size in sync with passenger count to avoid
+          // "Guest count exceeds passenger count" error from backend
           newGuests = newGuests.slice(0, count);
         }
+
         return { ...state, passengerCount: count, guests: newGuests };
       }
+
+      if (field === "isBulkUpload") {
+        return {
+          ...state,
+          isBulkUpload: value as boolean,
+          guestFile: null, // Clear file if switching to manual
+          guests: [{ name: "", phone: "", country_code: "+91" }], // Reset guests if switching
+        };
+      }
+
       return { ...state, [field]: value };
     }),
 
@@ -157,113 +177,122 @@ export const useRequestCreationStore = create<RequestState>((set, get) => ({
   submitRequest: async () => {
     const state = get();
 
+    // 1. Validation Logic
     if (!state.routeName.trim())
       return { success: false, message: "Route Name is required." };
+    if (!state.startDate)
+      return { success: false, message: "Start Date is required." };
 
-    const now = new Date();
-    const tomorrow = new Date();
-    tomorrow.setDate(now.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
-
-    const start = new Date(state.startDate);
-    if (!state.startDate || start < tomorrow) {
-      return {
-        success: false,
-        message: "Start date must be from tomorrow onwards.",
-      };
-    }
-
-    if (state.travelType === "Multi Day") {
-      if (!state.endDate)
-        return {
-          success: false,
-          message: "End date is required for Multi Day.",
-        };
-      if (new Date(state.endDate) <= start) {
-        return {
-          success: false,
-          message: "End date must be after the start date.",
-        };
-      }
-    }
-
-    if (state.passengerCount < 1)
-      return { success: false, message: "Passenger count cannot be 0." };
-
-    const requiredGuestDetailsCount = state.passengerCount === 1 ? 1 : 2;
-    const validGuests = state.guests.filter(
-      (g) => g.name.trim() !== "" && g.phone.trim() !== "",
-    );
-
-    if (validGuests.length < requiredGuestDetailsCount) {
-      return {
-        success: false,
-        message: `Please provide details for at least ${requiredGuestDetailsCount} guest(s).`,
-      };
-    }
-
-    for (const guest of validGuests) {
-      const pattern =
-        PHONE_PATTERNS[guest.country_code] || PHONE_PATTERNS["default"];
-      if (!pattern.test(guest.phone)) {
-        return {
-          success: false,
-          message: `Invalid phone number for ${guest.name} (${guest.country_code}).`,
-        };
-      }
-    }
-
-    // --- 5. Final Payload & API Call ---
-    const payload = {
-      travel_info: {
-        route_name: state.routeName,
-        type: state.travelType,
-        start_date: state.startDate,
-        end_date: state.travelType === "Multi Day" ? state.endDate : null,
-      },
-      route_details: {
-        selected_locations: state.stops.map((s) => s.address),
-        distance_km: parseFloat(state.distance || "0"),
-        duration_mins: parseFloat(state.duration || "0"),
-      },
-      vehicle_config: {
-        passenger_count: state.passengerCount,
-        vehicle_type: "Mini",
-      },
-      guests: validGuests, // Only send guests with data
-      additional_info: {
-        special_requirements: state.specialRequirements,
-        luggage_details: state.luggageDetails,
-      },
+    const travel_info = {
+      route_name: state.routeName,
+      type: state.travelType,
+      start_date: state.startDate,
+      end_date: state.travelType === "Multi Day" ? state.endDate : null,
     };
-    console.log(payload);
-    
+
+    const route_details = {
+      selected_locations: state.stops.map((s) => s.address),
+      distance_km: parseFloat(state.distance || "0"),
+      duration_mins: parseFloat(state.duration || "0"),
+    };
+
+    const vehicle_config = {
+      passenger_count: state.passengerCount,
+      vehicle_type: "Mini",
+    };
+
+    const additional_info = {
+      special_requirements: state.specialRequirements,
+      luggage_details: state.luggageDetails,
+    };
 
     try {
+      let body;
+      const headers: Record<string, string> = {
+        Authorization: `TMS ${localStorage.getItem("token") || ""}`,
+      };
+
+      if (state.isBulkUpload) {
+        if (!state.guestFile)
+          return {
+            success: false,
+            message: "Please upload a guest list file.",
+          };
+
+        const formData = new FormData();
+        formData.append("file", state.guestFile);
+        // As per your backend: req.file presence triggers JSON.parse() on these fields:
+        formData.append("travel_info", JSON.stringify(travel_info));
+        formData.append("route_details", JSON.stringify(route_details));
+        formData.append("vehicle_config", JSON.stringify(vehicle_config));
+        formData.append("additional_info", JSON.stringify(additional_info));
+
+        body = formData;
+        // Browser sets Content-Type to multipart/form-data automatically
+      } else {
+        // Manual validation
+        const requiredCount = state.passengerCount === 1 ? 1 : 2;
+        const validGuests = state.guests.filter(
+          (g) => g.name.trim() !== "" && g.phone.trim() !== "",
+        );
+
+        if (validGuests.length < requiredCount) {
+          return {
+            success: false,
+            message: `Details for at least ${requiredCount} guest(s) required.`,
+          };
+        }
+
+        headers["Content-Type"] = "application/json";
+        body = JSON.stringify({
+          travel_info,
+          route_details,
+          vehicle_config,
+          guests: validGuests,
+          additional_info,
+        });
+      }
+
       const response = await fetch(
         `${FILE_BASE_URL}/request/create-transport-request`,
         {
           method: "POST",
-          headers: {
-            Authorization: `TMS ${localStorage.getItem("token")}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
+          headers,
+          body,
         },
       );
 
+      const result = await response.json();
+
       if (response.ok) {
-        get().reset();
-        return { success: true, message: "Request Created Successfully!" };
+        get().reset(); // Clears everything including the file
+        return {
+          success: true,
+          message: "Transport request created successfully",
+        };
       }
-      const error = await response.json();
+
       return {
         success: false,
-        message: error.message || "403: Forbidden (Check Permissions)",
+        message: result.message || "Failed to create request.",
       };
     } catch (err) {
-      return { success: false, message: `Network Error Backend ${err}` };
+      console.error("Submission Error:", err);
+      const errorMessage =
+        err instanceof Error ? err.message : "Unknown error occurred";
+      return { success: false, message: `Network Error: ${errorMessage}` };
     }
   },
-  reset: () => set(initialState),
+
+  reset: () => set({ ...initialState, guestFile: null }),
+
+  sampleGuestBulkFile: () => {
+    const data = [
+      { name: "Full Name", country_code: "+91", phone: "9876543210" },
+    ];
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "GuestList");
+    XLSX.writeFile(workbook, "guest_list_template.xlsx");
+  },
 }));

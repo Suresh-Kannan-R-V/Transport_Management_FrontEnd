@@ -16,8 +16,6 @@ export const CustomPagination = ({
   // limit = 10,
   onPageChange,
 }: CustomPaginationProps) => {
-  if (totalItems === 0) return null;
-
   return (
     <div className="bg-white p-2 rounded-2xl border border-slate-100 shadow-sm mt-2">
       <div className="flex flex-col sm:flex-row justify-between items-center px-2 w-full gap-4">
@@ -90,7 +88,8 @@ export const CustomPagination = ({
     .custom-pagination-container [data-slot="cursor"] {
       background-color: #4f46e5 !important; 
       color: white !important;
-      font-weight: 700 !important;
+      font-weight: 500 !important;
+      size:10px !important;
       border-radius: 12px !important;
       min-width: 24px !important;
       height: 24px !important;

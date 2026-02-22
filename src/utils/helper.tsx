@@ -91,6 +91,7 @@ export const formatDateTime = (dateString: string) => {
   return new Intl.DateTimeFormat("en-GB", {
     day: "2-digit",
     month: "2-digit",
+    year: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
@@ -98,6 +99,41 @@ export const formatDateTime = (dateString: string) => {
     .format(date)
     .replace(",", " -")
     .toUpperCase();
+};
+
+export const formatDate = (dateString: string) => {
+  if (!dateString) return "N/A";
+
+  const date = new Date(dateString);
+
+  // Checks if the date is actually valid before formatting
+  if (isNaN(date.getTime())) return "Invalid Date";
+
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+  }).format(date);
+};
+
+export const formatTimeOnly = (dateStr: string) => {
+  return new Date(dateStr).toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
+export const formatDuration = (totalMinutes: number): string => {
+  if (!totalMinutes || totalMinutes <= 0) return "0m";
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = Math.round(totalMinutes % 60);
+
+  const hourPart = hours > 0 ? `${hours}h ` : "";
+  const minutePart = minutes > 0 ? `${minutes}m` : "";
+
+  return `${hourPart}${minutePart}`.trim();
 };
 
 export const geocodeLocations = async (locations: string[]) => {

@@ -1,16 +1,16 @@
-import { Button, Tooltip } from "@heroui/react";
+import { Button, ScrollShadow } from "@heroui/react";
 import axios from "axios";
 import {
   Briefcase,
   Calendar,
   Car,
+  ChevronRight,
   Clock,
   Copy,
   Info,
   Mail,
   MapPin,
   MessageSquare,
-  MousePointerClick,
   Phone,
   ShieldCheck,
   Trash2,
@@ -24,7 +24,12 @@ import { FILE_BASE_URL } from "../../../../api/base";
 import { BackButton, TransportLoader } from "../../../../components";
 import MapViewer from "../../../../components/MapComponent";
 import { useUserStore } from "../../../../store";
-import { cn, formatDateTime, geocodeLocations } from "../../../../utils/helper";
+import {
+  cn,
+  formatDateTime,
+  formatDuration,
+  geocodeLocations,
+} from "../../../../utils/helper";
 import { VehicleAssignmentPopup } from "../assignVechicle";
 
 export interface MappedStop {
@@ -47,20 +52,20 @@ interface Schedule {
   status: RequestStatus;
   start_datetime: string;
   end_datetime: string | null;
-  vehicle: {
+  vehicle?: {
     id: number;
     vehicle_number: string;
     vehicle_type: string;
     assigned_at: string | null;
     assigned_by: string | null;
   } | null;
-  driver: {
+  driver?: {
     id: number;
     name: string;
     phone: string;
   } | null;
   guest_count: number;
-  guests: Guest[];
+  guests?: Guest[];
 }
 
 interface Creator {
@@ -72,6 +77,10 @@ interface Creator {
   faculty_id: string | null;
   destination: string | null;
   department: string | null;
+  Role: {
+    id: number;
+    name: string;
+  };
 }
 
 interface RouteData {
@@ -93,6 +102,8 @@ interface RouteData {
     special_requirements: string | null;
     luggage_details: string | null;
   };
+  total_guest: number;
+  guests: Guest[];
   route_status: RequestStatus;
   faculty_remark: string | null;
   admin_remark: string | null;
@@ -103,24 +114,24 @@ interface RouteData {
 
 // Define the valid status types based on your comment
 type RequestStatus =
-  | "pending"
-  | "approved"
-  | "vehicle_assigned"
-  | "faculty_confirmed"
-  | "driver_assigned"
-  | "completed"
-  | "rejected"
-  | "cancelled";
+  | "Pending"
+  | "Approved"
+  | "Vehicle Assigned"
+  | "Faculty Confirmed"
+  | "Driver Assigned"
+  | "Completed"
+  | "Rejected"
+  | "Cancelled";
 
 const statusStyles: Record<RequestStatus, string> = {
-  pending: "bg-amber-50 text-amber-500 border-amber-200",
-  approved: "bg-blue-50 text-blue-500 border-blue-200",
-  faculty_confirmed: "bg-indigo-50 text-indigo-500 border-indigo-200",
-  vehicle_assigned: "bg-purple-50 text-purple-500 border-purple-200",
-  driver_assigned: "bg-violet-50 text-violet-500 border-violet-200",
-  completed: "bg-emerald-50 text-emerald-500 border-emerald-200",
-  rejected: "bg-rose-50 text-rose-500 border-rose-200",
-  cancelled: "bg-slate-50 text-slate-500 border-slate-200",
+  Pending: "bg-amber-50 text-amber-500 border-amber-200",
+  Approved: "bg-blue-50 text-blue-500 border-blue-200",
+  "Faculty Confirmed": "bg-indigo-50 text-indigo-500 border-indigo-200",
+  "Vehicle Assigned": "bg-purple-50 text-purple-500 border-purple-200",
+  "Driver Assigned": "bg-violet-50 text-violet-500 border-violet-200",
+  Completed: "bg-emerald-50 text-emerald-500 border-emerald-200",
+  Rejected: "bg-rose-50 text-rose-500 border-rose-200",
+  Cancelled: "bg-slate-50 text-slate-500 border-slate-200",
 };
 const ViewRequest = () => {
   const { id } = useParams();
@@ -129,6 +140,9 @@ const ViewRequest = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [mappedStops, setMappedStops] = useState<MappedStop[]>([]);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
+
+  const [requestData, setRequestData] = useState(null);
+  const [showPopup, setShowPopup] = useState(false);
 
   const [isAssignOpen, setIsAssignOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
@@ -145,9 +159,9 @@ const ViewRequest = () => {
 
     try {
       setLoading(true);
-      const realId = atob(id); // Decode the ID once here
+      const realId = atob(id);
       const response = await axios.get(
-        `http://localhost:8055/request/get-by-id/${realId}`,
+        `${FILE_BASE_URL}/request/get-by-id/${realId}`,
         {
           headers: { Authorization: `TMS ${localStorage.getItem("token")}` },
         },
@@ -172,7 +186,7 @@ const ViewRequest = () => {
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+  }, [fetchData, isAssignOpen]);
 
   const handleAction = async (action: "cancel" | "uncancel" | "delete") => {
     const realId = atob(id || "");
@@ -266,12 +280,12 @@ const ViewRequest = () => {
             />
             {data?.route_status?.replace(/_/g, " ")}
           </div>
-          {roleName === "Faculty" && data?.route_status !== "cancelled" && (
+          {roleName === "Faculty" && data?.route_status !== "Cancelled" && (
             <Button
               onPress={() => handleAction("cancel")}
               variant="faded"
               size="sm"
-              isDisabled={data?.route_status !== "pending"}
+              isDisabled={data?.route_status !== "Pending"}
               className="bg-indigo-50 rounded-lg px-5 text-sm text-indigo-600 "
             >
               Cancel Request
@@ -279,7 +293,7 @@ const ViewRequest = () => {
           )}
 
           {(roleName === "Faculty" || roleName === "Transport Admin") &&
-            data?.route_status === "cancelled" && (
+            data?.route_status === "Cancelled" && (
               <Button
                 onPress={() => handleAction("uncancel")}
                 variant="flat"
@@ -296,7 +310,7 @@ const ViewRequest = () => {
               size="sm"
               startContent={<Trash2 size={14} />}
               isDisabled={
-                schedule?.status !== "pending" && roleName !== "Transport Admin"
+                schedule?.status !== "Pending" && roleName !== "Transport Admin"
               }
               className="text-white bg-rose-500 rounded-lg px-5 text-sm shadow-sm hover:bg-rose-600 transition-all active:scale-95 tracking-wider"
             >
@@ -306,9 +320,9 @@ const ViewRequest = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-12 gap-4">
+      <div className="grid grid-cols-12 gap-3">
         <div className="col-span-12 lg:col-span-5 space-y-3">
-          <div className="h-72 bg-white shadow-md rounded-3xl overflow-hidden border-4 border-white">
+          <div className="h-80 bg-white shadow-md rounded-3xl overflow-hidden border-4 border-white">
             <MapViewer stops={mappedStops} />
           </div>
 
@@ -332,7 +346,7 @@ const ViewRequest = () => {
                 </p>
               </div>
             </div>
-            <div className="relative space-y-8 pl-2">
+            <div className="relative space-y-8 px-2 mt-2 h-60 custom-scrollbar overflow-y-scroll">
               {mappedStops.map((stop, idx) => (
                 <div key={stop.id} className="flex gap-4 relative">
                   {idx !== mappedStops.length - 1 && (
@@ -368,12 +382,12 @@ const ViewRequest = () => {
           </div>
         </div>
 
-        <div className="col-span-12 lg:col-span-7 space-y-4">
+        <div className="col-span-12 lg:col-span-7 space-y-3">
           <div className="grid grid-cols-3 gap-3">
             <MetricCard
               icon={<Clock />}
               label="Duration"
-              value={`${data.route_details.duration_mins} min`}
+              value={`${formatDuration(data.route_details.duration_mins)}`}
               className="text-green-600 bg-green-100"
             />
             <MetricCard
@@ -390,128 +404,278 @@ const ViewRequest = () => {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-5 rounded-3xl  border border-slate-200 shadow-md">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="p-5 pb-0 rounded-3xl border border-slate-200 shadow-md">
               <SectionTitle icon={<User size={22} />} title="Requested By" />
-              <div className="space-y-3">
-                <InfoRow
-                  icon={<Briefcase size={14} />}
-                  label="Name"
-                  value={data.creator.name}
-                  valueClassName="uppercase"
-                />
-                <InfoRow
-                  icon={<Mail size={14} />}
-                  label="Email"
-                  value={
-                    <p
-                      className=" flex justify-end gap-2 text-xs font-medium cursor-pointer text-slate-500 hover:text-indigo-600 hover:underline"
-                      onClick={() => {
-                        navigator.clipboard.writeText(data.creator.email);
-                        toast.success("Email copied to clipboard");
-                      }}
-                    >
-                      <Copy size={12} />
-                      <span>{data.creator.email}</span>
-                    </p>
-                  }
-                />
-                <InfoRow
-                  icon={<Phone size={14} />}
-                  label="Phone"
-                  value={
-                    <p
-                      className=" flex justify-end gap-2 text-xs font-medium cursor-pointer text-slate-500 hover:text-indigo-600 hover:underline"
-                      onClick={() => {
-                        navigator.clipboard.writeText(data.creator.phone);
-                        toast.success("Phone Number copied to clipboard");
-                      }}
-                    >
-                      <Copy size={12} />
-                      <span>{data.creator.phone}</span>
-                    </p>
-                  }
-                />
-                <InfoRow
-                  icon={<ShieldCheck size={14} />}
-                  label="User Name"
-                  value={
-                    <p
-                      className=" flex justify-end gap-2 text-xs font-medium cursor-pointer text-slate-500 hover:text-indigo-600 hover:underline"
-                      onClick={() => {
-                        navigator.clipboard.writeText(data.creator.user_name);
-                        toast.success("User Name copied to clipboard");
-                      }}
-                    >
-                      <Copy size={12} />
-                      <span>{data.creator.user_name}</span>
-                    </p>
-                  }
-                />
-              </div>
-            </div>
-
-            <div
-              className={cn(
-                "p-5 rounded-3xl border-none shadow-md bg-white cursor-pointer",
-                !schedule.vehicle && "bg-indigo-50/50",
-              )}
-              onClick={() => handleOpenAssign(schedule)}
-            >
-              <SectionTitle
-                icon={<Car className="text-indigo-600" />}
-                title="Assignment Info"
-              />
-              {schedule.vehicle ? (
-                <div className="space-y-4">
-                  <div className="p-3 bg-white/10 rounded-xl">
-                    <p className="text-[10px] uppercase text-indigo-600 font-bold">
-                      Vehicle
-                    </p>
-                    <p className="font-bold text-lg">
-                      {schedule.vehicle.vehicle_number}
-                    </p>
-                    <p className="text-xs text-slate-400">
-                      {schedule.vehicle.vehicle_type}
-                    </p>
-                  </div>
-                  {schedule.driver && (
-                    <div className="p-3 bg-white/10 rounded-xl">
-                      <p className="text-[10px] uppercase text-indigo-300 font-bold">
-                        Driver
-                      </p>
-                      <p className="font-bold">{schedule.driver.name}</p>
-                      <p className="text-xs text-slate-400">
-                        {schedule.driver.phone}
-                      </p>
-                    </div>
-                  )}
+              {(data.creator.Role.name === "Transport Admin" && (
+                <div className="flex flex-col items-center justify-center gap-2 py-15 bg-indigo-50 rounded-2xl border-1 border-slate-300 border-dashed">
+                  <Users className="text-slate-400" size={30} />
+                  <p className="text-xs text-indigo-500 font-semibold">
+                    Created By Admin
+                  </p>
                 </div>
-              ) : (
-                <>
-                  <div className="h-full flex flex-col items-center justify-center opacity-50 text-indigo-600">
-                    <Car size={50} className="mb-2" strokeWidth={1.5} />
-                    <p className="text-sm flex gap-3">
-                      <MousePointerClick size={18} />
-                      Click to Assign Vehicle for Guest
-                    </p>
-                  </div>
-                  {isAssignOpen && (
-                    <VehicleAssignmentPopup
-                      guests={schedule.guests}
-                      onClose={() => {
-                        setIsAssignOpen(false);
-                        setSelectedRequest(null);
-                      }}
-                    />
-                  )}
-                </>
+              )) || (
+                <div className="space-y-3 mt-5">
+                  <InfoRow
+                    icon={<Briefcase size={14} />}
+                    label="Name"
+                    value={data.creator.name}
+                    valueClassName="uppercase"
+                  />
+                  <InfoRow
+                    icon={<Mail size={14} />}
+                    label="Email"
+                    value={
+                      <p
+                        className=" flex justify-end gap-2 text-xs font-medium cursor-pointer text-slate-500 hover:text-indigo-600 hover:underline"
+                        onClick={() => {
+                          navigator.clipboard.writeText(data.creator.email);
+                          toast.success("Email copied to clipboard");
+                        }}
+                      >
+                        <Copy size={12} />
+                        <span>{data.creator.email}</span>
+                      </p>
+                    }
+                  />
+                  <InfoRow
+                    icon={<Phone size={14} />}
+                    label="Phone"
+                    value={
+                      <p
+                        className=" flex justify-end gap-2 text-xs font-medium cursor-pointer text-slate-500 hover:text-indigo-600 hover:underline"
+                        onClick={() => {
+                          navigator.clipboard.writeText(data.creator.phone);
+                          toast.success("Phone Number copied to clipboard");
+                        }}
+                      >
+                        <Copy size={12} />
+                        <span>{data.creator.phone}</span>
+                      </p>
+                    }
+                  />
+                  <InfoRow
+                    icon={<ShieldCheck size={14} />}
+                    label="Department"
+                    value={
+                      <span className="text-xs text-slate-500 font-medium">
+                        {data.creator.department}
+                      </span>
+                    }
+                  />
+                  <InfoRow
+                    icon={<ShieldCheck size={14} />}
+                    label="Destination"
+                    value={
+                      <span className="text-xs text-slate-500 font-medium">
+                        {data.creator.destination}
+                      </span>
+                    }
+                  />
+                </div>
               )}
+            </div>
+            <div className="p-4 pb-2 rounded-3xl border border-slate-200 shadow-sm">
+              <div className="flex justify-between">
+                <SectionTitle
+                  icon={<Users />}
+                  title={
+                    <span className="w-40 truncate">{`Guest (${data.total_guest})`}</span>
+                  }
+                />
+                <Button
+                  size="sm"
+                  onPress={() => setShowPopup(true)}
+                  className={cn(
+                    "text-xs font-medium rounded-lg text-indigo-600 hover:underline items-start",
+                    data?.route_status === "Vehicle Assigned"
+                      ? "warning"
+                      : "primary",
+                  )}
+                >
+                  {data?.route_status === "Vehicle Assigned"
+                    ? "Reassign Vehicles"
+                    : "Assign Vehicles"}
+                </Button>
+              </div>
+              <ScrollShadow className="space-y-2 h-48 overflow-y-scroll pr-2 custom-scrollbar">
+                {data.guests.map((guest) => (
+                  <div
+                    key={guest.id}
+                    className="flex items-center gap-3 p-2 bg-slate-50 rounded-2xl border border-slate-100 hover:border-indigo-500 transition-colors hover:shadow-md"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center font-bold text-indigo-600 shadow-sm text-xs border border-slate-200">
+                      {guest.seat_number}
+                    </div>
+                    <div className="overflow-hidden">
+                      <p className="font-bold text-slate-800 text-sm truncate">
+                        {guest.name}
+                      </p>
+                      {guest.phone !== "null -1" && (
+                        <p
+                          className=" flex gap-1 text-[10px] text-slate-500 dark:text-slate-400 hover:text-indigo-600 hover:underline cursor-pointer"
+                          onClick={() => {
+                            navigator.clipboard.writeText(guest.phone);
+                            toast.success(`${guest.name} Phone number copied`);
+                          }}
+                        >
+                          <Phone size={12} />
+                          <span>{guest.phone}</span>
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </ScrollShadow>
             </div>
           </div>
+          {showPopup && (
+            <VehicleAssignmentPopup
+              routeId={id}
+              guests={data?.guests}
+              existingSchedules={
+                data?.schedules?.map((schedule) => ({
+                  schedule_id: schedule.schedule_id,
+                  vehicle: schedule.vehicle
+                    ? {
+                        id: schedule.vehicle.id,
+                        vehicle_number: schedule.vehicle.vehicle_number,
+                        vehicle_type: schedule.vehicle.vehicle_type,
+                        capacity: 0,
+                        status: "active" as const,
+                      }
+                    : null,
+                  guests: schedule.guests || [],
+                })) as any
+              }
+              onClose={() => {
+                setShowPopup(false);
+                fetchData();
+              }}
+            />
+          )}
+          <div className="relative group">
+            <ScrollShadow
+              className={cn(
+                "flex gap-1 pb-1 no-scrollbar snap-x snap-mandatory",
+                data.schedules.length === 1 && !data.schedules[0].vehicle
+                  ? "w-full"
+                  : "h-fit overflow-y-auto scrollbar-none",
+              )}
+            >
+              {data.schedules.map((schedule) => (
+                <div
+                  key={schedule.schedule_id}
+                  className={cn(
+                    "h-full snap-start transition-all duration-300 mx-1",
+                    !schedule.vehicle && data.schedules.length === 1
+                      ? "w-full"
+                      : "min-w-80",
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "p-5 pb-2 rounded-3xl border border-slate-100 shadow-sm bg-white  h-full flex flex-col justify-between transition-all",
+                      !schedule.vehicle &&
+                        "bg-indigo-50/50 border-dashed border-indigo-200 cursor-pointer",
+                    )}
+                    onClick={() => {
+                      if (!schedule.vehicle) handleOpenAssign(schedule);
+                    }}
+                  >
+                    <div className={cn(!schedule.vehicle && "flex-1")}>
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex gap-2">
+                          <SectionTitle
+                            icon={<Car className="text-indigo-600" />}
+                            title={
+                              schedule?.vehicle?.vehicle_number ||
+                              "Assign Vehicle"
+                            }
+                          />
+                          {schedule?.vehicle?.vehicle_type && (
+                            <span className="text-xs mt-0.5 text-slate-500">
+                              {schedule.vehicle.vehicle_type}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Users size={14} className="text-slate-400" />
+                          <p className="text-xs text-slate-500 font-medium">
+                            {schedule.guest_count} Guests
+                          </p>
+                        </div>
+                      </div>
 
-          <div className="p-5 rounded-3xl border border-slate-200 shadow-md">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      {schedule.vehicle ? (
+                        <div className="animate-in fade-in zoom-in duration-300">
+                          <ScrollShadow className="h-[250px] overflow-y-scroll space-y-2 custom-scrollbar">
+                            {schedule?.guests?.map((guest) => (
+                              <div
+                                key={guest.id}
+                                className="flex items-center gap-3 p-2 bg-slate-50 rounded-2xl border border-slate-100 hover:border-indigo-500 transition-colors hover:shadow-md"
+                              >
+                                <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center font-bold text-indigo-600 shadow-sm text-xs border border-slate-200">
+                                  {guest.seat_number}
+                                </div>
+                                <div className="overflow-hidden">
+                                  <p className="font-bold text-slate-800 text-sm truncate">
+                                    {guest.name}
+                                  </p>
+                                  {guest.phone !== "null -1" && (
+                                    <p
+                                      className=" flex gap-1 text-[10px] text-slate-500 dark:text-slate-400 hover:text-indigo-600 hover:underline cursor-pointer"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(
+                                          guest.phone,
+                                        );
+                                        toast.success(
+                                          `${guest.name} Phone number copied`,
+                                        );
+                                      }}
+                                    >
+                                      <Phone size={12} />
+                                      <span>{guest.phone}</span>
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </ScrollShadow>
+                          {schedule.driver && (
+                            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                              <p className="text-[10px] uppercase text-indigo-300 font-bold">
+                                Driver
+                              </p>
+                              <p className="font-bold text-slate-800">
+                                {schedule.driver.name}
+                              </p>
+                              <p className="text-xs text-slate-400">
+                                {schedule.driver.phone}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex-1 flex flex-col items-center justify-center opacity-60 text-indigo-600 py-4">
+                          <Car size={48} className="mb-2" strokeWidth={1.5} />
+                          <p className="text-sm font-semibold text-center">
+                            No Vehicle Assigned Yet <br />
+                            <span className="text-xs font-normal">
+                              Click to assign a vehicle for guests
+                            </span>
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </ScrollShadow>
+          </div>
+        </div>
+        <div className="p-5 rounded-3xl border border-slate-200 shadow-md col-span-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <SectionTitle icon={<Info />} title="Requirements" />
                 <div className="space-y-4">
@@ -537,41 +701,6 @@ const ViewRequest = () => {
               </div>
             </div>
           </div>
-
-          <div className="p-4 rounded-3xl  border border-slate-200 shadow-sm">
-            <SectionTitle
-              icon={<Users />}
-              title={`Passenger Manifesto (${schedule.guest_count})`}
-            />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-              {schedule.guests.map((guest) => (
-                <div
-                  key={guest.id}
-                  className="flex items-center gap-3 p-2 bg-slate-50 rounded-2xl border border-slate-100 hover:border-indigo-500 transition-colors hover:shadow-md"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center font-bold text-indigo-600 shadow-sm text-xs border border-slate-200">
-                    {guest.seat_number}
-                  </div>
-                  <div className="overflow-hidden">
-                    <p className="font-bold text-slate-800 text-sm truncate">
-                      {guest.name}
-                    </p>
-                    <p
-                      className=" flex gap-1 text-[10px] text-slate-500 dark:text-slate-400 hover:text-indigo-600 hover:underline cursor-pointer"
-                      onClick={() => {
-                        navigator.clipboard.writeText(guest.phone);
-                        toast.success(`${guest.name} Phone number copied`);
-                      }}
-                    >
-                      <Phone size={12} />
-                      <span>{guest.phone}</span>
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
       </div>
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop--md">
@@ -628,21 +757,18 @@ const MetricCard = ({
 const SectionTitle = ({
   icon,
   title,
-  dark = false,
 }: {
   icon: React.ReactElement<{ size?: number; className?: string }>;
-  title: string;
-  dark?: boolean;
+  title: string | React.ReactNode;
 }) => (
   <h4
     className={cn(
-      "text-sm font-bold mb-4 flex items-center gap-2",
-      dark ? "text-slate-200" : "text-slate-800",
+      "text-sm font-bold mb-2 flex items-center gap-2 text-slate-800",
     )}
   >
     {React.cloneElement(icon, {
       size: 16,
-      className: dark ? "text-indigo-400" : "text-indigo-600",
+      className: "text-indigo-600",
     })}
     {title}
   </h4>

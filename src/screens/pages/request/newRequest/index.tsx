@@ -7,11 +7,14 @@ import {
 import { Button, DatePicker } from "@heroui/react";
 import {
   Calendar,
+  Download,
+  FileWarning,
   Footprints,
   GripVertical,
   MapPin,
   Plus,
   Trash2,
+  TriangleAlert,
   Upload,
   User,
   UsersRound,
@@ -26,7 +29,7 @@ import MapViewer from "../../../../components/MapComponent";
 import { cn } from "../../../../utils/helper";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { useRequestCreationStore } from "../../../../store";
 
 const NewRequest = () => {
@@ -56,6 +59,20 @@ const NewRequest = () => {
       "bg-slate-50 !bg-opacity-100 border-slate-200 rounded-xl shadow-sm hover:border-indigo-400 transition-all focus:ring focus:ring-indigo-600",
     popoverContent: "bg-white border border-slate-200 shadow-xl rounded-xl",
     calendar: "bg-red-500",
+    errorMessage:
+      "text-rose-500 text-[10px] font-medium mt-1 bg-rose-50 px-2 py-1 rounded-md border border-rose-100",
+    helperText: "text-slate-400 text-[10px]",
+    input: "text-slate-800 font-medium",
+  };
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      store.setField("guestFile", file); // Add guestFile to your store
+      toast.success(`File "${file.name}" selected`);
+    }
   };
 
   const handleCancel = () => {
@@ -203,12 +220,13 @@ const NewRequest = () => {
             </DragDropContext>
           </div>
 
-          <button
-            onClick={store.addStop}
-            className="mt-2 w-full py-2 border-2 border-dashed border-indigo-600 rounded-xl text-indigo-500 font-bold text-xs uppercase hover:bg-slate-50 transition-colors"
+          <Button
+            size={"sm"}
+            onPress={store.addStop}
+            className="mt-2 w-full py-2 border-2 border-dashed border-indigo-600 rounded-xl text-indigo-500 font-bold text-xs uppercase hover:bg-slate-50 transition-all duration-300"
           >
-            + Add Intermediate Stop
-          </button>
+            <Plus size={14} /> Add Intermediate Stop
+          </Button>
         </div>
       </div>
 
@@ -299,7 +317,10 @@ const NewRequest = () => {
                 </h3>
                 <input
                   type="number"
-                  className="w-24 p-1 mb-1 text-center bg-slate-50 border border-slate-100 rounded-md text-sm font-bold outline-none focus:ring-2 ring-indigo-500"
+                  min="1"
+                  className={cn(
+                    "w-24 p-1 mb-1 text-center bg-slate-50 border border-slate-100 rounded-md text-sm font-bold outline-none focus:ring-2 ring-indigo-500",
+                  )}
                   placeholder="Count"
                   value={store.passengerCount}
                   onChange={(e) =>
@@ -318,7 +339,12 @@ const NewRequest = () => {
                     }
                     className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                   />
-                  <span className="text-xs font-bold text-slate-500">
+                  <span
+                    className={cn(
+                      "text-xs font-bold text-slate-500",
+                      store.isBulkUpload && "text-indigo-600",
+                    )}
+                  >
                     Bulk Upload
                   </span>
                 </label>
@@ -334,14 +360,51 @@ const NewRequest = () => {
                   )}
               </div>
             </div>
-            <div className="rounded-2xl min-h-44">
+            <div className="rounded-2xl min-h-40">
               {store.isBulkUpload ? (
-                <div className="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center">
-                  <Upload className="mx-auto text-slate-300 mb-2" size={32} />
-                  <p className="text-sm font-bold text-slate-600">
-                    Upload Guest List
-                  </p>
-                </div>
+                <>
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className={cn(
+                      "border-2 border-dashed rounded-2xl p-4 text-center cursor-pointer transition-colors",
+                      store.guestFile
+                        ? "border-indigo-500 bg-indigo-50/30"
+                        : "border-slate-300 hover:border-indigo-400",
+                    )}
+                  >
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      hidden
+                      accept=".xlsx, .xls, .csv"
+                      onChange={handleFileChange}
+                    />
+                    <div className="flex justify-center">
+                      <p className="text-xs font-medium text-rose-500 flex gap-2">
+                        <TriangleAlert size={14}/> Fill Guest Count Before Upload File
+                      </p>
+                    </div>
+                    <Upload
+                      className={cn(
+                        "mx-auto my-2",
+                        store.guestFile ? "text-indigo-500" : "text-slate-300",
+                      )}
+                      size={32}
+                    />
+                    <p className="text-sm font-bold text-slate-600">
+                      {store.guestFile
+                        ? store.guestFile.name
+                        : "Click to Upload Guest List"}
+                    </p>
+                  </div>
+                  <Button
+                    onPress={() => store.sampleGuestBulkFile()}
+                    size={"sm"}
+                    className="w-full text-xs border-2 border-dashed border-indigo-400 rounded-md p-1 mt-2 text-indigo-400 font-semibold"
+                  >
+                    <Download size={14} /> Download Sample Format
+                  </Button>
+                </>
               ) : (
                 <div className="space-y-3">
                   {store.guests.map((guest, idx) => (

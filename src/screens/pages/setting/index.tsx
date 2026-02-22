@@ -22,7 +22,7 @@ const Setting = () => {
     },
     {
       title: "Vehicle Management",
-      description: "",
+      description: "Manage vehicle details, status, and maintenance schedules.",
       icon: <Car className="text-amber-600" size={24} />,
       path: "/settings/vehicle-management",
       color: "bg-amber-100/70",

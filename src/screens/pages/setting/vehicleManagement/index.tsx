@@ -1,15 +1,39 @@
+import type { DateValue } from "@heroui/react";
+import { Button, DatePicker, ScrollShadow } from "@heroui/react";
 import {
-  ChevronLeft,
-  ChevronRight,
-  Download,
-  Edit,
-  Filter,
+  Calendar,
+  Car,
+  FileText,
+  FilterIcon,
+  Navigation,
+  RefreshCcw,
   Search,
+  Settings,
+  ShieldCheck,
   Trash2,
   Upload,
+  Users,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import {
+  BackButton,
+  CustomPagination,
+  TransportLoader,
+} from "../../../../components";
 import { useVehicleStore } from "../../../../store/SettingStore/VehicleStore";
+import { cn } from "../../../../utils/helper";
+
+const pickerStyles = {
+  label: "text-[10px] font-bold text-indigo-600 uppercase ml-1",
+  inputWrapper:
+    "bg-slate-50 !bg-opacity-100 border-slate-200 rounded-md shadow-sm hover:border-indigo-400 transition-all focus:ring focus:ring-indigo-600",
+  popoverContent: "bg-white border border-slate-200 shadow-xl rounded-xl",
+  calendar: "bg-red-500",
+  errorMessage:
+    "text-rose-500 text-[10px] font-medium mt-1 bg-rose-50 px-2 py-1 rounded-md border border-rose-100",
+  helperText: "text-slate-400 text-[10px]",
+  input: "text-slate-800 font-medium",
+};
 
 const VehicleManagement = () => {
   const [activeTab, setActiveTab] = useState<"list" | "create">("list");
@@ -19,301 +43,425 @@ const VehicleManagement = () => {
     loading,
     deleteVehicle,
     addVehicle,
-    bulkUpload,
+    totalVehicles,
   } = useVehicleStore();
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const limit = 10;
+
+  const totalPages = Math.ceil(totalVehicles / limit);
+  const totalItems = totalVehicles;
+
+  const [dates, setDates] = useState<{
+    insurance_date: DateValue | null;
+    pollution_date: DateValue | null;
+    rc_date: DateValue | null;
+    fc_date: DateValue | null;
+    next_service_date: DateValue | null;
+  }>({
+    insurance_date: null,
+    pollution_date: null,
+    rc_date: null,
+    fc_date: null,
+    next_service_date: null,
+  });
 
   useEffect(() => {
-    fetchVehicles(`?page=${page}&limit=5&search=${search}`);
+    fetchVehicles(`?page=${page}&limit=${limit}&search=${search}`);
   }, [page, search, fetchVehicles]);
 
-  // Template Download Function
-  const handleDownloadTemplate = () => {
-    const headers = ["vehicle_number", "vehicle_type", "capacity", "status"];
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const baseData = Object.fromEntries(formData);
 
-    const sampleData = ["TN02CD5678", "Mini Bus", "25", "maintenance"];
+    const finalVehicleData = {
+      vehicle_number: String(baseData.vehicle_number),
+      vehicle_type: String(baseData.vehicle_type),
+      capacity: Number(baseData.capacity),
+      status: "active" as const,
+      current_kilometer: Number(baseData.current_kilometer) || undefined,
+      insurance_date: dates.insurance_date?.toString() || null,
+      pollution_date: dates.pollution_date?.toString() || null,
+      rc_date: dates.rc_date?.toString() || null,
+      fc_date: dates.fc_date?.toString() || null,
+      next_service_date: dates.next_service_date?.toString() || null,
+    };
 
-    const csvContent = [headers, sampleData].map((e) => e.join(",")).join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", "vehicle_template.csv");
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    addVehicle(finalVehicleData);
+    setActiveTab("list");
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FE] p-8">
-      <div className="max-w-6xl mx-auto">
-        <header className="flex justify-between items-center mb-8">
+    <div className="p-4">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3 gap-4">
+        <div className="flex gap-4">
+          <BackButton />
           <div>
-            <h1 className="text-3xl font-black text-slate-800">
-              Fleet Management
-            </h1>
-            <p className="text-slate-500 font-medium">
-              Manage and monitor your transport assets
+            <p className="text-indigo-500 text-[10px] uppercase tracking-widest font-extrabold">
+              Transport Asset Control
             </p>
+            <h1 className="text-3xl md:text-4xl text-slate-900 tracking-tight font-bold">
+              Vehicle Management
+            </h1>
           </div>
-          <div className="bg-white p-1.5 rounded-2xl shadow-sm border border-slate-100 flex gap-2">
-            <button
-              onClick={() => setActiveTab("list")}
-              className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === "list" ? "bg-indigo-600 text-white shadow-lg" : "text-slate-400"}`}
-            >
-              Vehicle List
-            </button>
-            <button
-              onClick={() => setActiveTab("create")}
-              className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === "create" ? "bg-indigo-600 text-white shadow-lg" : "text-slate-400"}`}
-            >
-              Add Vehicle
-            </button>
-          </div>
-        </header>
+        </div>
+        <div className="bg-slate-100 p-1 rounded-2xl shadow-sm border border-slate-100 flex gap-2">
+          <Button
+            size="md"
+            onPress={() => setActiveTab("list")}
+            className={cn(
+              "px-6 py-2 rounded-lg text-sm font-bold transition-all bg-transparent text-slate-400",
+              activeTab === "list" && "bg-indigo-600 text-white",
+            )}
+          >
+            List View
+          </Button>
+          <Button
+            size="md"
+            onPress={() => setActiveTab("create")}
+            className={cn(
+              "px-6 py-2 rounded-lg text-sm font-bold transition-all bg-transparent text-slate-400 ",
+              activeTab === "create" && "bg-indigo-600 text-white",
+            )}
+          >
+            Add New
+          </Button>
+        </div>
+      </header>
 
-        {activeTab === "list" ? (
-          <div className="space-y-4">
-            <div className="bg-white p-4 rounded-3xl shadow-sm border border-slate-50 flex gap-4">
-              <div className="flex-1 relative">
-                <Search
-                  className="absolute left-4 top-3 text-slate-300"
-                  size={20}
-                />
-                <input
-                  type="text"
-                  placeholder="Search vehicle number..."
-                  className="w-full pl-12 pr-4 py-2.5 bg-slate-50 rounded-2xl outline-none font-semibold text-slate-600"
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
-              <button className="px-6 py-2.5 bg-slate-50 text-slate-500 rounded-2xl font-bold flex items-center gap-2">
-                <Filter size={18} /> Filter
-              </button>
-            </div>
-
-            <div className="bg-white rounded-[2rem] overflow-hidden shadow-sm border border-slate-50">
-              <table className="w-full text-left">
-                <thead className="bg-slate-50/50 border-b border-slate-100">
-                  <tr>
-                    <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                      Vehicle Details
-                    </th>
-                    <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                      Type
-                    </th>
-                    <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                      Capacity
-                    </th>
-                    <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                      Status
-                    </th>
-                    <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest text-right">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50">
-                  {loading ? (
-                    <tr>
-                      <td
-                        colSpan={5}
-                        className="px-8 py-10 text-center animate-pulse text-slate-400"
-                      >
-                        Loading...
-                      </td>
-                    </tr>
-                  ) : vehicles.length > 0 ? (
-                    vehicles.map((v) => (
-                      <tr
-                        key={v.id}
-                        className="hover:bg-slate-50/50 transition-colors group"
-                      >
-                        <td className="px-8 py-5 font-bold text-slate-700">
-                          {v.vehicle_number}
-                        </td>
-                        <td className="px-8 py-5 text-slate-500 font-semibold">
-                          {v.vehicle_type}
-                        </td>
-                        <td className="px-8 py-5">
-                          <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg font-bold text-sm">
-                            {v.capacity} Seats
-                          </span>
-                        </td>
-                        <td className="px-8 py-5">
-                          <span
-                            className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase ${v.status === "active" ? "bg-green-100 text-green-600" : "bg-amber-100 text-amber-600"}`}
-                          >
-                            {v.status}
-                          </span>
-                        </td>
-                        <td className="px-8 py-5 text-right space-x-2">
-                          <button className="p-2 text-slate-300 hover:text-indigo-600">
-                            <Edit size={18} />
-                          </button>
-                          <button
-                            onClick={() => deleteVehicle([v.id])}
-                            className="p-2 text-slate-300 hover:text-red-500"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan={5}
-                        className="px-8 py-10 text-center text-slate-400"
-                      >
-                        No vehicles found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-
-              <div className="p-6 bg-slate-50/50 flex justify-between items-center border-t border-slate-100">
-                <p className="text-sm font-bold text-slate-400">
-                  Showing page {page}
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className="p-2 bg-white rounded-xl shadow-sm"
-                  >
-                    <ChevronLeft size={20} />
-                  </button>
-                  <button
-                    onClick={() => setPage((p) => p + 1)}
-                    className="p-2 bg-white rounded-xl shadow-sm"
-                  >
-                    <ChevronRight size={20} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-50">
-              <h3 className="text-xl font-black text-slate-800 mb-6">
-                Single Vehicle Entry
-              </h3>
-              <form
-                className="space-y-4"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const formData = new FormData(e.currentTarget);
-                  addVehicle(Object.fromEntries(formData));
+      {activeTab === "list" ? (
+        <div className="space-y-3">
+          <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
+            <div className="relative hidden lg:block ">
+              <Search
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                size={18}
+              />
+              <input
+                type="text"
+                placeholder="Search..."
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
                 }}
-              >
-                <div>
-                  <label className="text-[10px] font-black uppercase text-slate-400 mb-1 block">
-                    Vehicle Number
-                  </label>
-                  <input
-                    name="vehicle_number"
-                    className="w-full p-3 bg-slate-50 rounded-2xl outline-none font-bold"
-                    placeholder="TN09..."
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-[10px] font-black uppercase text-slate-400 mb-1 block">
-                      Type
-                    </label>
-                    <select
-                      name="vehicle_type"
-                      className="w-full p-3 bg-slate-50 rounded-2xl outline-none font-bold"
-                    >
-                      <option>Bus</option>
-                      <option>Van</option>
-                      <option>SUV</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black uppercase text-slate-400 mb-1 block">
-                      Capacity
-                    </label>
-                    <input
-                      name="capacity"
-                      type="number"
-                      className="w-full p-3 bg-slate-50 rounded-2xl outline-none font-bold"
-                      placeholder="40"
-                      required
-                    />
-                  </div>
-                </div>
-                <button
-                  type="submit"
-                  className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-wider shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all"
-                >
-                  Save Vehicle
-                </button>
-              </form>
+                className="pl-12 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-sm w-96 shadow-sm"
+              />
             </div>
-
-            <div className="space-y-6">
-              <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-50">
-                <h3 className="text-xl font-black text-slate-800 mb-2">
-                  Bulk Upload
-                </h3>
-                <p className="text-slate-400 text-sm mb-6 font-medium">
-                  Upload CSV or JSON for batch creation
-                </p>
-                <div
-                  className="border-4 border-dashed border-slate-100 rounded-[2rem] p-10 text-center hover:border-indigo-100 transition-colors group cursor-pointer"
-                  onClick={() => document.getElementById("bulk-file")?.click()}
-                >
-                  <input
-                    type="file"
-                    id="bulk-file"
-                    className="hidden"
-                    accept=".csv, .xlsx" // Allowed both based on your controller
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        bulkUpload(e.target.files[0]);
-                        e.target.value = ""; // Clear so you can re-upload same file if needed
-                      }
-                    }}
-                  />
-                  <Upload
-                    className="mx-auto text-slate-200 group-hover:text-indigo-400 mb-4 transition-colors"
-                    size={48}
-                  />
-                  <p className="font-black text-slate-500">
-                    Drop your CSV file here
-                  </p>
-                </div>
-              </div>
-
-              {/* DOWNLOAD SECTION UPDATED */}
-              <div className="bg-indigo-600 p-6 rounded-[2rem] text-white flex items-center justify-between shadow-xl shadow-indigo-100">
-                <div>
-                  <h4 className="font-black text-lg">Need a template?</h4>
-                  <p className="text-indigo-100 text-sm">
-                    Download the CSV format
-                  </p>
-                </div>
-                <button
-                  onClick={handleDownloadTemplate}
-                  className="p-4 bg-white/20 rounded-2xl hover:bg-white/30 transition-all"
-                >
-                  <Download size={24} />
-                </button>
-              </div>
+            <div className="flex gap-2">
+              <Button
+                isIconOnly
+                onPress={() =>
+                  fetchVehicles(`?page=${page}&limit=${limit}&search=${search}`)
+                }
+                variant="flat"
+                className="bg-white border border-slate-200 text-slate-600 font-semibold rounded-xl h-9 text-xs"
+                startContent={<RefreshCcw size={16} strokeWidth={2} />}
+              />
+              <Button
+                variant="flat"
+                className="bg-white border border-slate-200 text-slate-600 font-semibold rounded-xl h-9 text-xs"
+                startContent={<FilterIcon size={16} />}
+              >
+                Filter & Sort
+              </Button>
             </div>
           </div>
-        )}
-      </div>
+
+          {loading ? (
+            <div className="py-20 flex justify-center">
+              <TransportLoader size={60} />
+            </div>
+          ) : (
+            <>
+              <ScrollShadow className="grid grid-cols-1 gap-2 h-[calc(100vh-340px)] px-2 custom-scrollbar mb-0 pb-4">
+                {vehicles.length > 0 ? (
+                  vehicles.map((v) => (
+                    <div
+                      key={v.id}
+                      className="bg-white border-2 border-slate-100 rounded-2xl p-3 hover:border-indigo-600 hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex flex-col lg:flex-row justify-between gap-6">
+                        <div className="flex gap-4 items-start lg:w-1/4">
+                          <div
+                            className={cn(
+                              "bg-indigo-50 p-4 rounded-2xl text-indigo-600",
+                              v.status === "active"
+                                ? "bg-green-100 text-green-600"
+                                : v.status === "assign"
+                                  ? "bg-amber-100 text-amber-600"
+                                  : "bg-rose-100 text-rose-600",
+                            )}
+                          >
+                            <Car size={24} />
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-bold text-slate-800 uppercase tracking-tight">
+                              {v.vehicle_number}
+                            </h3>
+                            <div className="flex gap-3 mt-1">
+                              <span className="flex items-center gap-2 text-[10px] font-bold text-indigo-600 uppercase">
+                                <Users
+                                  size={12}
+                                  className="text-slate-400"
+                                  strokeWidth={2}
+                                />
+                                {v.capacity} Seats
+                              </span>
+                              <span className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase">
+                                <Settings size={12} strokeWidth={2} />
+                                {v.vehicle_type}
+                              </span>
+                              <span
+                                className={cn(
+                                  "inline-block px-3 py-0.5 rounded-full text-[9px] font-semibold uppercase ",
+                                  v.status === "active"
+                                    ? "bg-green-100 text-green-600"
+                                    : "bg-amber-100 text-amber-600",
+                                )}
+                              >
+                                {v.status}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 flex-1 lg:px-4 border-t lg:border-t-0 lg:border-x-2 border-slate-100 pt-6 lg:pt-0">
+                          <DataMetric
+                            label="Current KM"
+                            value={`${v.current_kilometer} km`}
+                            icon={<Navigation size={12} />}
+                          />
+                          <DataMetric
+                            label="Insurance"
+                            value={v.insurance_date}
+                            icon={<ShieldCheck size={12} />}
+                            isDate
+                          />
+                          <DataMetric
+                            label="Pollution"
+                            value={v.pollution_date}
+                            icon={<Calendar size={12} />}
+                            isDate
+                          />
+                          <DataMetric
+                            label="RC Expiry"
+                            value={v.rc_date}
+                            icon={<FileText size={12} />}
+                            isDate
+                          />
+                          <DataMetric
+                            label="FC Date"
+                            value={v.fc_date}
+                            icon={<Calendar size={12} />}
+                            isDate
+                          />
+                          <DataMetric
+                            label="Next Service"
+                            value={v.fc_date}
+                            icon={<Calendar size={12} />}
+                            isDate
+                          />
+                        </div>
+
+                        <div className="flex justify-center items-center">
+                          <Button
+                            isIconOnly
+                            startContent={<Trash2 size={16} />}
+                            onPress={() => deleteVehicle([v.id])}
+                            className="text-red-500 bg-red-50 rounded-full transition-all"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="bg-slate-50 rounded-2xl py-20 text-center border-2 border-dashed border-slate-200">
+                    <p className="text-slate-400 font-bold uppercase tracking-widest">
+                      No assets found
+                    </p>
+                  </div>
+                )}
+              </ScrollShadow>
+              <CustomPagination
+                currentPage={page}
+                totalPages={totalPages}
+                totalItems={totalItems}
+                limit={limit}
+                onPageChange={setPage}
+              />
+            </>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <div className="lg:col-span-9 bg-white p-3">
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormInput
+                  label="Vehicle Number"
+                  name="vehicle_number"
+                  placeholder="TN01AA1234"
+                  required
+                />
+                <FormInput
+                  label="Vehicle Type"
+                  name="vehicle_type"
+                  placeholder="Bus, Van, SUV..."
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormInput
+                  label="Seating Capacity"
+                  name="capacity"
+                  type="number"
+                  placeholder="48"
+                  required
+                  min="2"
+                />
+                <FormInput
+                  label="Current KM"
+                  name="current_kilometer"
+                  type="number"
+                  placeholder="25000"
+                  min="100"
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <DatePicker
+                  label="RC Date"
+                  labelPlacement="outside"
+                  classNames={pickerStyles}
+                  selectorIcon={
+                    <Calendar size={16} className="text-slate-400" />
+                  }
+                  onChange={(v) => setDates({ ...dates, rc_date: v })}
+                />
+                <DatePicker
+                  label="Insurance Date"
+                  labelPlacement="outside"
+                  classNames={pickerStyles}
+                  selectorIcon={
+                    <Calendar size={16} className="text-slate-400" />
+                  }
+                  onChange={(v) => setDates({ ...dates, insurance_date: v })}
+                />
+                <DatePicker
+                  label="Pollution Date"
+                  labelPlacement="outside"
+                  classNames={pickerStyles}
+                  selectorIcon={
+                    <Calendar size={16} className="text-slate-400" />
+                  }
+                  onChange={(v) => setDates({ ...dates, pollution_date: v })}
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <DatePicker
+                  label="FC Date"
+                  labelPlacement="outside"
+                  classNames={pickerStyles}
+                  selectorIcon={
+                    <Calendar size={16} className="text-slate-400" />
+                  }
+                  onChange={(v) => setDates({ ...dates, fc_date: v })}
+                />
+                <DatePicker
+                  label="Next Service"
+                  labelPlacement="outside"
+                  classNames={pickerStyles}
+                  selectorIcon={
+                    <Calendar size={16} className="text-slate-400" />
+                  }
+                  onChange={(v) => setDates({ ...dates, next_service_date: v })}
+                />
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  type="reset"
+                  className="w-full text-indigo-600 bg-indigo-50 rounded-lg font-bold capitalize tracking-widest  hover:bg-indigo-100 transition-all"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="w-full bg-indigo-500 text-white rounded-lg font-bold capitalize tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-600 transition-all"
+                >
+                  Save Vehicle Asset
+                </Button>
+              </div>
+            </form>
+          </div>
+          <div className="bg-white p-4 rounded-2xl lg:col-span-3  shadow-sm border border-slate-100 h-full">
+            <h3 className="text-lg font-bold mb-2">Bulk Integration</h3>
+            <div
+              onClick={() => document.getElementById("bulk-file")?.click()}
+              className="border-3 border-dashed border-slate-100 rounded-2xl p-10 text-center hover:border-indigo-100 cursor-pointer transition-all"
+            >
+              <input
+                type="file"
+                id="bulk-file"
+                className="hidden"
+                accept=".csv, .xlsx"
+              />
+              <Upload className="mx-auto text-slate-200 mb-4" size={40} />
+              <p className="font-black text-slate-400 text-sm">
+                Upload Spreadsheet
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
+const DataMetric = ({
+  label,
+  value,
+  icon,
+  isDate = false,
+}: {
+  label: string;
+  value: string | null | undefined;
+  icon: React.ReactNode;
+  isDate?: boolean;
+}) => (
+  <div className="space-y-1 my-auto">
+    <p className="text-[10px] font-bold uppercase text-slate-400 flex items-center gap-1">
+      {icon} {label}
+    </p>
+    <p className="text-xs font-bold text-slate-700 truncate ml-1">
+      {value
+        ? isDate
+          ? new Date(value).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
+          : value
+        : "--"}
+    </p>
+  </div>
+);
+
+const FormInput = ({
+  label,
+  ...props
+}: {
+  label: string;
+} & React.InputHTMLAttributes<HTMLInputElement>) => (
+  <div className="space-y-1 h-fit">
+    <label className="text-[10px] font-bold uppercase text-indigo-600 ml-2">
+      {label}
+    </label>
+    <input
+      {...props}
+      className="w-full p-3 shadow-sm bg-slate-50 border border-slate-100 rounded-lg text-sm font-medium outline-none focus:ring-2 ring-indigo-500"
+    />
+  </div>
+);
 
 export default VehicleManagement;

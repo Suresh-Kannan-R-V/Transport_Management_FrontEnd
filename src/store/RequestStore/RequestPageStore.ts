@@ -6,12 +6,28 @@ let searchTimeout: ReturnType<typeof setTimeout>;
 interface RequestItem {
   id: number;
   routeName: string;
-  createdBy: { name: string; faculty_id: string | null };
-  status: "pending" | "confirmed" | "assign";
+  createdBy: {
+    name: string;
+    faculty_id: string | null;
+    roles: {
+      id: number;
+      role: string;
+    };
+  };
+  status:
+    | "Pending"
+    | "Approved"
+    | "Vehicle Assigned"
+    | "Faculty Confirmed"
+    | "Driver Assigned"
+    | "Completed"
+    | "Rejected"
+    | "Cancelled";
   travelType: "One Way" | "Two Way" | "Multi Day";
   start_datetime: string;
   end_datetime: string | null;
   passengerCount: number;
+  approx_duration: number;
   startLocation: string;
   destinationLocation: string;
   intermediateStops: string[];
