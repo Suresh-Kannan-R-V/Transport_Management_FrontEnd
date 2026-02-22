@@ -23,7 +23,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import { FILE_BASE_URL } from "../../../../api/base";
 import { BackButton, TransportLoader } from "../../../../components";
 import MapViewer from "../../../../components/MapComponent";
-import { useUserStore } from "../../../../store";
 import {
   cn,
   formatDateTime,
@@ -31,6 +30,7 @@ import {
   geocodeLocations,
 } from "../../../../utils/helper";
 import { VehicleAssignmentPopup } from "../assignVechicle";
+import { useUserStore } from "../../../../store";
 
 export interface MappedStop {
   id: string;
@@ -136,12 +136,12 @@ const statusStyles: Record<RequestStatus, string> = {
 const ViewRequest = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const roleName = useUserStore((state) => state.roleName);
   const [data, setData] = useState<RouteData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [mappedStops, setMappedStops] = useState<MappedStop[]>([]);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
 
-  const [requestData, setRequestData] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
 
   const [isAssignOpen, setIsAssignOpen] = useState(false);
@@ -151,8 +151,6 @@ const ViewRequest = () => {
     setSelectedRequest(request);
     setIsAssignOpen(true);
   };
-
-  const roleName = useUserStore((state) => state.roleName);
 
   const fetchData = useCallback(async () => {
     if (!id) return;
@@ -408,7 +406,7 @@ const ViewRequest = () => {
             <div className="p-5 pb-0 rounded-3xl border border-slate-200 shadow-md">
               <SectionTitle icon={<User size={22} />} title="Requested By" />
               {(data.creator.Role.name === "Transport Admin" && (
-                <div className="flex flex-col items-center justify-center gap-2 py-15 bg-indigo-50 rounded-2xl border-1 border-slate-300 border-dashed">
+                <div className="flex flex-col items-center justify-center gap-2 py-15 bg-indigo-50 rounded-2xl border border-slate-300 border-dashed">
                   <Users className="text-slate-400" size={30} />
                   <p className="text-xs text-indigo-500 font-semibold">
                     Created By Admin
@@ -476,27 +474,31 @@ const ViewRequest = () => {
               )}
             </div>
             <div className="p-4 pb-2 rounded-3xl border border-slate-200 shadow-sm">
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center">
                 <SectionTitle
                   icon={<Users />}
                   title={
-                    <span className="w-40 truncate">{`Guest (${data.total_guest})`}</span>
+                    <span className="w-36 truncate">{`Guest (${data.total_guest})`}</span>
                   }
                 />
-                <Button
-                  size="sm"
-                  onPress={() => setShowPopup(true)}
-                  className={cn(
-                    "text-xs font-medium rounded-lg text-indigo-600 hover:underline items-start",
-                    data?.route_status === "Vehicle Assigned"
-                      ? "warning"
-                      : "primary",
-                  )}
-                >
-                  {data?.route_status === "Vehicle Assigned"
-                    ? "Reassign Vehicles"
-                    : "Assign Vehicles"}
-                </Button>
+                {(roleName === "Transport Admin" ||
+                  (roleName === "Faculty" &&
+                    data?.route_status === "Vehicle Assigned")) && (
+                  <Button
+                    size="sm"
+                    // onPress={() => setShowPopup(true)}
+                    className={cn(
+                      "text-xs font-medium items-start pt-1 px-3 h-6 rounded-3xl justify-center",
+                      data?.route_status === "Vehicle Assigned"
+                        ? "text-orange-600 "
+                        : "text-indigo-600 ",
+                    )}
+                  >
+                    {data?.route_status === "Vehicle Assigned"
+                      ? "Reassign Vehicles"
+                      : "Assign Vehicles"}
+                  </Button>
+                )}
               </div>
               <ScrollShadow className="space-y-2 h-48 overflow-y-scroll pr-2 custom-scrollbar">
                 {data.guests.map((guest) => (
@@ -577,11 +579,8 @@ const ViewRequest = () => {
                     className={cn(
                       "p-5 pb-2 rounded-3xl border border-slate-100 shadow-sm bg-white  h-full flex flex-col justify-between transition-all",
                       !schedule.vehicle &&
-                        "bg-indigo-50/50 border-dashed border-indigo-200 cursor-pointer",
+                        "bg-indigo-50/50 border-dashed border-indigo-200",
                     )}
-                    onClick={() => {
-                      if (!schedule.vehicle) handleOpenAssign(schedule);
-                    }}
                   >
                     <div className={cn(!schedule.vehicle && "flex-1")}>
                       <div className="flex justify-between items-start mb-2">
@@ -609,7 +608,7 @@ const ViewRequest = () => {
 
                       {schedule.vehicle ? (
                         <div className="animate-in fade-in zoom-in duration-300">
-                          <ScrollShadow className="h-[250px] overflow-y-scroll space-y-2 custom-scrollbar">
+                          <ScrollShadow className="h-64 overflow-y-scroll space-y-2 custom-scrollbar">
                             {schedule?.guests?.map((guest) => (
                               <div
                                 key={guest.id}
@@ -660,10 +659,7 @@ const ViewRequest = () => {
                         <div className="flex-1 flex flex-col items-center justify-center opacity-60 text-indigo-600 py-4">
                           <Car size={48} className="mb-2" strokeWidth={1.5} />
                           <p className="text-sm font-semibold text-center">
-                            No Vehicle Assigned Yet <br />
-                            <span className="text-xs font-normal">
-                              Click to assign a vehicle for guests
-                            </span>
+                            No Vehicle Assigned Yet
                           </p>
                         </div>
                       )}
@@ -675,32 +671,32 @@ const ViewRequest = () => {
           </div>
         </div>
         <div className="p-5 rounded-3xl border border-slate-200 shadow-md col-span-12">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <SectionTitle icon={<Info />} title="Requirements" />
-                <div className="space-y-4">
-                  <RemarkBox
-                    label="Special Requirements"
-                    content={data.additional_info.special_requirements}
-                  />
-                  <RemarkBox
-                    label="Luggage Details"
-                    content={data.additional_info.luggage_details}
-                  />
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <SectionTitle icon={<Info />} title="Requirements" />
+              <div className="space-y-4">
+                <RemarkBox
+                  label="Special Requirements"
+                  content={data.additional_info.special_requirements}
+                />
+                <RemarkBox
+                  label="Luggage Details"
+                  content={data.additional_info.luggage_details}
+                />
               </div>
-              <div>
-                <SectionTitle icon={<MessageSquare />} title="Remarks" />
-                <div className="space-y-4">
-                  <RemarkBox
-                    label="Faculty Remark"
-                    content={data.faculty_remark}
-                  />
-                  <RemarkBox label="Admin Remark" content={data.admin_remark} />
-                </div>
+            </div>
+            <div>
+              <SectionTitle icon={<MessageSquare />} title="Remarks" />
+              <div className="space-y-4">
+                <RemarkBox
+                  label="Faculty Remark"
+                  content={data.faculty_remark}
+                />
+                <RemarkBox label="Admin Remark" content={data.admin_remark} />
               </div>
             </div>
           </div>
+        </div>
       </div>
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop--md">

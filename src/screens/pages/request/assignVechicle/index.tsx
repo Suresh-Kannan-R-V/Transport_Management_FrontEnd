@@ -30,6 +30,7 @@ import {
 import { FILE_BASE_URL } from "../../../../api/base";
 import { cn } from "../../../../utils/helper";
 import toast from "react-hot-toast";
+import { useUserStore } from "../../../../store";
 
 interface Guest {
   id: number;
@@ -81,6 +82,9 @@ export const VehicleAssignmentPopup = ({
   const [availableVehicles, setAvailableVehicles] = useState<Vehicle[]>([]);
   const [vehicleSearch, setVehicleSearch] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [remarks, setRemarks] = useState("");
+
+  const roleName = useUserStore((state) => state.roleName);
 
   const fetchVehicles = async () => {
     try {
@@ -120,6 +124,8 @@ export const VehicleAssignmentPopup = ({
   }, [guests, existingSchedules]);
 
   const handleConfirm = async () => {
+    console.log(roleName);
+
     let decodedRouteId;
     try {
       decodedRouteId = Number(atob(routeId as string));
@@ -144,6 +150,10 @@ export const VehicleAssignmentPopup = ({
       return;
     }
 
+    const isFaculty = roleName === "faculty";
+    const finalRemark = remarks.trim()
+      ? `${remarks}`
+      : `Remark By ${roleName}.`;
     const isUpdate = existingSchedules && existingSchedules.length > 0;
     setIsSubmitting(true);
 
@@ -153,11 +163,13 @@ export const VehicleAssignmentPopup = ({
 
     const payload = {
       route_id: decodedRouteId,
+      [isFaculty ? "faculty_remark" : "admin_remark"]: finalRemark,
       allocations: vehicles.map((v) => ({
         vehicle_id: v.selectedVehicle?.id,
         guest_ids: v.assignedGuests.map((g) => g.id),
       })),
     };
+    console.log(payload);
 
     try {
       const response = await fetch(apiUrl, {
@@ -226,7 +238,6 @@ export const VehicleAssignmentPopup = ({
     )
       return;
 
-    // Find the guest object using the draggableId (which is the guest.id)
     let guestToMove: Guest | undefined;
 
     if (source.droppableId === "guest-pool") {
@@ -276,7 +287,7 @@ export const VehicleAssignmentPopup = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-indigo-950/40 backdrop-blur-md p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-indigo-950/40 backdrop-blur-md p-4 m-0">
       <Card className="w-full max-w-6xl h-[90vh] flex flex-col shadow-2xl bg-slate-50 border-none rounded-3xl overflow-hidden">
         <div className="px-6 py-4 bg-white border-b border-indigo-100 flex justify-between items-center">
           <div>
@@ -585,25 +596,33 @@ export const VehicleAssignmentPopup = ({
           </div>
         </DragDropContext>
 
-        {/* Footer */}
-        <div className="pt-2 pb-4 px-6 bg-white border-t border-indigo-100 flex justify-end gap-3">
-          <Button
-            variant="light"
-            className="font-bold rounded-xl px-12 bg-indigo-50 text-indigo-600"
-            onPress={onClose}
-            isDisabled={isSubmitting}
-          >
-            Cancel
-          </Button>
-          <Button
-            isLoading={isSubmitting}
-            isDisabled={vehicles.length === 0}
-            onPress={handleConfirm}
-            color="primary"
-            className="font-medium px-12 rounded-xl text-white bg-indigo-600 shadow-xl shadow-indigo-100"
-          >
-            Confirm
-          </Button>
+        <div className="pt-2 pb-4 px-6 bg-white border-t border-indigo-100 flex justify-between items-center gap-3">
+          <textarea
+            value={remarks}
+            onChange={(e) => setRemarks(e.target.value)}
+            rows={2}
+            placeholder="Enter notes here..."
+            className="flex-1 max-w-md px-4 py-2 text-sm text-slate-700 bg-slate-50 border border-slate-200 rounded-xl outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 resize-none"
+          />
+          <div className="flex gap-3">
+            <Button
+              variant="light"
+              className="font-bold rounded-xl px-12 bg-indigo-50 text-indigo-600"
+              onPress={onClose}
+              isDisabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              isLoading={isSubmitting}
+              isDisabled={vehicles.length === 0}
+              onPress={handleConfirm}
+              color="primary"
+              className="font-medium px-12 rounded-xl text-white bg-indigo-600 shadow-xl shadow-indigo-100"
+            >
+              Confirm
+            </Button>
+          </div>
         </div>
       </Card>
     </div>
