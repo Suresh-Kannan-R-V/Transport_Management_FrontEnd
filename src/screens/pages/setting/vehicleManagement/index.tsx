@@ -175,12 +175,12 @@ const VehicleManagement = () => {
             </div>
           ) : (
             <>
-              <ScrollShadow className="grid grid-cols-1 gap-2 h-[calc(100vh-340px)] px-2 custom-scrollbar mb-0 pb-4">
+              <ScrollShadow className="flex flex-col gap-3 h-[calc(100vh-340px)] px-2 custom-scrollbar mb-0 pb-4 overflow-y-auto">
                 {vehicles.length > 0 ? (
                   vehicles.map((v) => (
                     <div
                       key={v.id}
-                      className="bg-white border-2 border-slate-100 rounded-2xl p-3 hover:border-indigo-600 hover:shadow-md transition-shadow"
+                      className="w-full bg-white border-2 border-slate-50 rounded-2xl p-4 hover:border-indigo-500 hover:shadow-xl hover:shadow-indigo-500/5 transition-all group h-fit flex-shrink-0"
                     >
                       <div className="flex flex-col lg:flex-row justify-between gap-6">
                         <div className="flex gap-4 items-start lg:w-1/4">
@@ -197,7 +197,7 @@ const VehicleManagement = () => {
                             <Car size={24} />
                           </div>
                           <div>
-                            <h3 className="text-xl font-bold text-slate-800 uppercase tracking-tight">
+                            <h3 className="text-xl font-bold uppercase tracking-tight">
                               {v.vehicle_number}
                             </h3>
                             <div className="flex gap-3 mt-1">

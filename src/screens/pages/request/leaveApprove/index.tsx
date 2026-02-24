@@ -17,7 +17,15 @@ import {
   Tooltip,
   useDisclosure,
 } from "@heroui/react";
-import { CheckCircle2, Clock, Filter, Info, Search } from "lucide-react";
+import {
+  CheckCircle2,
+  Clock,
+  Filter,
+  FilterIcon,
+  Info,
+  RefreshCcw,
+  Search,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { BackButton } from "../../../../components";
@@ -87,14 +95,12 @@ const LeaveApprovePage = () => {
   const [selectedLeave, setSelectedLeave] = useState<any>(null);
   const [newDriver, setNewDriver] = useState("");
 
-  // --- Filter Logic ---
   const filteredItems = useMemo(() => {
     return leaves.filter((leave) =>
       leave.name.toLowerCase().includes(filterValue.toLowerCase()),
     );
   }, [leaves, filterValue]);
 
-  // --- Pagination Logic ---
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
   const items = useMemo(() => {
     const start = (page - 1) * rowsPerPage;
@@ -145,8 +151,7 @@ const LeaveApprovePage = () => {
   };
 
   return (
-    <div className="p-4 sm:p-8 animate-in fade-in duration-500 bg-slate-50/30 min-h-screen">
-      {/* Header & Search Area */}
+    <div className="px-4 py-2 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
         <div className="flex items-center gap-4">
           <BackButton />
@@ -159,15 +164,33 @@ const LeaveApprovePage = () => {
             </h1>
           </div>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2 items-center">
+          <div className="relative hidden lg:block">
+            <Search
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+              size={18}
+            />
+            <input
+              type="text"
+              placeholder="Quick search missions..."
+              className="pl-12 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl focus:ring-1 focus:ring-indigo-500 outline-none transition-all text-sm w-72 shadow-sm"
+            />
+          </div>
+          <Button
+            isIconOnly
+            variant="flat"
+            className="bg-white border border-slate-200 text-slate-600 font-semibold rounded-xl text-xs shadow"
+            startContent={<RefreshCcw size={16} strokeWidth={2} />}
+          />
           <Dropdown>
             <DropdownTrigger>
               <Button
-                variant="light"
-                isIconOnly
-                className="text-[#64748b] font-medium text-sm border border-gray-200 shadow-md rounded-lg"
-                startContent={<Filter size={18} strokeWidth={2} />}
-              />
+                variant="flat"
+                className="bg-white border border-slate-200 text-slate-600 font-semibold rounded-xl text-xs shadow"
+                startContent={<FilterIcon size={16} />}
+              >
+                Filter & Sort
+              </Button>
             </DropdownTrigger>
             <DropdownMenu
               className="bg-white shadow-md rounded-2xl"
@@ -210,17 +233,6 @@ const LeaveApprovePage = () => {
               </DropdownItem>
             </DropdownMenu>
           </Dropdown>
-          <div className="relative hidden lg:block">
-            <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-              size={18}
-            />
-            <input
-              type="text"
-              placeholder="Quick search missions..."
-              className="pl-12 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-sm w-72 shadow-sm"
-            />
-          </div>
         </div>
       </div>
 

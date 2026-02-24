@@ -1,5 +1,5 @@
 import { Card, CardBody, cn } from "@heroui/react";
-import { ArrowRight, Car, LogOut, Users } from "lucide-react";
+import { ArrowRight, Car, LogOut, User, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Setting = () => {
@@ -26,6 +26,13 @@ const Setting = () => {
       icon: <Car className="text-amber-600" size={24} />,
       path: "/settings/vehicle-management",
       color: "bg-amber-100/70",
+    },
+    {
+      title: "Driver Management",
+      description: "Manage driver details, licenses, and performance.",
+      icon: <User className="text-teal-600" size={24} />,
+      path: "/settings/driver-management",
+      color: "bg-teal-100/70",
     },
   ];
 

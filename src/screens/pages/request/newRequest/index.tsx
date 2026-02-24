@@ -31,6 +31,7 @@ import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useCallback, useMemo, useRef } from "react";
 import { useRequestCreationStore } from "../../../../store";
+import { pickerStyles } from "../../../../utils/style";
 
 const NewRequest = () => {
   const store = useRequestCreationStore();
@@ -52,18 +53,6 @@ const NewRequest = () => {
     if (!store.startDate) return currentDateTime;
     return parseToZoned(store.startDate) || currentDateTime;
   }, [store.startDate, currentDateTime, parseToZoned]);
-
-  const pickerStyles = {
-    label: "text-[10px] font-bold text-indigo-600 uppercase ml-1",
-    inputWrapper:
-      "bg-slate-50 !bg-opacity-100 border-slate-200 rounded-xl shadow-sm hover:border-indigo-400 transition-all focus:ring focus:ring-indigo-600",
-    popoverContent: "bg-white border border-slate-200 shadow-xl rounded-xl",
-    calendar: "bg-red-500",
-    errorMessage:
-      "text-rose-500 text-[10px] font-medium mt-1 bg-rose-50 px-2 py-1 rounded-md border border-rose-100",
-    helperText: "text-slate-400 text-[10px]",
-    input: "text-slate-800 font-medium",
-  };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -381,7 +370,8 @@ const NewRequest = () => {
                     />
                     <div className="flex justify-center">
                       <p className="text-xs font-medium text-rose-500 flex gap-2">
-                        <TriangleAlert size={14}/> Fill Guest Count Before Upload File
+                        <TriangleAlert size={14} /> Fill Guest Count Before
+                        Upload File
                       </p>
                     </div>
                     <Upload

@@ -16,6 +16,7 @@ import {
 } from "../screens";
 import VehicleManagement from "../screens/pages/setting/vehicleManagement";
 import ViewRequest from "../screens/pages/request/viewRequest";
+import DriverManagement from "../screens/pages/setting/driverManagement";
 
 const privateRoutes = [
   {
@@ -73,6 +74,10 @@ const privateRoutes = [
   {
     path: "settings/vehicle-management",
     element: <VehicleManagement />,
+  },
+  {
+    path: "settings/driver-management",
+    element: <DriverManagement />,
   },
   {
     path: "*",
