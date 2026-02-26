@@ -17,7 +17,7 @@ const Setting = () => {
       title: "Session Management",
       description: "View active sessions and force logout users if necessary.",
       icon: <LogOut className="text-rose-600" size={24} />,
-      path: "/settings/logout-users",
+      path: "/settings/session-management",
       color: "bg-rose-50",
     },
     {

@@ -166,3 +166,41 @@ export const geocodeLocations = async (locations: string[]) => {
   );
   return coords;
 };
+
+export const RouteStatus: Record<number, string> = {
+  1: "Pending",
+  2: "Vehicle Assigned",
+  3: "Vehicle Reassigned",
+  4: "Faculty Approved",
+  5: "Driver Assigned",
+  6: "Driver Reassigned",
+  7: "Started",
+  8: "Completed",
+  9: "Cancelled",
+};
+
+export const ROUTE_STATUS: Record<string, number> = {
+  PENDING: 1,
+  VEHICLE_ASSIGNED: 2,
+  VEHICLE_REASSIGNED: 3,
+  FACULTY_APPROVED: 4,
+  DRIVER_ASSIGNED: 5,
+  DRIVER_REASSIGNED: 6,
+  STARTED: 7,
+  COMPLETED: 8,
+  CANCELLED: 9,
+};
+
+export const DriverStatus: Record<number, string> = {
+  1: "Available",
+  2: "Assigned",
+  3: "On Trip",
+  4: "On Leave",
+};
+
+export const DRIVER_STATUS: Record<string, number> = {
+  AVAILABLE: 1,
+  ASSIGNED: 2,
+  ON_TRIP: 3,
+  ON_LEAVE: 4,
+};

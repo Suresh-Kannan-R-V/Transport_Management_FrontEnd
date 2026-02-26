@@ -1,27 +1,50 @@
-import { Button, ScrollShadow, Select, SelectItem } from "@heroui/react";
+import { Button, ScrollShadow } from "@heroui/react";
 import {
+  BellRing,
   Calendar,
-  FilterIcon,
-  Mail,
+  LogIn,
   Phone,
   RefreshCcw,
   Search,
+  ShieldCheck,
+  ShieldUser,
   Trash2,
   User,
-  ShieldCheck,
-  LogIn,
-  BellRing,
-  ShieldUser,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   BackButton,
   CustomPagination,
+  GenericFilterDropdown,
   TransportLoader,
 } from "../../../../components";
-import { cn } from "../../../../utils/helper";
 import { useDriverStore } from "../../../../store/SettingStore/DriverStore";
-import { selectorStyles } from "../../../../utils/style";
+import { cn } from "../../../../utils/helper";
+
+const filterConfig = [
+  {
+    title: "Driver Status",
+    items: [
+      { key: "available", label: "Available", value: "available" },
+      { key: "assigned", label: "Assigned", value: "assigned" },
+      { key: "leave", label: "On Leave", value: "leave" },
+    ],
+  },
+  {
+    title: "Login Status",
+    items: [
+      { key: "true-login", label: "Logged In", value: "true" },
+      { key: "false-login", label: "Logged Out", value: "false" },
+    ],
+  },
+  {
+    title: "Push Notifications",
+    items: [
+      { key: "true-push", label: "Enabled (ON)", value: "true" },
+      { key: "false-push", label: "Disabled (OFF)", value: "false" },
+    ],
+  },
+];
 
 const DriverManagement = () => {
   // Store Hooks
@@ -58,6 +81,28 @@ const DriverManagement = () => {
     loadDrivers();
   }, [page, search, status, isLogin, pushStatus]);
 
+  const handleFilterSelection = (sectionTitle: string, item: any) => {
+    setPage(1);
+    switch (sectionTitle) {
+      case "Driver Status":
+        setStatus(item.value);
+        break;
+      case "Login Status":
+        setIsLogin(item.value);
+        break;
+      case "Push Notifications":
+        setPushStatus(item.value);
+        break;
+    }
+  };
+  const handleReset = () => {
+    setSearch("");
+    setPage(1);
+    setStatus("all");
+    setIsLogin("all");
+    setPushStatus("all");
+  };
+
   return (
     <div className="px-4 pt-2">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
@@ -71,59 +116,6 @@ const DriverManagement = () => {
               Driver Management
             </h1>
           </div>
-        </div>
-
-        <div className="flex gap-3">
-          <Button
-            isIconOnly
-            onPress={loadDrivers}
-            variant="flat"
-            size="md"
-            className="bg-white border border-slate-200 text-slate-600 font-semibold rounded-xl text-xs shadow"
-            startContent={<RefreshCcw size={16} strokeWidth={2} />}
-          />
-          <Select
-            placeholder="Status"
-            size="sm"
-            className="w-32"
-            classNames={selectorStyles}
-            onSelectionChange={(keys) =>
-              setStatus(Array.from(keys)[0] as string)
-            }
-          >
-            <SelectItem key="all">All</SelectItem>
-            <SelectItem key="available">Available</SelectItem>
-            <SelectItem key="assigned">Assigned</SelectItem>
-            <SelectItem key="leave">Leave</SelectItem>
-          </Select>
-
-          <Select
-            placeholder="Login"
-            size="sm"
-            className="w-28"
-            classNames={selectorStyles}
-            onSelectionChange={(keys) =>
-              setIsLogin(Array.from(keys)[0] as string)
-            }
-          >
-            <SelectItem key="all">All</SelectItem>
-            <SelectItem key="true">Log In</SelectItem>
-            <SelectItem key="false">Log Out</SelectItem>
-          </Select>
-
-          <Select
-            placeholder="Push"
-            className="w-28"
-            size="sm"
-            classNames={selectorStyles}
-            onSelectionChange={(keys) =>
-              setPushStatus(Array.from(keys)[0] as string)
-            }
-          >
-            <SelectItem key="all">All</SelectItem>
-            <SelectItem key="true">ON</SelectItem>
-            <SelectItem key="false">OFF</SelectItem>
-          </Select>
         </div>
       </header>
 
@@ -144,6 +136,25 @@ const DriverManagement = () => {
             className="pl-12 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl focus:ring-1 focus:ring-indigo-500 outline-none transition-all text-sm w-72 shadow-sm"
           />
         </div>
+        <div className="flex gap-2">
+          <Button
+            isIconOnly
+            onPress={() => {
+              loadDrivers();
+              handleReset();
+            }}
+            variant="flat"
+            size="md"
+            className="bg-white border border-slate-200 text-slate-600 font-semibold rounded-xl h-9 text-xs"
+            startContent={<RefreshCcw size={16} strokeWidth={2} />}
+          />
+          <GenericFilterDropdown
+            sections={filterConfig}
+            onFilterSelect={handleFilterSelection}
+            onReset={handleReset}
+            buttonLabel="Filter Drivers"
+          />
+        </div>
       </div>
 
       {loading ? (
@@ -152,7 +163,7 @@ const DriverManagement = () => {
         </div>
       ) : (
         <>
-          <ScrollShadow className="flex flex-col gap-2 h-[calc(100vh-330px)] px-2 custom-scrollbar mb-0 pb-4 overflow-y-auto">
+          <ScrollShadow className="flex flex-col gap-2 h-[calc(100vh-330px)] px-2 custom-scrollbar mb-0 pb-4">
             {" "}
             {drivers.length > 0 ? (
               drivers.map((d) => (
@@ -165,7 +176,7 @@ const DriverManagement = () => {
                       <div
                         className={cn(
                           "p-3 rounded-2xl transition-colors",
-                          d.status === "available"
+                          d.status === 1
                             ? "bg-green-50 text-green-600"
                             : "bg-amber-50 text-amber-600",
                         )}
@@ -177,19 +188,25 @@ const DriverManagement = () => {
                           {d.name}
                         </h3>
                         <div className="flex gap-2 mt-1">
-                          <p className="text-[10px] font-medium text-slate-400 tracking-widest uppercase">
+                          <p className="text-[10px] font-medium text-slate-400 tracking-widest">
                             <ShieldUser size={13} className="inline mr-1" />
                             {d.user_name}
                           </p>
                           <span
                             className={cn(
                               "px-2 pt-0.5 rounded-full text-[9px] font-semibold uppercase border",
-                              d.status === "available"
+                              d.status === 1
                                 ? "bg-green-50 border-green-100 text-green-600"
-                                : "bg-amber-50 border-amber-100 text-amber-600",
+                                : d.status === 2
+                                  ? "bg-amber-50 border-amber-100 text-amber-600"
+                                  : "bg-rose-50 border-rose-100 text-rose-600",
                             )}
                           >
-                            {d.status}
+                            {d.status == 1
+                              ? "Available"
+                              : d.status === 2
+                                ? "Assign"
+                                : "On Leave"}
                           </span>
                           {d.isLogin && (
                             <span className="bg-indigo-50 border border-indigo-100 text-indigo-600 px-2 pt-0.5 rounded-full text-[9px] font-semibold uppercase flex items-center gap-1">

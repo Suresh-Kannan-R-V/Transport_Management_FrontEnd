@@ -8,34 +8,29 @@ import {
   Users,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { cn, formatDate, formatDuration } from "../../utils/helper";
-
-type RequestStatus =
-  | "Pending"
-  | "Approved"
-  | "Vehicle Assigned"
-  | "Faculty Confirmed"
-  | "Driver Assigned"
-  | "Completed"
-  | "Rejected"
-  | "Cancelled";
+import {
+  cn,
+  formatDate,
+  formatDuration,
+  RouteStatus,
+} from "../../utils/helper";
 
 interface RequestCardItem {
   id: number;
   routeName: string;
-  status: RequestStatus;
+  status: number;
   startLocation: string;
   destinationLocation: string;
   start_datetime: string;
-  end_datetime?: string;
+  end_datetime?: string | null;
   travelType: string;
   passengerCount: number;
   approx_duration: number;
-  vehicleAssigned?: string;
+  vehicleAssigned?: string | null;
   intermediateStops: unknown[];
   createdBy: {
     name: string;
-    faculty_id: string;
+    faculty_id?: string | null;
     roles: {
       id: number;
       role: string;
@@ -43,25 +38,16 @@ interface RequestCardItem {
   };
 }
 
-const statusStyles: Record<RequestStatus, string> = {
-  Pending: "bg-amber-50 text-amber-500 border-amber-200 border",
-  Approved: "bg-blue-50 text-blue-500 border-blue-200 border",
-  "Faculty Confirmed": "bg-indigo-50 text-indigo-500 border-indigo-200 border",
-  "Vehicle Assigned": "bg-purple-50 text-purple-500 border-purple-200 border",
-  "Driver Assigned": "bg-violet-50 text-violet-500 border-violet-200 border",
-  Completed: "bg-emerald-50 text-emerald-500 border-emerald-200 border",
-  Rejected: "bg-rose-50 text-rose-500 border-rose-200 border",
-  Cancelled: "bg-slate-50 text-slate-500 border-slate-200 border",
-};
-const getStatusStyles = (status: string) => {
-  const normalizedStatus = status
-    .split(/[\s_]+/)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ") as RequestStatus;
-  return (
-    statusStyles[normalizedStatus] ||
-    "bg-slate-50 text-slate-500 border-slate-200 border"
-  );
+const statusStyles: Record<number, string> = {
+  1: "bg-amber-50 text-amber-500 border-amber-200 border", // Pending
+  2: "bg-purple-50 text-purple-500 border-purple-200 border", // Vehicle Assigned
+  3: "bg-purple-50 text-purple-500 border-purple-200 border", // Vehicle Reassigned
+  4: "bg-indigo-50 text-indigo-500 border-indigo-200 border", // Faculty Approved
+  5: "bg-teal-50 text-teal-500 border-teal-200 border", // Driver Assigned
+  6: "bg-teal-50 text-teal-500 border-teal-200 border", // Driver Reassigned
+  7: "bg-blue-50 text-blue-500 border-blue-200 border", // Started
+  8: "bg-emerald-50 text-emerald-500 border-emerald-200 border", // Completed
+  9: "bg-slate-50 text-slate-500 border-slate-200 border", // Cancelled
 };
 
 export const RequestCard = ({ item }: { item: RequestCardItem }) => {
@@ -69,7 +55,7 @@ export const RequestCard = ({ item }: { item: RequestCardItem }) => {
 
   const handleCardClick = () => {
     const hashedId = btoa(item.id.toString());
-    navigate(`/request/view-request/${hashedId}`);
+    navigate(`/view-request/${hashedId}`);
   };
 
   return (
@@ -89,8 +75,14 @@ export const RequestCard = ({ item }: { item: RequestCardItem }) => {
                 {item.routeName}
               </h3>
 
-              <div className="flex justify-start">
-                <p className="text-[10px] capitalize font-semibold bg-indigo-100 px-3 rounded-full text-indigo-600 pt-px mt-0.5">
+              <div className="flex justify-start items-center gap-2">
+                <p
+                  className={cn(
+                    "text-[10px] capitalize font-semibold bg-indigo-100 px-3 rounded-full text-indigo-600 mt-0.5",
+                    item.createdBy?.roles?.role === "Faculty" &&
+                      "bg-green-100 text-green-600",
+                  )}
+                >
                   {item.createdBy?.roles?.role === "Transport Admin"
                     ? "Admin"
                     : item.createdBy?.roles?.role || "User"}
@@ -105,12 +97,12 @@ export const RequestCard = ({ item }: { item: RequestCardItem }) => {
           </div>
           <p
             className={cn(
-              "px-3 py-0.5 rounded-full text-[11px] font-semibold shadow-sm capitalize",
-              getStatusStyles(item.status as RequestStatus) ||
-                "bg-slate-50 text-slate-500",
+              "px-3 py-0.5 pb-[0.5px] rounded-full text-[11px] font-semibold shadow-sm capitalize",
+              statusStyles[item.status] ||
+                "bg-slate-50 text-slate-500 border-slate-200 border",
             )}
           >
-            {item.status}
+            {RouteStatus[item.status] || "Unknown"}
           </p>
         </div>
 

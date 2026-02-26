@@ -20,11 +20,10 @@ import {
 import {
   CheckCircle2,
   Clock,
-  Filter,
   FilterIcon,
   Info,
   RefreshCcw,
-  Search,
+  Search
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import toast from "react-hot-toast";

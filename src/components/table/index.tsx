@@ -44,40 +44,25 @@ export const GenericTable = <T extends { id: string | number }>({
         removeWrapper
         isHeaderSticky
         classNames={{
-          base: "flex-1 overflow-auto scrollbar-hide",
-          // Changed h-full to h-auto so rows don't stretch vertically
+          base: "flex-1 overflow-auto scrollbar-hide custom-scrollbar",
           table: "min-w-full border-separate border-spacing-0 h-auto",
-          thead: "z-10",
+          thead: "z-20",
           th: [
-            "bg-indigo-50",
-            "text-indigo-600",
-            "font-bold",
-            "text-[12px]",
-            "uppercase",
-            "tracking-tight",
-            "py-2.5", // Reduced header height
-            "px-6",
-            "border-b",
-            "border-indigo-100",
+            "bg-slate-100 text-slate-600 font-bold text-xs uppercase tracking-tight py-4 px-6 border-b border-indigo-100",
           ],
           td: [
-            "py-2", // This makes the row height small/fit to content
-            "px-6",
-            "border-b",
-            "border-indigo-50",
-            "group-data-[hover=true]:bg-indigo-100/30",
-            "transition-colors",
+            "py-2 px-6 border-b border-indigo-50 group-data-[hover=true]:bg-indigo-100/30 transition-colors",
           ],
         }}
       >
-        <TableHeader columns={allColumns}>
+        <TableHeader columns={allColumns} >
           {(column) => (
             <TableColumn
               key={column.key}
               className={cn(
-                column.key === "sno" && "pl-8 w-[60px]",
+                column.key === "sno" && "pl-8 w-12",
                 column.key === "actions" &&
-                  "sticky right-0 z-10 bg-indigo-50 font-bold pr-8 text-center",
+                  "sticky right-0 font-bold pr-8 text-center",
               )}
             >
               {column.label}
@@ -108,7 +93,7 @@ export const GenericTable = <T extends { id: string | number }>({
                       "text-slate-600 text-sm h-14 font-semibold",
                       columnKey === "sno" && "pl-8 font-bold",
                       columnKey === "actions" &&
-                        "sticky right-0 z-10 bg-indigo-50 text-white pr-8 group-data-[hover=true]:bg-indigo-600 transition-colors text-center",
+                        "sticky right-0 z-10 bg-white text-white pr-8 group-data-[hover=true]:bg-indigo-600 transition-colors text-center",
                     )}
                   >
                     {columnKey === "sno"

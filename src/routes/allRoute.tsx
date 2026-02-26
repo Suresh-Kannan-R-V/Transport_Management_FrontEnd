@@ -4,20 +4,19 @@ import {
   Assignment,
   Dashboard,
   Driver,
+  DriverManagement,
   LeaveApprovePage,
-  LogoutUsers,
-  Mission,
+  MissionPage,
   NewRequest,
   NotFound,
   RequestPage,
+  RoleManagement,
   Schedule,
   Setting,
+  VehicleManagement,
+  ViewRequest,
   WebQrLogin,
 } from "../screens";
-import VehicleManagement from "../screens/pages/setting/vehicleManagement";
-import ViewRequest from "../screens/pages/request/viewRequest";
-import DriverManagement from "../screens/pages/setting/driverManagement";
-
 const privateRoutes = [
   {
     index: true,
@@ -37,7 +36,7 @@ const privateRoutes = [
   },
   {
     path: "mission",
-    element: <Mission />,
+    element: <MissionPage />,
   },
   {
     path: "request",
@@ -48,7 +47,7 @@ const privateRoutes = [
     element: <NewRequest />,
   },
   {
-    path: "request/view-request/:id",
+    path: "view-request/:id",
     element: <ViewRequest />,
   },
   {
@@ -67,10 +66,7 @@ const privateRoutes = [
     path: "settings/add-users",
     element: <AddUser />,
   },
-  {
-    path: "settings/logout-users",
-    element: <LogoutUsers />,
-  },
+
   {
     path: "settings/vehicle-management",
     element: <VehicleManagement />,
@@ -78,6 +74,10 @@ const privateRoutes = [
   {
     path: "settings/driver-management",
     element: <DriverManagement />,
+  },
+  {
+    path: "settings/session-management",
+    element: <RoleManagement />,
   },
   {
     path: "*",

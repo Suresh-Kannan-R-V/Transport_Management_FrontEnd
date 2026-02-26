@@ -6,9 +6,13 @@ import {
 } from "@hello-pangea/dnd";
 import { Button, DatePicker } from "@heroui/react";
 import {
+  getLocalTimeZone,
+  now,
+  parseAbsoluteToLocal,
+} from "@internationalized/date";
+import {
   Calendar,
   Download,
-  FileWarning,
   Footprints,
   GripVertical,
   MapPin,
@@ -19,18 +23,13 @@ import {
   User,
   UsersRound,
 } from "lucide-react";
-import {
-  now,
-  getLocalTimeZone,
-  parseAbsoluteToLocal,
-} from "@internationalized/date";
-import { AddressSearchInput, CountrySelector } from "../../../../components";
-import MapViewer from "../../../../components/MapComponent";
-import { cn } from "../../../../utils/helper";
+import { useCallback, useMemo, useRef } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import { useCallback, useMemo, useRef } from "react";
+import { AddressSearchInput, CountrySelector } from "../../../../components";
+import MapViewer from "../../../../components/MapComponent";
 import { useRequestCreationStore } from "../../../../store";
+import { cn } from "../../../../utils/helper";
 import { pickerStyles } from "../../../../utils/style";
 
 const NewRequest = () => {
@@ -319,6 +318,15 @@ const NewRequest = () => {
               </div>
 
               <div className="flex items-center gap-4">
+                {!store.isBulkUpload &&
+                  store.guests.length < Number(store.passengerCount) && (
+                    <button
+                      onClick={store.addGuest}
+                      className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100"
+                    >
+                      <Plus size={16} />
+                    </button>
+                  )}
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
@@ -337,16 +345,6 @@ const NewRequest = () => {
                     Bulk Upload
                   </span>
                 </label>
-
-                {!store.isBulkUpload &&
-                  store.guests.length < Number(store.passengerCount) && (
-                    <button
-                      onClick={store.addGuest}
-                      className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100"
-                    >
-                      <Plus size={16} />
-                    </button>
-                  )}
               </div>
             </div>
             <div className="rounded-2xl min-h-40">

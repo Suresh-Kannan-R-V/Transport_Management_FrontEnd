@@ -4,7 +4,6 @@ import {
   Calendar,
   Car,
   FileText,
-  FilterIcon,
   Navigation,
   RefreshCcw,
   Search,
@@ -12,28 +11,46 @@ import {
   ShieldCheck,
   Trash2,
   Upload,
-  Users,
+  Users
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   BackButton,
   CustomPagination,
+  GenericFilterDropdown,
   TransportLoader,
 } from "../../../../components";
 import { useVehicleStore } from "../../../../store/SettingStore/VehicleStore";
 import { cn } from "../../../../utils/helper";
+import { pickerStyles } from "../../../../utils/style";
 
-const pickerStyles = {
-  label: "text-[10px] font-bold text-indigo-600 uppercase ml-1",
-  inputWrapper:
-    "bg-slate-50 !bg-opacity-100 border-slate-200 rounded-md shadow-sm hover:border-indigo-400 transition-all focus:ring focus:ring-indigo-600",
-  popoverContent: "bg-white border border-slate-200 shadow-xl rounded-xl",
-  calendar: "bg-red-500",
-  errorMessage:
-    "text-rose-500 text-[10px] font-medium mt-1 bg-rose-50 px-2 py-1 rounded-md border border-rose-100",
-  helperText: "text-slate-400 text-[10px]",
-  input: "text-slate-800 font-medium",
-};
+const vehicleFilterConfig = [
+  {
+    title: "Vehicle Status",
+    items: [
+      { key: "active", label: "Active", value: "active" },
+      { key: "assign", label: "Assigned", value: "assign" },
+      { key: "maintenance", label: "Maintenance", value: "maintenance" },
+    ],
+  },
+  {
+    title: "Vehicle Type",
+    items: [
+      { key: "bus", label: "Bus", value: "Bus" },
+      { key: "van", label: "Van", value: "Van" },
+      { key: "car", label: "Car", value: "Car" },
+    ],
+  },
+  {
+    title: "Capacity",
+    items: [
+      { key: "cap-4", label: "4 Seats", value: "4" },
+      { key: "cap-7", label: "7 Seats", value: "7" },
+      { key: "cap-12", label: "12 Seats", value: "12" },
+      { key: "cap-50", label: "50 Seats", value: "50" },
+    ],
+  },
+];
 
 const VehicleManagement = () => {
   const [activeTab, setActiveTab] = useState<"list" | "create">("list");
@@ -48,6 +65,9 @@ const VehicleManagement = () => {
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [capacityFilter, setCapacityFilter] = useState<string>("all");
   const limit = 10;
 
   const totalPages = Math.ceil(totalVehicles / limit);
@@ -67,9 +87,19 @@ const VehicleManagement = () => {
     next_service_date: null,
   });
 
+  const loadVehicles = () => {
+    let query = `?page=${page}&limit=${limit}`;
+    if (search) query += `&search=${search}`;
+    if (statusFilter !== "all") query += `&status=${statusFilter}`;
+    if (typeFilter !== "all") query += `&vehicle_type=${typeFilter}`;
+    if (capacityFilter !== "all") query += `&capacity=${capacityFilter}`;
+
+    fetchVehicles(query);
+  };
+
   useEffect(() => {
-    fetchVehicles(`?page=${page}&limit=${limit}&search=${search}`);
-  }, [page, search, fetchVehicles]);
+    loadVehicles();
+  }, [page, search, statusFilter, typeFilter, capacityFilter]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -91,6 +121,21 @@ const VehicleManagement = () => {
 
     addVehicle(finalVehicleData);
     setActiveTab("list");
+  };
+
+  const handleFilterSelect = (sectionTitle: string, item: any) => {
+    setPage(1);
+    if (sectionTitle === "Vehicle Status") setStatusFilter(item.value);
+    if (sectionTitle === "Vehicle Type") setTypeFilter(item.value);
+    if (sectionTitle === "Capacity") setCapacityFilter(item.value);
+  };
+
+  const handleReset = () => {
+    setSearch("");
+    setPage(1);
+    setStatusFilter("all");
+    setTypeFilter("all");
+    setCapacityFilter("all");
   };
 
   return (
@@ -152,20 +197,22 @@ const VehicleManagement = () => {
             <div className="flex gap-2">
               <Button
                 isIconOnly
-                onPress={() =>
-                  fetchVehicles(`?page=${page}&limit=${limit}&search=${search}`)
-                }
+                onPress={() => {
+                  fetchVehicles(
+                    `?page=${page}&limit=${limit}&search=${search}`,
+                  );
+                  handleReset();
+                }}
                 variant="flat"
                 className="bg-white border border-slate-200 text-slate-600 font-semibold rounded-xl h-9 text-xs"
                 startContent={<RefreshCcw size={16} strokeWidth={2} />}
               />
-              <Button
-                variant="flat"
-                className="bg-white border border-slate-200 text-slate-600 font-semibold rounded-xl h-9 text-xs"
-                startContent={<FilterIcon size={16} />}
-              >
-                Filter & Sort
-              </Button>
+              <GenericFilterDropdown
+                sections={vehicleFilterConfig}
+                onFilterSelect={handleFilterSelect}
+                onReset={handleReset}
+                buttonLabel="Filter Assets"
+              />
             </div>
           </div>
 

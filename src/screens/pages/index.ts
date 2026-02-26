@@ -1,11 +1,14 @@
 export { default as Dashboard } from "./dashboard";
 export { default as Assignment } from "./assignment";
 export { default as Driver } from "./driver";
-export { default as Mission } from "./missions";
+export { default as MissionPage } from "./missions";
 export { default as RequestPage } from "./request";
 export { default as NewRequest } from "./request/newRequest";
-export { default as LeaveApprovePage } from "./request/leaveApprove";
+export { default as ViewRequest } from "./request/viewRequest";
+export { default as LeaveApprovePage } from "./schedule/leaveApprove";
 export { default as Schedule } from "./schedule";
 export { default as Setting } from "./setting";
 export { default as AddUser } from "./setting/addUser";
-export { default as LogoutUsers } from "./setting/logOutUser";
+export { default as RoleManagement } from "./setting/changeRole";
+export { default as VehicleManagement } from "./setting/vehicleManagement";
+export { default as DriverManagement } from "./setting/driverManagement";

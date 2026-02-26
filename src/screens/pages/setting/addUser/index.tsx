@@ -5,7 +5,6 @@ import {
   ArrowLeft,
   Building2,
   Calendar,
-  Contact,
   CreditCard,
   Hash,
   KeyRound,
@@ -18,13 +17,13 @@ import {
   Star,
   UserCircle,
   UserPlus,
-  UserRound,
+  UserRound
 } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import { FormInput } from "../../../../components";
 import { FILE_BASE_URL } from "../../../../api/base";
+import { FormInput } from "../../../../components";
 import { pickerStyles, selectorStyles } from "../../../../utils/style";
 
 interface UserPayload {
@@ -195,7 +194,7 @@ const AddUser = () => {
           size="md"
           className="bg-indigo-600 text-white font-semibold text-sm px-5 shadow-md rounded-lg"
           startContent={<UserRound size={18} strokeWidth={3} />}
-          onPress={() => navigate("/settings/logout-users")}
+          onPress={() => navigate("/settings/session-management")}
         >
           Login Control
         </Button>

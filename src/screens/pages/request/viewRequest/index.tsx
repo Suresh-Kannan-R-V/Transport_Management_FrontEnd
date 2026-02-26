@@ -1,10 +1,11 @@
-import { Button, ScrollShadow } from "@heroui/react";
+import { Button, Card, ScrollShadow, useDisclosure } from "@heroui/react";
 import axios from "axios";
 import {
   Briefcase,
   Calendar,
   Car,
-  ChevronRight,
+  CarFront,
+  CheckCheck,
   Clock,
   Copy,
   Info,
@@ -23,14 +24,18 @@ import { useNavigate, useParams } from "react-router-dom";
 import { FILE_BASE_URL } from "../../../../api/base";
 import { BackButton, TransportLoader } from "../../../../components";
 import MapViewer from "../../../../components/MapComponent";
+import { useUserStore } from "../../../../store";
 import {
   cn,
   formatDateTime,
   formatDuration,
   geocodeLocations,
+  ROUTE_STATUS,
+  RouteStatus,
 } from "../../../../utils/helper";
-import { VehicleAssignmentPopup } from "../assignVechicle";
-import { useUserStore } from "../../../../store";
+import { VehicleAssignmentPopup } from "../assignVehicle";
+import { AssignDriverModal } from "../assignDriver";
+import { FacultyApprovalModal } from "../facultyApprove";
 
 export interface MappedStop {
   id: string;
@@ -49,13 +54,14 @@ interface Guest {
 
 interface Schedule {
   schedule_id: number;
-  status: RequestStatus;
+  status: number;
   start_datetime: string;
   end_datetime: string | null;
   vehicle?: {
     id: number;
     vehicle_number: string;
     vehicle_type: string;
+    vehicle_capacity: number;
     assigned_at: string | null;
     assigned_by: string | null;
   } | null;
@@ -104,35 +110,27 @@ interface RouteData {
   };
   total_guest: number;
   guests: Guest[];
-  route_status: RequestStatus;
+  route_status: number;
   faculty_remark: string | null;
   admin_remark: string | null;
   created_at: string;
+  updated_at: string;
   creator: Creator;
   schedules: Schedule[];
 }
 
-// Define the valid status types based on your comment
-type RequestStatus =
-  | "Pending"
-  | "Approved"
-  | "Vehicle Assigned"
-  | "Faculty Confirmed"
-  | "Driver Assigned"
-  | "Completed"
-  | "Rejected"
-  | "Cancelled";
-
-const statusStyles: Record<RequestStatus, string> = {
-  Pending: "bg-amber-50 text-amber-500 border-amber-200",
-  Approved: "bg-blue-50 text-blue-500 border-blue-200",
-  "Faculty Confirmed": "bg-indigo-50 text-indigo-500 border-indigo-200",
-  "Vehicle Assigned": "bg-purple-50 text-purple-500 border-purple-200",
-  "Driver Assigned": "bg-violet-50 text-violet-500 border-violet-200",
-  Completed: "bg-emerald-50 text-emerald-500 border-emerald-200",
-  Rejected: "bg-rose-50 text-rose-500 border-rose-200",
-  Cancelled: "bg-slate-50 text-slate-500 border-slate-200",
+const statusStyles: Record<number, string> = {
+  1: "bg-amber-50 text-amber-500 border-amber-200 border", // Pending
+  2: "bg-purple-50 text-purple-500 border-purple-200 border", // Vehicle Assigned
+  3: "bg-purple-50 text-purple-500 border-purple-200 border", // Vehicle Reassigned
+  4: "bg-indigo-50 text-indigo-500 border-indigo-200 border", // Faculty Approved
+  5: "bg-teal-50 text-teal-500 border-teal-200 border", // Driver Assigned
+  6: "bg-teal-50 text-teal-500 border-teal-200 border", // Driver Reassigned
+  7: "bg-blue-50 text-blue-500 border-blue-200 border", // Started
+  8: "bg-emerald-50 text-emerald-500 border-emerald-200 border", // Completed
+  9: "bg-slate-50 text-slate-500 border-slate-200 border", // Cancelled
 };
+
 const ViewRequest = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -141,16 +139,17 @@ const ViewRequest = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [mappedStops, setMappedStops] = useState<MappedStop[]>([]);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
+  const [selectedScheduleId, setSelectedScheduleId] = useState<number | null>(
+    null,
+  );
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [isApprovalOpen, setIsApprovalOpen] = useState(false);
 
-  const [showPopup, setShowPopup] = useState(false);
-
-  const [isAssignOpen, setIsAssignOpen] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState<any>(null);
-
-  const handleOpenAssign = (request: any) => {
-    setSelectedRequest(request);
-    setIsAssignOpen(true);
+  const handleCardClick = (id: number) => {
+    setSelectedScheduleId(id);
+    onOpen();
   };
+  const [showPopup, setShowPopup] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!id) return;
@@ -184,10 +183,11 @@ const ViewRequest = () => {
 
   useEffect(() => {
     fetchData();
-  }, [fetchData, isAssignOpen]);
+  }, [fetchData]);
 
   const handleAction = async (action: "cancel" | "uncancel" | "delete") => {
-    const realId = atob(id || "");
+    const realId = parseInt(atob(id || ""));
+    console.log(realId);
 
     try {
       const config = {
@@ -268,7 +268,8 @@ const ViewRequest = () => {
           <div
             className={cn(
               "capitalize font-bold text-xs border rounded-full px-4 py-1.5 inline-flex items-center shadow-sm",
-              statusStyles[data?.route_status] || "bg-slate-50 text-slate-500",
+              statusStyles[data.route_status] ||
+                "bg-slate-50 text-slate-500 border-slate-200 border",
             )}
           >
             <span
@@ -276,14 +277,30 @@ const ViewRequest = () => {
                 "size-2 rounded-full mr-2 animate-pulse bg-current",
               )}
             />
-            {data?.route_status?.replace(/_/g, " ")}
+            {RouteStatus[data?.route_status] || "Unknown"}
           </div>
-          {roleName === "Faculty" && data?.route_status !== "Cancelled" && (
+          {roleName === "Faculty" &&
+            (data?.route_status === ROUTE_STATUS.VEHICLE_ASSIGNED ||
+              data?.route_status === ROUTE_STATUS.VEHICLE_REASSIGNED) && (
+              <Button
+                variant="faded"
+                size="sm"
+                startContent={<CheckCheck size={14} />}
+                isDisabled={
+                  data?.route_status !== ROUTE_STATUS.VEHICLE_ASSIGNED &&
+                  data?.route_status !== ROUTE_STATUS.VEHICLE_REASSIGNED
+                }
+                className="font-bold text-violet-600 rounded-lg bg-violet-50 text-xs"
+                onPress={() => setIsApprovalOpen(true)}
+              >
+                Approve Route
+              </Button>
+            )}
+          {data?.route_status === ROUTE_STATUS.PENDING && (
             <Button
               onPress={() => handleAction("cancel")}
               variant="faded"
               size="sm"
-              isDisabled={data?.route_status !== "Pending"}
               className="bg-indigo-50 rounded-lg px-5 text-sm text-indigo-600 "
             >
               Cancel Request
@@ -291,7 +308,7 @@ const ViewRequest = () => {
           )}
 
           {(roleName === "Faculty" || roleName === "Transport Admin") &&
-            data?.route_status === "Cancelled" && (
+            data?.route_status === ROUTE_STATUS.CANCELLED && (
               <Button
                 onPress={() => handleAction("uncancel")}
                 variant="flat"
@@ -308,7 +325,7 @@ const ViewRequest = () => {
               size="sm"
               startContent={<Trash2 size={14} />}
               isDisabled={
-                schedule?.status !== "Pending" && roleName !== "Transport Admin"
+                schedule?.status !== 1 && roleName !== "Transport Admin"
               }
               className="text-white bg-rose-500 rounded-lg px-5 text-sm shadow-sm hover:bg-rose-600 transition-all active:scale-95 tracking-wider"
             >
@@ -331,17 +348,21 @@ const ViewRequest = () => {
               </h2>
               <div className="flex gap-2">
                 <p className="text-slate-500 text-xs font-semibold flex items-center gap-1">
-                  {formatDateTime(data.created_at)}
+                  {formatDateTime(data.travel_info.start_date)}
                 </p>
-                <div className="flex items-center gap-1 mx-1">
-                  <span className="size-1 bg-indigo-500 rounded-full" />
-                  <span className="size-2 bg-indigo-500 rounded-full" />
-                  <span className="size-2 bg-indigo-500 rounded-full" />
-                  <span className="size-1 bg-indigo-500 rounded-full" />
-                </div>
-                <p className="text-slate-500 text-xs font-semibold flex items-center gap-1">
-                  {formatDateTime(data.created_at)}
-                </p>
+                {data.travel_info.end_date && (
+                  <>
+                    <div className="flex items-center gap-1 mx-1">
+                      <span className="size-1 bg-indigo-500 rounded-full" />
+                      <span className="size-2 bg-indigo-500 rounded-full" />
+                      <span className="size-2 bg-indigo-500 rounded-full" />
+                      <span className="size-1 bg-indigo-500 rounded-full" />
+                    </div>
+                    <p className="text-slate-500 text-xs font-semibold flex items-center gap-1">
+                      {formatDateTime(data.travel_info.end_date)}
+                    </p>
+                  </>
+                )}
               </div>
             </div>
             <div className="relative space-y-8 px-2 mt-2 h-60 custom-scrollbar overflow-y-scroll">
@@ -483,18 +504,25 @@ const ViewRequest = () => {
                 />
                 {(roleName === "Transport Admin" ||
                   (roleName === "Faculty" &&
-                    data?.route_status === "Vehicle Assigned")) && (
+                    data?.route_status >= ROUTE_STATUS.VEHICLE_ASSIGNED &&
+                    data?.route_status < ROUTE_STATUS.FACULTY_APPROVED)) && (
                   <Button
                     size="sm"
                     onPress={() => setShowPopup(true)}
+                    isDisabled={
+                      data?.route_status === ROUTE_STATUS.COMPLETED ||
+                      data?.route_status === ROUTE_STATUS.CANCELLED
+                    }
                     className={cn(
-                      "text-xs font-medium items-start pt-1 px-3 h-6 rounded-3xl justify-center",
-                      data?.route_status === "Vehicle Assigned"
+                      "text-xs font-medium items-start px-3 h-6 rounded-3xl justify-center",
+                      data?.route_status === ROUTE_STATUS.VEHICLE_ASSIGNED ||
+                        data?.route_status === ROUTE_STATUS.VEHICLE_REASSIGNED
                         ? "text-orange-600 "
                         : "text-indigo-600 ",
                     )}
                   >
-                    {data?.route_status === "Vehicle Assigned"
+                    {data?.route_status === ROUTE_STATUS.VEHICLE_ASSIGNED ||
+                    data?.route_status === ROUTE_STATUS.VEHICLE_REASSIGNED
                       ? "Reassign Vehicles"
                       : "Assign Vehicles"}
                   </Button>
@@ -543,7 +571,7 @@ const ViewRequest = () => {
                         id: schedule.vehicle.id,
                         vehicle_number: schedule.vehicle.vehicle_number,
                         vehicle_type: schedule.vehicle.vehicle_type,
-                        capacity: 0,
+                        capacity: Number(schedule.vehicle.vehicle_capacity),
                         status: "active" as const,
                       }
                     : null,
@@ -575,21 +603,29 @@ const ViewRequest = () => {
                       : "min-w-80",
                   )}
                 >
-                  <div
+                  <Card
+                    isDisabled={
+                      roleName !== "Transport Admin" ||
+                      data?.route_status !== ROUTE_STATUS.FACULTY_APPROVED
+                    }
+                    isPressable={
+                      roleName === "Transport Admin" &&
+                      data?.route_status === ROUTE_STATUS.FACULTY_APPROVED
+                    }
+                    onPress={() => handleCardClick(schedule.schedule_id)}
                     className={cn(
-                      "p-5 pb-2 rounded-3xl border border-slate-100 shadow-sm bg-white  h-full flex flex-col justify-between transition-all",
+                      "w-full p-5 pb-2 rounded-3xl border border-slate-100 shadow-sm bg-wh  h-full flex flex-col justify-between transition-all",
                       !schedule.vehicle &&
                         "bg-indigo-50/50 border-dashed border-indigo-200",
                     )}
                   >
                     <div className={cn(!schedule.vehicle && "flex-1")}>
-                      <div className="flex justify-between items-start mb-2">
+                      <div className="flex justify-between items-start mb-1">
                         <div className="flex gap-2">
                           <SectionTitle
                             icon={<Car className="text-indigo-600" />}
                             title={
-                              schedule?.vehicle?.vehicle_number ||
-                              "Assign Vehicle"
+                              schedule?.vehicle?.vehicle_number || "unDefined"
                             }
                           />
                           {schedule?.vehicle?.vehicle_type && (
@@ -608,7 +644,7 @@ const ViewRequest = () => {
 
                       {schedule.vehicle ? (
                         <div className="animate-in fade-in zoom-in duration-300">
-                          <ScrollShadow className="h-64 overflow-y-scroll space-y-2 custom-scrollbar">
+                          <ScrollShadow className="h-57 overflow-y-scroll space-y-2 custom-scrollbar">
                             {schedule?.guests?.map((guest) => (
                               <div
                                 key={guest.id}
@@ -618,7 +654,7 @@ const ViewRequest = () => {
                                   {guest.seat_number}
                                 </div>
                                 <div className="overflow-hidden">
-                                  <p className="font-bold text-slate-800 text-sm truncate">
+                                  <p className="font-bold text-slate-800 text-sm truncate text-left">
                                     {guest.name}
                                   </p>
                                   {guest.phone !== "null -1" && (
@@ -642,15 +678,35 @@ const ViewRequest = () => {
                             ))}
                           </ScrollShadow>
                           {schedule.driver && (
-                            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                              <p className="text-[10px] uppercase text-indigo-300 font-bold">
-                                Driver
-                              </p>
-                              <p className="font-bold text-slate-800">
-                                {schedule.driver.name}
-                              </p>
-                              <p className="text-xs text-slate-400">
-                                {schedule.driver.phone}
+                            <div className="py-1.5 pb-2 px-2 flex justify-between items-center border-t border-slate-200">
+                              <div className="flex items-center gap-1">
+                                <CarFront
+                                  size={16}
+                                  className="text-indigo-600 mr-2"
+                                />
+                                <p className="font-semibold text-xs">
+                                  {schedule.driver.name}
+                                </p>
+                              </div>
+                              <p
+                                className="text-xs text-slate-400 flex gap-1 items-center"
+                                onClick={() => {
+                                  const phone = schedule?.driver?.phone;
+                                  if (phone) {
+                                    navigator.clipboard.writeText(
+                                      phone as string,
+                                    );
+                                    toast.success(
+                                      "Driver Phone Number copied to clipboard",
+                                    );
+                                  }
+                                }}
+                              >
+                                <Phone
+                                  size={12}
+                                  className="text-slate-400 mr-1"
+                                />
+                                {schedule?.driver?.phone}
                               </p>
                             </div>
                           )}
@@ -664,11 +720,34 @@ const ViewRequest = () => {
                         </div>
                       )}
                     </div>
-                  </div>
+                  </Card>
+                  {
+                    <AssignDriverModal
+                      isOpen={isOpen}
+                      onOpenChange={onOpenChange}
+                      scheduleId={selectedScheduleId}
+                      VehicleId={schedule.vehicle?.vehicle_number || null}
+                      onSuccess={() => {
+                        fetchData();
+                      }}
+                    />
+                  }
                 </div>
               ))}
             </ScrollShadow>
           </div>
+          {roleName === "Faculty" &&
+            (data?.route_status === ROUTE_STATUS.VEHICLE_ASSIGNED ||
+              data?.route_status === ROUTE_STATUS.VEHICLE_REASSIGNED) && (
+              <FacultyApprovalModal
+                isOpen={isApprovalOpen}
+                onOpenChange={() => setIsApprovalOpen(false)}
+                routeId={id || null}
+                onSuccess={() => {
+                  fetchData();
+                }}
+              />
+            )}
         </div>
         <div className="p-5 rounded-3xl border border-slate-200 shadow-md col-span-12">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -9,7 +9,7 @@ interface Driver {
   user_name: string;
   email: string;
   phone: string;
-  status: "available" | "assigned";
+  status: number;
   isLogin: boolean;
   push_notification_status: boolean;
   license_number: string;

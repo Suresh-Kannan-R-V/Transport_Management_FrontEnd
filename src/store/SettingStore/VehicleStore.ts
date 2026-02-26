@@ -44,7 +44,7 @@ export const useVehicleStore = create<VehicleState>((set, get) => ({
       const res = await fetch(
         `${FILE_BASE_URL}/api/vehicles/get-all${params}`,
         {
-          headers: { ...getAuthHeader() },
+          headers: { Authorization: `TMS ${localStorage.getItem("token")}` },
         },
       );
 
@@ -60,8 +60,9 @@ export const useVehicleStore = create<VehicleState>((set, get) => ({
       } else {
         set({ vehicles: [], loading: false });
       }
-    } catch (err) {
+    } catch (err:any) {
       console.error("Fetch failed:", err);
+      toast.error(err.response?.data?.message || "Failed to fetch vehicles");
       set({ vehicles: [], loading: false });
     }
   },
@@ -83,7 +84,7 @@ export const useVehicleStore = create<VehicleState>((set, get) => ({
 
       const result = await res.json();
       if (result.success) {
-        get().fetchVehicles(`?page=1&limit=5`);
+        get().fetchVehicles(`?page=1&limit=10`);
       } else {
         toast.error(result.message);
       }
@@ -141,16 +142,13 @@ export const useVehicleStore = create<VehicleState>((set, get) => ({
 
   deleteVehicle: async (ids) => {
     try {
-      const res = await fetch(
-        `${FILE_BASE_URL}/api/vehicles/delete/${ids}`,
-        {
-          method: "DELETE",
-          headers: {
-            ...getAuthHeader(),
-            "Content-Type": "application/json",
-          },
+      const res = await fetch(`${FILE_BASE_URL}/api/vehicles/delete/${ids}`, {
+        method: "DELETE",
+        headers: {
+          ...getAuthHeader(),
+          "Content-Type": "application/json",
         },
-      );
+      });
 
       if (res.ok) {
         // Refresh the list after deletion

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { FILE_BASE_URL } from "../../api/base";
+import { ROUTE_STATUS } from "../../utils/helper";
 
 let searchTimeout: ReturnType<typeof setTimeout>;
 
@@ -14,15 +15,7 @@ interface RequestItem {
       role: string;
     };
   };
-  status:
-    | "Pending"
-    | "Approved"
-    | "Vehicle Assigned"
-    | "Faculty Confirmed"
-    | "Driver Assigned"
-    | "Completed"
-    | "Rejected"
-    | "Cancelled";
+  status: number;
   travelType: "One Way" | "Two Way" | "Multi Day";
   start_datetime: string;
   end_datetime: string | null;
@@ -41,7 +34,7 @@ interface RequestPageState {
   totalPages: number;
   currentPage: number;
   search: string;
-  statusFilter: string;
+  statusFilter: number | "";
   travelTypeFilter: string;
   sortBy: string;
   sortOrder: "ASC" | "DESC";
@@ -67,7 +60,7 @@ export const useRequestPageStore = create<RequestPageState>((set, get) => ({
 
   setFilters: (status, type) => {
     set({
-      statusFilter: status ?? "",
+      statusFilter: status ? Number(status) : "",
       travelTypeFilter: type ?? "",
       currentPage: 1,
     });
@@ -110,33 +103,48 @@ export const useRequestPageStore = create<RequestPageState>((set, get) => ({
       sortOrder,
     } = get();
 
-    const params = new URLSearchParams({
-      page: currentPage.toString(),
-      limit: "8",
-      sortBy,
-      sortOrder,
-      ...(search && { search }),
-      ...(statusFilter && { status: statusFilter }),
-      ...(travelTypeFilter && { travel_type: travelTypeFilter }),
-    });
+    const params = new URLSearchParams();
+    params.append("page", currentPage.toString());
+    params.append("limit", "10");
+    params.append("sortBy", sortBy);
+    params.append("sortOrder", sortOrder);
+
+    if (search && search.trim() !== "") {
+      params.append("search", search);
+    }
+    if (travelTypeFilter && travelTypeFilter !== "") {
+      params.append("travel_type", travelTypeFilter);
+    }
+
+    if (statusFilter !== "" && !isNaN(Number(statusFilter))) {
+      params.append("status", statusFilter.toString());
+    } else if (statusFilter === "") {
+      [ROUTE_STATUS.PENDING, ROUTE_STATUS.CANCELLED].forEach((s) =>
+        params.append("status", s.toString()),
+      );
+    }
 
     try {
       const response = await fetch(
-        `${FILE_BASE_URL}/request/get-all?${params}`,
+        `${FILE_BASE_URL}/request/get-all?${params.toString()}`,
         {
-          headers: { Authorization: `TMS ${localStorage.getItem("token")}` },
+          headers: {
+            Authorization: `TMS ${localStorage.getItem("token")}`,
+          },
         },
       );
+
       const data = await response.json();
+
       if (data.success) {
         set({
-          items: data.items,
-          totalItems: data.totalItems,
-          totalPages: data.totalPages,
+          items: data.items || [],
+          totalItems: data.totalItems || 0,
+          totalPages: data.totalPages || 1,
         });
       }
     } catch (error) {
-      console.error(error);
+      console.error("Frontend Fetch Error:", error);
     } finally {
       set({ loading: false });
     }

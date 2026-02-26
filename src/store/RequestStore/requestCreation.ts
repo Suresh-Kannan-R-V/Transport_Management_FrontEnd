@@ -2,13 +2,6 @@ import { create } from "zustand";
 import { FILE_BASE_URL } from "../../api/base";
 import * as XLSX from "xlsx";
 
-const PHONE_PATTERNS: Record<string, RegExp> = {
-  "+91": /^[6-9]\d{9}$/, // India: 10 digits starting with 6-9
-  "+1": /^\d{10}$/, // USA/Canada
-  "+44": /^7\d{9}$/, // UK Mobile
-  // Default fallback for others: 7 to 15 digits
-  default: /^\d{7,15}$/,
-};
 export interface RouteStop {
   id: string;
   address: string;
