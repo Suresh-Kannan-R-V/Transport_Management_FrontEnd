@@ -19,15 +19,16 @@ import {
   TransportLoader,
 } from "../../../../components";
 import { useDriverStore } from "../../../../store/SettingStore/DriverStore";
-import { cn } from "../../../../utils/helper";
+import { cn, DRIVER_STATUS } from "../../../../utils/helper";
 
 const filterConfig = [
   {
     title: "Driver Status",
     items: [
-      { key: "available", label: "Available", value: "available" },
-      { key: "assigned", label: "Assigned", value: "assigned" },
-      { key: "leave", label: "On Leave", value: "leave" },
+      { key: "available", label: "Available", value: DRIVER_STATUS.AVAILABLE },
+      { key: "assigned", label: "Assigned", value: DRIVER_STATUS.ASSIGNED },
+      { key: "trip", label: "On Trip", value: DRIVER_STATUS.ON_TRIP },
+      { key: "leave", label: "On Leave", value: DRIVER_STATUS.ON_LEAVE },
     ],
   },
   {
@@ -178,7 +179,9 @@ const DriverManagement = () => {
                           "p-3 rounded-2xl transition-colors",
                           d.status === 1
                             ? "bg-green-50 text-green-600"
-                            : "bg-amber-50 text-amber-600",
+                            : d.status === 2
+                              ? "bg-amber-50 text-amber-600"
+                              : "bg-rose-50 text-rose-600",
                         )}
                       >
                         <User size={24} />
@@ -217,7 +220,6 @@ const DriverManagement = () => {
                       </div>
                     </div>
 
-                    {/* Metrics Grid */}
                     <div className="grid grid-cols-2 md:grid-cols-4 flex-1 lg:px-6 border-t lg:border-t-0 lg:border-x border-slate-100 pt-4 lg:pt-0 gap-4">
                       <DataMetric
                         label="Contact"
@@ -255,7 +257,7 @@ const DriverManagement = () => {
                 </div>
               ))
             ) : (
-              <div className="bg-slate-50 rounded-[32px] py-20 text-center border-2 border-dashed border-slate-200">
+              <div className="bg-slate-50 rounded-4xl py-20 text-center border-2 border-dashed border-slate-200">
                 <p className="text-slate-400 font-bold uppercase tracking-widest">
                   No drivers matching filters
                 </p>
@@ -276,7 +278,6 @@ const DriverManagement = () => {
   );
 };
 
-// Sub-component for individual metrics
 const DataMetric = ({
   label,
   value,

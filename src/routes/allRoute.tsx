@@ -2,16 +2,16 @@ import { Navigate } from "react-router-dom";
 import {
   AddUser,
   Assignment,
+  CreateLeave,
   Dashboard,
   Driver,
   DriverManagement,
-  LeaveApprovePage,
   MissionPage,
   NewRequest,
   NotFound,
   RequestPage,
   RoleManagement,
-  Schedule,
+  ScheduleManagement,
   Setting,
   VehicleManagement,
   ViewRequest,
@@ -46,17 +46,17 @@ const privateRoutes = [
     path: "request/new-request",
     element: <NewRequest />,
   },
-  {
-    path: "view-request/:id",
+  ...["request/view-request/:id", "mission/view-request/:id"].map((path) => ({
+    path,
     element: <ViewRequest />,
-  },
-  {
-    path: "request/leave-approve",
-    element: <LeaveApprovePage />,
-  },
+  })),
   {
     path: "schedule",
-    element: <Schedule />,
+    element: <ScheduleManagement />,
+  },
+  {
+    path: "schedule/create-leave",
+    element: <CreateLeave />,
   },
   {
     path: "settings",

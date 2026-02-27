@@ -83,7 +83,7 @@ export const getTokenRemainingTime = () => {
   );
 };
 
-export const formatDateTime = (dateString: string) => {
+export const formatDateTime = (dateString: string | undefined) => {
   if (!dateString) return "N/A";
 
   const date = new Date(dateString);
@@ -203,4 +203,11 @@ export const DRIVER_STATUS: Record<string, number> = {
   ASSIGNED: 2,
   ON_TRIP: 3,
   ON_LEAVE: 4,
+};
+
+export const LEAVE_TYPE: Record<number, string> = {
+  1: "Sick",
+  2: "Casual",
+  3: "Emergency",
+  4: "Other",
 };

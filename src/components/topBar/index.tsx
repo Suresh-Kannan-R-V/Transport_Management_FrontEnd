@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Bell, Copy, Menu, Truck, X } from "lucide-react";
+import { Bell, Copy, Menu, Truck, UserRound, X } from "lucide-react";
 import React from "react";
-import { FILE_BASE_URL } from "../../api/base";
 import { useCommonStore, useUserStore } from "../../store";
 import { cn, getTokenRemainingTime, privateGet } from "../../utils/helper";
 
@@ -85,19 +84,15 @@ export default function Topbar() {
 const ProfileSection = ({ user, role }: { user: any; role: any }) => {
   const userName = user?.name || "-";
   const userEmail = user?.email || "-";
-  const profileImg = user?.imageUrl
-    ? `${FILE_BASE_URL}${user.imageUrl}`
-    : "https://i.pravatar.cc/40";
 
   return (
     <div className="group relative flex flex-col items-center justify-center p-2 cursor-pointer w-full h-12">
       <div className="flex items-center w-full justify-center lg:justify-start gap-3">
         <div className="relative shrink-0 transition-transform duration-300 group-hover:scale-105">
-          <img
-            src={profileImg}
-            alt="profile"
-            className="size-7 rounded-full object-cover border-2 border-transparent group-hover:border-indigo-500 transition-all"
-          />
+          <div className="size-7 rounded-full object-cover border-2 border-transparent group-hover:border-indigo-500 transition-all">
+            <UserRound className="size-full text-indigo-500" />
+          </div>
+          {/* <img src={profileImg} alt="profile" /> */}
           <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-slate-900 rounded-full" />
         </div>
 

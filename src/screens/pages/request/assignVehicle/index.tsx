@@ -187,7 +187,6 @@ export const VehicleAssignmentPopup = ({
       return;
     }
 
-    const isFaculty = roleName === "faculty";
     const finalRemark = remarks.trim()
       ? remarks.trim()
       : `Remark By ${roleName}.`;
@@ -200,7 +199,7 @@ export const VehicleAssignmentPopup = ({
 
     const payload = {
       route_id: decodedRouteId,
-      [isFaculty ? "faculty_remark" : "admin_remark"]: finalRemark,
+      remarks: finalRemark,
       allocations: vehicles.map((v) => ({
         vehicle_id: v.selectedVehicle?.id,
         guest_ids: v.assignedGuests.map((g) => g.id),
@@ -433,81 +432,86 @@ export const VehicleAssignmentPopup = ({
                                   />
                                 </div>
                               </PopoverTrigger>
-                              <PopoverContent className="w-72 overflow-hidden rounded-2xl border border-slate-300 shadow-md bg-white pb-4">
-                                <div className="relative w-full group mb-2 mt-1">
-                                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                    <Search
-                                      size={14}
-                                      className="text-slate-400 group-focus-within:text-indigo-500"
+                              {roleName !== "Faculty" && (
+                                <PopoverContent className="w-72 overflow-hidden rounded-2xl border border-slate-300 shadow-md bg-white pb-4">
+                                  <div className="relative w-full group mb-2 mt-1">
+                                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                      <Search
+                                        size={14}
+                                        className="text-slate-400 group-focus-within:text-indigo-500"
+                                      />
+                                    </div>
+                                    <input
+                                      type="text"
+                                      placeholder="Search vehicle..."
+                                      value={vehicleSearch}
+                                      onChange={(e) =>
+                                        setVehicleSearch(e.target.value)
+                                      }
+                                      className="w-full bg-white border border-slate-200 text-sm rounded-full py-2 pl-9 pr-4 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 shadow"
                                     />
                                   </div>
-                                  <input
-                                    type="text"
-                                    placeholder="Search vehicle..."
-                                    value={vehicleSearch}
-                                    onChange={(e) =>
-                                      setVehicleSearch(e.target.value)
-                                    }
-                                    className="w-full bg-white border border-slate-200 text-sm rounded-full py-2 pl-9 pr-4 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 shadow"
-                                  />
-                                </div>
 
-                                <ScrollShadow className="max-h-60 w-full custom-scrollbar space-y-1.5">
-                                  {availableVehicles.map((v) => {
-                                    const isUsed =
-                                      usedVehicleIds.includes(v.id) &&
-                                      card.selectedVehicle?.id !== v.id;
-                                    return (
-                                      <div
-                                        key={v.id}
-                                        onClick={() => {
-                                          if (!isUsed) {
-                                            setVehicles((prev) =>
-                                              prev.map((c) =>
-                                                c.id === card.id
-                                                  ? { ...c, selectedVehicle: v }
-                                                  : c,
-                                              ),
-                                            );
-                                          }
-                                        }}
-                                        className={cn(
-                                          "flex items-center justify-between gap-3 p-2 cursor-pointer transition-colors rounded-2xl border border-slate-300",
-                                          isUsed
-                                            ? "opacity-30 cursor-not-allowed bg-slate-50"
-                                            : "hover:bg-indigo-50",
-                                        )}
-                                      >
-                                        <div className="flex gap-2 items-center">
-                                          <div className="bg-indigo-100 p-2 rounded-lg">
-                                            <Truck
-                                              size={16}
-                                              className="text-indigo-600"
-                                            />
-                                          </div>
-                                          <div className="flex flex-col">
-                                            <span className="text-sm font-bold">
-                                              {v.vehicle_number}
-                                            </span>
-                                            <span className="text-[10px] text-slate-500 uppercase">
-                                              {v.vehicle_type} •
-                                              <span className="text-green-500 font-medium ml-1">
-                                                {v.capacity} Seats
+                                  <ScrollShadow className="max-h-60 w-full custom-scrollbar space-y-1.5">
+                                    {availableVehicles.map((v) => {
+                                      const isUsed =
+                                        usedVehicleIds.includes(v.id) &&
+                                        card.selectedVehicle?.id !== v.id;
+                                      return (
+                                        <div
+                                          key={v.id}
+                                          onClick={() => {
+                                            if (!isUsed) {
+                                              setVehicles((prev) =>
+                                                prev.map((c) =>
+                                                  c.id === card.id
+                                                    ? {
+                                                        ...c,
+                                                        selectedVehicle: v,
+                                                      }
+                                                    : c,
+                                                ),
+                                              );
+                                            }
+                                          }}
+                                          className={cn(
+                                            "flex items-center justify-between gap-3 p-2 cursor-pointer transition-colors rounded-2xl border border-slate-300",
+                                            isUsed
+                                              ? "opacity-30 cursor-not-allowed bg-slate-50"
+                                              : "hover:bg-indigo-50",
+                                          )}
+                                        >
+                                          <div className="flex gap-2 items-center">
+                                            <div className="bg-indigo-100 p-2 rounded-lg">
+                                              <Truck
+                                                size={16}
+                                                className="text-indigo-600"
+                                              />
+                                            </div>
+                                            <div className="flex flex-col">
+                                              <span className="text-sm font-bold">
+                                                {v.vehicle_number}
                                               </span>
-                                            </span>
+                                              <span className="text-[10px] text-slate-500 uppercase">
+                                                {v.vehicle_type} •
+                                                <span className="text-green-500 font-medium ml-1">
+                                                  {v.capacity} Seats
+                                                </span>
+                                              </span>
+                                            </div>
                                           </div>
+                                          {isUsed && (
+                                            <CircleCheckBig
+                                              size={14}
+                                              className="mr-2 text-rose-500"
+                                            />
+                                          )}
                                         </div>
-                                        {isUsed && (
-                                          <CircleCheckBig
-                                            size={14}
-                                            className="mr-2 text-rose-500"
-                                          />
-                                        )}
-                                      </div>
-                                    );
-                                  })}
-                                </ScrollShadow>
-                              </PopoverContent>
+                                      );
+                                    })}
+                                  </ScrollShadow>
+                                </PopoverContent>
+                              )}
                             </Popover>
 
                             {/* Capacity Badge */}

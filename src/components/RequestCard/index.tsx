@@ -7,7 +7,6 @@ import {
   UserCircle,
   Users,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import {
   cn,
   formatDate,
@@ -50,19 +49,12 @@ const statusStyles: Record<number, string> = {
   9: "bg-slate-50 text-slate-500 border-slate-200 border", // Cancelled
 };
 
-export const RequestCard = ({ item }: { item: RequestCardItem }) => {
-  const navigate = useNavigate();
-
-  const handleCardClick = () => {
-    const hashedId = btoa(item.id.toString());
-    navigate(`/view-request/${hashedId}`);
-  };
-
+export const RequestCard = ({ item,onPress,isPressable }: { item: RequestCardItem, onPress?: () => void, isPressable?: boolean }) => {
   return (
     <Card
-      isPressable
-      onPress={handleCardClick}
-      className="bg-white duration-200 rounded-3xl shadow-md border border-slate-200 hover:border hover:border-indigo-400 overflow-hidden flex flex-col h-full"
+      isPressable={isPressable}
+      onPress={onPress}
+      className="bg-white duration-200 rounded-3xl shadow-sm border border-slate-200 hover:border hover:border-indigo-400 overflow-hidden flex flex-col h-full"
     >
       <div>
         <div className="flex justify-between items-center px-5 py-3 pb-2 sm:pb-2 border-b-2 border-slate-200">

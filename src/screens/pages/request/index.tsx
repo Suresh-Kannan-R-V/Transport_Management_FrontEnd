@@ -122,7 +122,7 @@ const RequestPage = () => {
               />
               <input
                 type="text"
-                placeholder="Quick search missions..."
+                placeholder="Quick search request..."
                 onChange={handleSearchChange}
                 className="pl-12 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-sm w-72 shadow-sm"
               />
@@ -162,7 +162,14 @@ const RequestPage = () => {
                 )}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 ">
                   {items.map((req) => (
-                    <RequestCard key={req.id} item={req} />
+                    <RequestCard
+                      isPressable
+                      key={req.id}
+                      item={req}
+                      onPress={() =>
+                        navigate(`view-request/${btoa(req.id.toString())}`)
+                      }
+                    />
                   ))}
                 </div>
               </ScrollShadow>

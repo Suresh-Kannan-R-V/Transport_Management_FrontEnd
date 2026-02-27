@@ -1,4 +1,4 @@
-import { Button, ScrollShadow } from "@heroui/react";
+import { Button, Card, ScrollShadow } from "@heroui/react";
 import { GitPullRequest, RefreshCcw, Search } from "lucide-react";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +9,7 @@ import {
   TransportLoader,
 } from "../../../components";
 import { useApproveMissionStore } from "../../../store";
+import { ROUTE_STATUS } from "../../../utils/helper";
 
 const missionFilterConfig = [
   {
@@ -32,27 +33,39 @@ const missionFilterConfig = [
     title: "Mission Status",
     items: [
       {
-        key: "all-missions",
-        label: "All Active Missions",
-        value: "",
-        type: "filter",
-      },
-      {
-        key: "approved",
-        label: "Approved Only",
-        value: "Approved",
-        type: "filter",
-      },
-      {
-        key: "assigned",
+        key: "vehicle1",
         label: "Vehicle Assigned",
-        value: "Vehicle Assigned",
+        value: ROUTE_STATUS.VEHICLE_ASSIGNED,
+        type: "filter",
+      },
+      {
+        key: "vehicle2",
+        label: "Vehicle Reassigned",
+        value: ROUTE_STATUS.VEHICLE_REASSIGNED,
+        type: "filter",
+      },
+      {
+        key: "driver1",
+        label: "Driver Assigned",
+        value: ROUTE_STATUS.DRIVER_ASSIGNED,
+        type: "filter",
+      },
+      {
+        key: "driver2",
+        label: "Driver Reassigned",
+        value: ROUTE_STATUS.DRIVER_REASSIGNED,
+        type: "filter",
+      },
+      {
+        key: "start",
+        label: "Started",
+        value: ROUTE_STATUS.STARTED,
         type: "filter",
       },
       {
         key: "completed",
         label: "Completed",
-        value: "Completed",
+        value: ROUTE_STATUS.COMPLETED,
         type: "filter",
       },
     ],
@@ -172,7 +185,17 @@ const MissionPage = () => {
                 )}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 ">
                   {items.map((req) => (
-                    <RequestCard key={req.id} item={{...req, status: parseInt(req.status)}} />
+                    <Card
+                      isPressable
+                      key={req.id}
+                      onPress={() =>
+                        navigate(`view-request/${btoa(req.id.toString())}`)
+                      }
+                    >
+                      <RequestCard
+                        item={{ ...req, status: parseInt(req.status) }}
+                      />
+                    </Card>
                   ))}
                 </div>
               </ScrollShadow>

@@ -207,13 +207,13 @@ const RoleManagement = () => {
                       </div>
                       <div
                         className={cn(
-                          "absolute bottom- right-0 size-4 rounded-full border-4 border-white",
-                          user.isLogin ? "bg-green-600" : "bg-rose-600",
+                          "absolute bottom-1 right-0 size-4 rounded-full border-4 border-white",
+                          user.isLogin ? "bg-green-600" : "bg-indigo-600",
                         )}
                       />
                     </div>
                     <span className="font-bold uppercase text-[10px] bg-indigo-50 text-indigo-600 px-2 pt-0.5 rounded-full">
-                      {user.role_name || "No Role"}
+                      {user.Role?.name || "No Role"}
                     </span>
                   </div>
 

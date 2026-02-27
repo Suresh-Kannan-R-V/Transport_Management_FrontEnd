@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Trash2,
   User,
+  UserPen,
   Users,
 } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
@@ -261,6 +262,12 @@ const ViewRequest = () => {
               <span className="px-3 pt-1 pb-0.5 rounded-md bg-indigo-50 text-indigo-600 text-[10px] font-semibold uppercase">
                 {data.travel_info.type}
               </span>
+              {data.route_status >= ROUTE_STATUS.VEHICLE_ASSIGNED && (
+                <p className="text-slate-500 text-xs font-medium flex items-center gap-2">
+                  <UserPen size={14} className="text-indigo-600" />
+                  Updated: {formatDateTime(data.updated_at)}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -319,7 +326,9 @@ const ViewRequest = () => {
                 UnCancel Request
               </Button>
             )}
-          {(roleName === "Transport Admin" || roleName === "Faculty") && (
+          {(roleName === "Transport Admin" ||
+            (roleName === "Faculty" &&
+              data.route_status <= ROUTE_STATUS.VEHICLE_REASSIGNED)) && (
             <Button
               onPress={() => setConfirmDelete(true)}
               size="sm"
@@ -502,31 +511,39 @@ const ViewRequest = () => {
                     <span className="w-36 truncate">{`Guest (${data.total_guest})`}</span>
                   }
                 />
-                {(roleName === "Transport Admin" ||
-                  (roleName === "Faculty" &&
-                    data?.route_status >= ROUTE_STATUS.VEHICLE_ASSIGNED &&
-                    data?.route_status < ROUTE_STATUS.FACULTY_APPROVED)) && (
-                  <Button
-                    size="sm"
-                    onPress={() => setShowPopup(true)}
-                    isDisabled={
-                      data?.route_status === ROUTE_STATUS.COMPLETED ||
-                      data?.route_status === ROUTE_STATUS.CANCELLED
-                    }
-                    className={cn(
-                      "text-xs font-medium items-start px-3 h-6 rounded-3xl justify-center",
-                      data?.route_status === ROUTE_STATUS.VEHICLE_ASSIGNED ||
-                        data?.route_status === ROUTE_STATUS.VEHICLE_REASSIGNED
-                        ? "text-orange-600 "
-                        : "text-indigo-600 ",
-                    )}
-                  >
-                    {data?.route_status === ROUTE_STATUS.VEHICLE_ASSIGNED ||
-                    data?.route_status === ROUTE_STATUS.VEHICLE_REASSIGNED
-                      ? "Reassign Vehicles"
-                      : "Assign Vehicles"}
-                  </Button>
-                )}
+                {(() => {
+                  const status = data?.route_status;
+                  const isReassign =
+                    status === ROUTE_STATUS.VEHICLE_ASSIGNED ||
+                    status === ROUTE_STATUS.VEHICLE_REASSIGNED;
+
+                  const canSee =
+                    (roleName === "Transport Admin" &&
+                      status >= ROUTE_STATUS.PENDING &&
+                      status < ROUTE_STATUS.FACULTY_APPROVED) ||
+                    (roleName === "Faculty" && isReassign);
+
+                  if (!canSee) return null;
+
+                  return (
+                    <Button
+                      size="sm"
+                      onPress={() => setShowPopup(true)}
+                      isDisabled={[
+                        ROUTE_STATUS.COMPLETED,
+                        ROUTE_STATUS.CANCELLED,
+                      ].includes(status)}
+                      className={cn(
+                        "text-xs font-medium px-3 h-6 rounded-3xl",
+                        isReassign
+                          ? "text-orange-600 bg-orange-50"
+                          : "text-indigo-600 bg-indigo-50",
+                      )}
+                    >
+                      {isReassign ? "Reassign" : "Assign"} Vehicles
+                    </Button>
+                  );
+                })()}
               </div>
               <ScrollShadow className="space-y-2 h-48 overflow-y-scroll pr-2 custom-scrollbar">
                 {data.guests.map((guest) => (
@@ -606,11 +623,13 @@ const ViewRequest = () => {
                   <Card
                     isDisabled={
                       roleName !== "Transport Admin" ||
-                      data?.route_status !== ROUTE_STATUS.FACULTY_APPROVED
+                      data.route_status < ROUTE_STATUS.FACULTY_APPROVED ||
+                      data.route_status > ROUTE_STATUS.DRIVER_REASSIGNED
                     }
                     isPressable={
                       roleName === "Transport Admin" &&
-                      data?.route_status === ROUTE_STATUS.FACULTY_APPROVED
+                      data.route_status >= ROUTE_STATUS.FACULTY_APPROVED &&
+                      data.route_status <= ROUTE_STATUS.DRIVER_REASSIGNED
                     }
                     onPress={() => handleCardClick(schedule.schedule_id)}
                     className={cn(
@@ -721,17 +740,19 @@ const ViewRequest = () => {
                       )}
                     </div>
                   </Card>
-                  {
-                    <AssignDriverModal
-                      isOpen={isOpen}
-                      onOpenChange={onOpenChange}
-                      scheduleId={selectedScheduleId}
-                      VehicleId={schedule.vehicle?.vehicle_number || null}
-                      onSuccess={() => {
-                        fetchData();
-                      }}
-                    />
-                  }
+                  {data.route_status >= ROUTE_STATUS.FACULTY_APPROVED &&
+                    data.route_status <= ROUTE_STATUS.DRIVER_REASSIGNED && (
+                      <AssignDriverModal
+                        isOpen={isOpen}
+                        onOpenChange={onOpenChange}
+                        scheduleId={selectedScheduleId}
+                        VehicleId={schedule.vehicle?.vehicle_number || null}
+                        currentDriverId={schedule.driver?.id || null}
+                        onSuccess={() => {
+                          fetchData();
+                        }}
+                      />
+                    )}
                 </div>
               ))}
             </ScrollShadow>
