@@ -15,6 +15,7 @@ import {
   Download,
   Footprints,
   GripVertical,
+  Map,
   MapPin,
   Plus,
   Trash2,
@@ -26,7 +27,11 @@ import {
 import { useCallback, useMemo, useRef } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import { AddressSearchInput, CountrySelector } from "../../../../components";
+import {
+  AddressSearchInput,
+  BackButton,
+  CountrySelector,
+} from "../../../../components";
 import MapViewer from "../../../../components/MapComponent";
 import { useRequestCreationStore } from "../../../../store";
 import { cn } from "../../../../utils/helper";
@@ -93,29 +98,64 @@ const NewRequest = () => {
   };
 
   return (
-    <div className="font-sans grid grid-cols-1 lg:grid-cols-12 gap-4">
-      <div className="lg:col-span-5 flex flex-col gap-2 overflow-hidden">
-        <div className="h-64 shrink-0 bg-white shadow-md rounded-3xl overflow-hidden border-4 border-white">
+    <div className="font-sans grid grid-cols-1 lg:grid-cols-12 gap-3">
+      <div className="col-span-12 flex flex-col md:flex-row items-center justify-between gap-6 bg-white py-2 px-1 rounded-2xl shadow-sm border border-slate-100 mx-1">
+        <div className="flex flex-1 items-center gap-4 w-full group">
+          <BackButton onClick={handleCancel} className="shrink-0 ml-2" />
+          <div className="relative flex-1 max-w-2xl">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500">
+              <Map size={18} strokeWidth={2.5} />
+            </div>
+            <input
+              className="w-full pl-12 pr-4 py-2 bg-slate-50 border-2 border-transparent focus:border-indigo-500 rounded-md text-base font-medium text-slate-800 placeholder:text-slate-400 placeholder:font-medium outline-none transition-all shadow"
+              placeholder="Name your journey... (e.g. Airport Pickup)"
+              value={store.routeName}
+              onChange={(e) => store.setField("routeName", e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-col items-end gap-1 px-2">
+          <div className="flex bg-slate-100 p-1 rounded-lg shadow-sm h-10">
+            {["One Way", "Two Way", "Multi Day"].map((t) => (
+              <button
+                key={t}
+                onClick={() => store.setField("travelType", t)}
+                className={cn(
+                  "px-4 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer",
+                  store.travelType === t
+                    ? "bg-white text-indigo-600 shadow-sm"
+                    : "text-slate-400",
+                )}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="lg:col-span-5 flex flex-col gap-2 overflow-hidden ">
+        <div className="h-64 shrink-0 bg-white shadow-md rounded-xl overflow-hidden border-2 border-slate-200 mx-1">
           <MapViewer stops={store.stops} />
         </div>
 
         <div className="rounded-2xl p-2">
-          <div className="flex items-center justify-between bg-white rounded-lg">
+          <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-slate-800 mb-2 flex items-center gap-2">
               <MapPin className="text-indigo-600" size={20} /> Route Plan
             </h2>
 
             <div className="flex gap-4 text-sm">
-              <div className="flex items-center gap-3 bg-indigo-100 py-1.5 px-4 mb-1.5 rounded-lg">
-                <p className="text-indigo-600 uppercase text-[10px] font-bold tracking-wider">
+              <div className="flex items-end gap-3 py-1.5 px-4 mb-1.5">
+                <p className="text-indigo-600 uppercase text-[10px] font-bold tracking-wider pb-0.5">
                   Distance :
                 </p>
                 <p className="font-semibold text-slate-900">
                   {store.distance || "0.00"} km
                 </p>
               </div>
-              <div className="flex items-center gap-3 bg-indigo-100 py-1.5 px-4 mb-1.5 rounded-lg">
-                <p className="text-indigo-600 uppercase text-[10px] font-bold tracking-wider">
+              <div className="flex items-end gap-3 py-1.5 px-4 mb-1.5">
+                <p className="text-indigo-600 uppercase text-[10px] font-bold tracking-wider pb-0.5">
                   Est. Time :
                 </p>
                 <p className="font-semibold text-slate-900">
@@ -134,7 +174,7 @@ const NewRequest = () => {
             </div>
           </div>
 
-          <div className="h-[calc(100vh-500px)] overflow-y-auto pr-1.5 custom-scrollbar">
+          <div className="h-[calc(100vh-565px)] overflow-y-auto pr-1.5 custom-scrollbar">
             <DragDropContext onDragEnd={handleDragEnd}>
               <Droppable droppableId="stops">
                 {(provided) => (
@@ -153,7 +193,7 @@ const NewRequest = () => {
                           <div
                             ref={p.innerRef}
                             {...p.draggableProps}
-                            className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100"
+                            className="flex items-center gap-3 p-3 bg-slate-50 rounded-md border border-slate-100"
                           >
                             <div {...p.dragHandleProps}>
                               <GripVertical
@@ -192,8 +232,8 @@ const NewRequest = () => {
                             {idx !== 0 && idx !== store.stops.length - 1 && (
                               <button onClick={() => store.removeStop(idx)}>
                                 <Trash2
-                                  size={14}
-                                  className="text-slate-300 hover:text-red-500"
+                                  size={20}
+                                  className="bg-rose-100 p-1 rounded text-red-500 cursor-pointer"
                                 />
                               </button>
                             )}
@@ -211,7 +251,7 @@ const NewRequest = () => {
           <Button
             size={"sm"}
             onPress={store.addStop}
-            className="mt-2 w-full py-2 border-2 border-dashed border-indigo-600 rounded-xl text-indigo-500 font-bold text-xs uppercase hover:bg-slate-50 transition-all duration-300"
+            className="mt-2 w-full py-2 border border-dashed border-indigo-600 rounded-xl text-indigo-500 font-bold text-[11px] uppercase hover:bg-slate-50 transition-all duration-300"
           >
             <Plus size={14} /> Add Intermediate Stop
           </Button>
@@ -219,36 +259,13 @@ const NewRequest = () => {
       </div>
 
       <div className="lg:col-span-7 flex flex-col overflow-hidden h-full">
-        <div className="rounded-3xl px-2 pt-1 h-[calc(100vh-190px)] pb-2 custom-scrollbar overflow-y-scroll">
-          <input
-            className="w-full mb-4 p-3 shadow-sm bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-indigo-500"
-            placeholder="Route Name"
-            value={store.routeName}
-            onChange={(e) => store.setField("routeName", e.target.value)}
-          />
+        <div className="rounded-xl px-2 pt-1 h-full pb-2 custom-scrollbar overflow-y-scroll">
           <section>
-            <div className="flex justify-between items-center">
+            <div className="flex items-center">
               <h3 className="font-bold uppercase text-sm flex gap-2 ">
                 <Footprints size={18} className="text-indigo-600" />
                 Travel Configuration
               </h3>
-
-              <div className="flex bg-slate-100 p-1 rounded-lg shadow-sm">
-                {["One Way", "Two Way", "Multi Day"].map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => store.setField("travelType", t)}
-                    className={cn(
-                      "px-4 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer",
-                      store.travelType === t
-                        ? "bg-white text-indigo-600 shadow-sm"
-                        : "text-slate-400",
-                    )}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-4 mt-1">
@@ -261,8 +278,19 @@ const NewRequest = () => {
                   value={parseToZoned(store.startDate)}
                   minValue={currentDateTime}
                   onChange={(date) => {
-                    const dateString = date ? date.toDate().toISOString() : "";
-                    store.setField("startDate", dateString);
+                    if (date) {
+                      const adjustedDate = date.set({
+                        hour: 6,
+                        minute: 0,
+                        second: 0,
+                      });
+                      store.setField(
+                        "startDate",
+                        adjustedDate.toDate().toISOString(),
+                      );
+                    } else {
+                      store.setField("startDate", "");
+                    }
                   }}
                   classNames={pickerStyles}
                   selectorIcon={
@@ -281,10 +309,19 @@ const NewRequest = () => {
                     value={parseToZoned(store.endDate)}
                     minValue={endMinValue}
                     onChange={(date) => {
-                      const dateString = date
-                        ? date.toDate().toISOString()
-                        : "";
-                      store.setField("endDate", dateString);
+                      if (date) {
+                        const adjustedDate = date.set({
+                          hour: 22,
+                          minute: 0,
+                          second: 0,
+                        });
+                        store.setField(
+                          "endDate",
+                          adjustedDate.toDate().toISOString(),
+                        );
+                      } else {
+                        store.setField("endDate", "");
+                      }
                     }}
                     classNames={pickerStyles}
                     selectorIcon={
@@ -322,7 +359,7 @@ const NewRequest = () => {
                   store.guests.length < Number(store.passengerCount) && (
                     <button
                       onClick={store.addGuest}
-                      className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100"
+                      className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 cursor-pointer"
                     >
                       <Plus size={16} />
                     </button>
@@ -347,13 +384,13 @@ const NewRequest = () => {
                 </label>
               </div>
             </div>
-            <div className="rounded-2xl min-h-40">
+            <div className="rounded-2xl min-h-52">
               {store.isBulkUpload ? (
                 <>
                   <div
                     onClick={() => fileInputRef.current?.click()}
                     className={cn(
-                      "border-2 border-dashed rounded-2xl p-4 text-center cursor-pointer transition-colors",
+                      "border border-dashed rounded-2xl p-4 text-center cursor-pointer transition-colors",
                       store.guestFile
                         ? "border-indigo-500 bg-indigo-50/30"
                         : "border-slate-300 hover:border-indigo-400",
@@ -377,9 +414,9 @@ const NewRequest = () => {
                         "mx-auto my-2",
                         store.guestFile ? "text-indigo-500" : "text-slate-300",
                       )}
-                      size={32}
+                      size={24}
                     />
-                    <p className="text-sm font-bold text-slate-600">
+                    <p className="text-xs font-bold text-slate-600">
                       {store.guestFile
                         ? store.guestFile.name
                         : "Click to Upload Guest List"}
@@ -388,7 +425,7 @@ const NewRequest = () => {
                   <Button
                     onPress={() => store.sampleGuestBulkFile()}
                     size={"sm"}
-                    className="w-full text-xs border-2 border-dashed border-indigo-400 rounded-md p-1 mt-2 text-indigo-400 font-semibold"
+                    className="w-full text-xs border border-dashed border-indigo-400 rounded-md p-1 mt-2 text-indigo-400 font-semibold"
                   >
                     <Download size={14} /> Download Sample Format
                   </Button>
@@ -404,14 +441,14 @@ const NewRequest = () => {
                       )}
                     >
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Full Name Input */}
-                        <div className="flex flex-col gap-1.5 p-2 px-4 bg-slate-50 rounded-2xl border border-transparent focus-within:border-indigo-500 focus-within:border-2 shadow-sm">
-                          <label className="text-[10px] font-semibold text-indigo-600 uppercase tracking-wider">
-                            Full Name{" "}
+                        <div className="flex flex-col gap-0.5 h-fit p-2 px-4 pt-1.5 bg-slate-50 rounded-md border border-transparent focus-within:border-indigo-500 focus-within:border-2 shadow-sm">
+                          <label className="text-[9px] font-semibold text-indigo-600 uppercase">
+                            Full Name
                             {isMandatory(idx) && (
-                              <span className="text-rose-500">*</span>
+                              <span className=" text-rose-500 ml-1">*</span>
                             )}
                           </label>
+
                           <div className="flex items-center gap-2">
                             <User size={16} className="text-indigo-600" />
                             <input
@@ -419,15 +456,14 @@ const NewRequest = () => {
                               onChange={(e) =>
                                 store.updateGuest(idx, "name", e.target.value)
                               }
-                              className="w-full bg-transparent font-medium text-sm outline-none"
+                              className="w-full bg-transparent font-medium text-sm outline-none rounded-md"
                               placeholder="Guest Name"
                             />
                           </div>
                         </div>
 
-                        {/* Phone Input with Country Selector */}
-                        <div className="flex flex-col gap-1.5 p-2 px-4 bg-slate-50 rounded-2xl border border-transparent focus-within:border-indigo-600 focus-within:border-2 shadow-sm">
-                          <label className="text-[10px] font-semibold text-indigo-600 uppercase tracking-wider">
+                        <div className="flex flex-col gap-0.5 h-fit p-2 px-4 pt-1.5 bg-slate-50 rounded-md border border-transparent focus-within:border-indigo-600 focus-within:border-2 shadow-sm">
+                          <label className="text-[9px] font-semibold text-indigo-600 uppercase">
                             Phone Number{" "}
                             {isMandatory(idx) && (
                               <span className="text-rose-500">*</span>
@@ -453,13 +489,12 @@ const NewRequest = () => {
                         </div>
                       </div>
 
-                      {/* Remove Button for optional guests */}
                       {!isMandatory(idx) && (
                         <button
                           onClick={() => store.removeGuest(idx)}
-                          className="absolute right-0 top-1/2 -translate-y-1/2 text-rose-500 bg-rose-50 hover:bg-rose-100 rounded-xl p-1.5 transition-all shadow-sm"
+                          className="absolute right-0 top-1/2 -translate-y-1/2 text-rose-500 bg-rose-50 hover:bg-rose-100 rounded p-1.5 transition-all shadow-sm cursor-pointer"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={14} />
                         </button>
                       )}
                     </div>
@@ -482,7 +517,7 @@ const NewRequest = () => {
                 onChange={(e) =>
                   store.setField("luggageDetails", e.target.value)
                 }
-                className="w-full min-h-18 custom-scrollbar overflow-y-scroll p-2 bg-slate-50 rounded-xl text-[10px] outline-none resize-none focus-within:border-indigo-500 focus-within:border-2 shadow-sm"
+                className="w-full min-h-18 custom-scrollbar overflow-y-scroll p-2 bg-slate-50 rounded-md text-[10px] outline-none resize-none focus-within:border-indigo-500 focus-within:border-2 shadow-sm"
                 placeholder="e.g. 2 Large bags"
               />
             </div>
@@ -497,7 +532,7 @@ const NewRequest = () => {
                 onChange={(e) =>
                   store.setField("specialRequirements", e.target.value)
                 }
-                className="w-full min-h-18 custom-scrollbar overflow-y-scroll p-2 bg-slate-50 rounded-xl text-[10px] outline-none resize-none focus-within:border-indigo-500 focus-within:border-2 shadow-sm"
+                className="w-full min-h-18 custom-scrollbar overflow-y-scroll p-2 bg-slate-50 rounded-md text-[10px] outline-none resize-none focus-within:border-indigo-500 focus-within:border-2 shadow-sm"
                 placeholder="e.g. AC, Water bottles"
               />
             </div>
@@ -506,13 +541,13 @@ const NewRequest = () => {
         <div className="flex flex-1 mt-2 gap-4">
           <Button
             onPress={handleCancel}
-            className="w-full py-4 bg-indigo-50 text-indigo-600 rounded-xl text-lg shadow-sm hover:bg-indigo-100 transition-all active:scale-95 tracking-wider"
+            className="w-full py-4 bg-indigo-50 text-indigo-600 rounded-md text-base shadow-sm hover:bg-indigo-100 transition-all active:scale-95 tracking-wider"
           >
             Cancel
           </Button>
           <Button
             onPress={handleCreateRequest}
-            className="w-full py-4 bg-indigo-600 text-white rounded-xl text-lg shadow-sm hover:bg-indigo-500 transition-all active:scale-95 tracking-wider"
+            className="w-full py-4 bg-indigo-600 text-white rounded-md text-base shadow-sm hover:bg-indigo-500 transition-all active:scale-95 tracking-wider"
           >
             Create Request
           </Button>

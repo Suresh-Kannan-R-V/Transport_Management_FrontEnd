@@ -5,7 +5,11 @@ import React from "react";
 import { Toaster } from "react-hot-toast";
 import Sidebar from "../../components/sideBar";
 import Topbar from "../../components/topBar";
-import { useCommonStore, useUserStore } from "../../store";
+import {
+  useCommonStore,
+  useRoleManagementStore,
+  useUserStore,
+} from "../../store";
 import { cn } from "../../utils/helper";
 
 const Layout = () => {
@@ -28,7 +32,7 @@ const Layout = () => {
   }, []);
 
   return (
-    <div className="h-screen bg-gray-100">
+    <div className="h-screen bg-slate-100">
       <Toaster position="top-center" reverseOrder={false} />
       <Topbar />
       <div className="flex flex-1 overflow-hidden pl-1">

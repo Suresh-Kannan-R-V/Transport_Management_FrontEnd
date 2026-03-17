@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Bell, Copy, Menu, Truck, UserRound, X } from "lucide-react";
+import { Bell, Copy, Menu, UserRound, X } from "lucide-react";
 import React from "react";
 import { useCommonStore, useUserStore } from "../../store";
 import { cn, getTokenRemainingTime, privateGet } from "../../utils/helper";
@@ -44,8 +44,12 @@ export default function Topbar() {
   return (
     <header className="bg-white flex items-center justify-between px-4 py-1  shadow-md">
       <div className="flex items-center gap-3">
-        <div className="bg-indigo-100 p-2 rounded-lg hidden lg:block">
-          <Truck className="text-indigo-600" />
+        <div className="bg-indigo-100 size-10 p-0.75 shadow-2xl rounded-lg hidden lg:block aspect-square overflow-hidden">
+          <img
+            src="/TripZo.png"
+            alt="TripZo Logo"
+            className="size-full object-cover"
+          />
         </div>
         <div
           onClick={() => setState("isOpen", !isOpen)}
@@ -58,10 +62,9 @@ export default function Topbar() {
           )}
         </div>
         <div>
-          <p className="hidden sm:block font-semibold">
-            Transport Management System
-          </p>
-          <p className="block sm:hidden font-semibold">TMS</p>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tighter italic">
+            Trip<span className="text-indigo-600">Zo</span>
+          </h1>
         </div>
       </div>
 

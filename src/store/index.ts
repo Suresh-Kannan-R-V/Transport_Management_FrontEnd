@@ -1,9 +1,11 @@
 export { useCommonStore } from "./commonStore";
+export { useDriverDashboardStore } from "./DashboardStores/driverStores";
 export { useUserStore } from "./useUserStore";
+export { useAssignmentStore } from "./AssignmentStore/AssignmentStore";
 export { useApproveMissionStore } from "./MissionStore/ApprovedMissionStore";
 export { useRequestCreationStore } from "./RequestStore/requestCreation";
 export { useRequestPageStore } from "./RequestStore/RequestPageStore";
 export { useLeaveStore } from "./ScheduleStore/LeaveStore";
-export { useVehicleStore } from "./SettingStore/VehicleStore";
+export { useVehicleStore } from "./VehicleManagementStore/VehicleStore";
 export { useRoleManagementStore } from "./SettingStore/RoleManageStore";
 export { useDriverStore } from "./SettingStore/DriverStore";

@@ -5,7 +5,9 @@ import {
   ArrowLeft,
   Building2,
   Calendar,
+  Coins,
   CreditCard,
+  Droplet,
   Hash,
   KeyRound,
   Lock,
@@ -15,9 +17,10 @@ import {
   RefreshCw,
   ShieldCheck,
   Star,
+  User,
   UserCircle,
   UserPlus,
-  UserRound
+  UserRound,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
@@ -34,12 +37,15 @@ interface UserPayload {
   role_id: number;
   isLogin: boolean;
   user_name?: string;
+  age?: number;
   faculty_id?: string;
   destination?: string;
   department?: string;
   license_number?: string;
   license_expiry?: string;
   experience_years?: number;
+  blood_group?: string;
+  salary?: number;
 }
 
 const AddUser = () => {
@@ -55,6 +61,7 @@ const AddUser = () => {
     role_id: "",
     password: "",
     user_name: "",
+    age: "",
     // Faculty fields
     faculty_id: "",
     destination: "",
@@ -63,6 +70,8 @@ const AddUser = () => {
     license_number: "",
     license_expiry: "",
     experience_years: "",
+    blood_group: "",
+    salary: "",
   });
 
   // Fetch roles from API
@@ -120,7 +129,6 @@ const AddUser = () => {
         await axios.put(`${FILE_BASE_URL}/auth/user`, updatePayload, config);
         toast.success(`User unblocked successfully!`);
       } else {
-        // Prepare base payload
         let payload: UserPayload = {
           name: formData.name,
           email: formData.email,
@@ -128,10 +136,10 @@ const AddUser = () => {
           phone: formData.phone,
           role_id: Number(formData.role_id),
           isLogin: true,
+          age: Number(formData.age),
           ...(formData.user_name && { user_name: formData.user_name }),
         };
 
-        // Add Role specific data
         if (selectedRoleName === "faculty") {
           payload = {
             ...payload,
@@ -145,6 +153,8 @@ const AddUser = () => {
             license_number: formData.license_number,
             license_expiry: formData.license_expiry,
             experience_years: Number(formData.experience_years),
+            blood_group: formData.blood_group,
+            salary: Number(formData.salary),
           };
         }
 
@@ -158,7 +168,6 @@ const AddUser = () => {
         toast.success(`User ${finalUserName} registered successfully!`);
       }
 
-      // Reset Form
       setFormData({
         name: "",
         email: "",
@@ -166,12 +175,15 @@ const AddUser = () => {
         role_id: "",
         password: "",
         user_name: "",
+        age: "",
         faculty_id: "",
         destination: "",
         department: "",
         license_number: "",
         license_expiry: "",
         experience_years: "",
+        blood_group: "",
+        salary: "",
       });
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
@@ -282,40 +294,53 @@ const AddUser = () => {
                   />
                 </div>
 
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase ml-1">
-                    Assign Role
-                  </label>
-                  <Select
-                    placeholder="Select a role"
-                    selectedKeys={formData.role_id ? [formData.role_id] : []}
-                    onChange={(e) =>
-                      setFormData({ ...formData, role_id: e.target.value })
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 uppercase ml-1">
+                      Assign Role
+                    </label>
+                    <Select
+                      placeholder="Select a role"
+                      selectedKeys={formData.role_id ? [formData.role_id] : []}
+                      onChange={(e) =>
+                        setFormData({ ...formData, role_id: e.target.value })
+                      }
+                      variant="flat"
+                      className="w-full"
+                      classNames={selectorStyles}
+                    >
+                      {roles.map((role) => (
+                        <SelectItem
+                          key={role.id.toString()}
+                          textValue={role.name}
+                        >
+                          {role.name}
+                        </SelectItem>
+                      ))}
+                    </Select>
+                  </div>
+                  <FormInput
+                    label="Age"
+                    icon={User}
+                    type="number"
+                    min={24}
+                    placeholder="Enter Your Age"
+                    value={formData.age}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setFormData({ ...formData, age: e.target.value })
                     }
-                    variant="flat"
-                    className="w-full"
-                    classNames={selectorStyles}
-                  >
-                    {roles.map((role) => (
-                      <SelectItem
-                        key={role.id.toString()}
-                        textValue={role.name}
-                      >
-                        {role.name}
-                      </SelectItem>
-                    ))}
-                  </Select>
+                  />
                 </div>
 
                 {selectedRoleName === "faculty" && (
-                  <div className="p-4 bg-indigo-50/50 rounded-2xl space-y-4 border-2 border-indigo-500">
+                  <div className="p-4 bg-indigo-50/50 rounded-2xl space-y-2 border-2 border-indigo-500">
                     <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">
                       Faculty Details
                     </p>
                     <FormInput
                       label="Faculty ID"
                       icon={Hash}
-                      placeholder="FAC123"
+                      placeholder="CS123"
                       value={formData.faculty_id}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         setFormData({ ...formData, faculty_id: e.target.value })
@@ -339,7 +364,7 @@ const AddUser = () => {
                       <FormInput
                         label="Destination"
                         icon={MapPin}
-                        placeholder="e.g. Sathy"
+                        placeholder="e.g. Head of Department"
                         value={formData.destination}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                           setFormData({
@@ -354,7 +379,7 @@ const AddUser = () => {
                 )}
 
                 {selectedRoleName === "driver" && (
-                  <div className="p-4 bg-emerald-50/50 rounded-2xl space-y-4 border-2 border-emerald-500">
+                  <div className="p-4 bg-emerald-50/50 rounded-2xl space-y-2 border-2 border-emerald-500">
                     <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">
                       Driver License Info
                     </p>
@@ -390,17 +415,48 @@ const AddUser = () => {
                         }
                         isRequired
                       />
-
                       <FormInput
                         label="Experience (Years)"
                         icon={Star}
                         type="number"
-                        placeholder="5"
+                        min={0}
+                        max={20}
+                        placeholder="Enter Experience Year"
                         value={formData.experience_years}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                           setFormData({
                             ...formData,
                             experience_years: e.target.value,
+                          })
+                        }
+                        required
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormInput
+                        label="Blood Group"
+                        icon={Droplet}
+                        type="text"
+                        placeholder="Enter Blood Group"
+                        value={formData.blood_group}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setFormData({
+                            ...formData,
+                            blood_group: e.target.value,
+                          })
+                        }
+                        required
+                      />
+                      <FormInput
+                        label="Salary"
+                        icon={Coins}
+                        type="number"
+                        placeholder="Enter Salary for Driver"
+                        value={formData.salary}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setFormData({
+                            ...formData,
+                            salary: e.target.value,
                           })
                         }
                         required

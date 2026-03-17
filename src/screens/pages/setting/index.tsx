@@ -21,13 +21,6 @@ const Setting = () => {
       color: "bg-rose-50",
     },
     {
-      title: "Vehicle Management",
-      description: "Manage vehicle details, status, and maintenance schedules.",
-      icon: <Car className="text-amber-600" size={24} />,
-      path: "/settings/vehicle-management",
-      color: "bg-amber-100/70",
-    },
-    {
       title: "Driver Management",
       description: "Manage driver details, licenses, and performance.",
       icon: <User className="text-teal-600" size={24} />,
@@ -59,7 +52,7 @@ const Setting = () => {
               {/* Icon Container */}
               <div
                 className={cn(
-                  "p-4 rounded-2xl flex-shrink-0 transition-transform group-hover:scale-110",
+                  "p-4 rounded-2xl shrink-0 transition-transform group-hover:scale-110",
                   option.color,
                 )}
               >

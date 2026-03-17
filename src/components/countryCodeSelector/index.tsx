@@ -34,10 +34,10 @@ export const CountrySelector = ({ selectedCode, onSelect }: any) => {
   );
 
   return (
-    <div className="relative col-span-4 cursor-pointer">
+    <div className="relative col-span-4 cursor-pointer h-fit">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 w-full bg-transparent font-bold text-sm outline-none pt-1 cursor-pointer"
+        className="flex items-center gap-2 w-full bg-transparent font-bold text-sm outline-none cursor-pointer"
       >
         {selectedCountry ? (
           <>

@@ -1,10 +1,9 @@
 import { Navigate } from "react-router-dom";
 import {
   AddUser,
-  Assignment,
   CreateLeave,
   Dashboard,
-  Driver,
+  DriverDashBoard,
   DriverManagement,
   MissionPage,
   NewRequest,
@@ -17,6 +16,8 @@ import {
   ViewRequest,
   WebQrLogin,
 } from "../screens";
+import AssignmentPage from "../screens/pages/assignment";
+import VehicleDashboard from "../screens/pages/vehicleManagement/VehicleDashBoard";
 const privateRoutes = [
   {
     index: true,
@@ -28,11 +29,11 @@ const privateRoutes = [
   },
   {
     path: "assignment",
-    element: <Assignment />,
+    element: <AssignmentPage />,
   },
   {
-    path: "driver",
-    element: <Driver />,
+    path: "driver/:driverId",
+    element: <DriverDashBoard />,
   },
   {
     path: "mission",
@@ -58,6 +59,23 @@ const privateRoutes = [
     path: "schedule/create-leave",
     element: <CreateLeave />,
   },
+
+  {
+    path: "vehicle",
+    element: <VehicleManagement />,
+  },
+  {
+    path: "vehicle/vehicle-dashboard",
+    element: <VehicleDashboard />,
+  },
+  {
+    path: "vehicle/fuel",
+    element: <VehicleManagement />,
+  },
+  {
+    path: "vehicle/service",
+    element: <VehicleManagement />,
+  },
   {
     path: "settings",
     element: <Setting />,
@@ -67,10 +85,6 @@ const privateRoutes = [
     element: <AddUser />,
   },
 
-  {
-    path: "settings/vehicle-management",
-    element: <VehicleManagement />,
-  },
   {
     path: "settings/driver-management",
     element: <DriverManagement />,

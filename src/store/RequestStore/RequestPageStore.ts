@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { FILE_BASE_URL } from "../../api/base";
-import { ROUTE_STATUS } from "../../utils/helper";
 
 let searchTimeout: ReturnType<typeof setTimeout>;
 
@@ -8,6 +7,7 @@ interface RequestItem {
   id: number;
   routeName: string;
   createdBy: {
+    user_id: number;
     name: string;
     faculty_id: string | null;
     roles: {
@@ -24,7 +24,13 @@ interface RequestItem {
   startLocation: string;
   destinationLocation: string;
   intermediateStops: string[];
-  vehicleAssigned: string | null;
+  vehicleAssigned: number | null;
+  driverAssigned: number | null;
+  drivers: {
+    driver_id: number;
+    name: string;
+    phone: string;
+  }[];
 }
 
 interface RequestPageState {
@@ -36,13 +42,15 @@ interface RequestPageState {
   search: string;
   statusFilter: number | "";
   travelTypeFilter: string;
+  fromDate?: string | null;
   sortBy: string;
   sortOrder: "ASC" | "DESC";
 
   setSort: (column: string, order?: "ASC" | "DESC") => void;
   setSearch: (val: string) => void;
-  setFilters: (status?: string, type?: string) => void;
+  setFilters: (status?: string, type?: string, dateFilter?: boolean) => void;
   setPage: (page: number) => void;
+  resetFilters: () => void;
   fetchRequests: () => Promise<void>;
 }
 
@@ -55,13 +63,15 @@ export const useRequestPageStore = create<RequestPageState>((set, get) => ({
   search: "",
   statusFilter: "",
   travelTypeFilter: "",
+  fromDate: null,
   sortBy: "created_at",
   sortOrder: "DESC",
 
-  setFilters: (status, type) => {
+  setFilters: (status, type, dateFilter) => {
     set({
       statusFilter: status ? Number(status) : "",
       travelTypeFilter: type ?? "",
+      fromDate: dateFilter ? new Date().toISOString().split("T")[0] : null,
       currentPage: 1,
     });
 
@@ -92,7 +102,22 @@ export const useRequestPageStore = create<RequestPageState>((set, get) => ({
     get().fetchRequests();
   },
 
+  resetFilters: () => {
+    set({
+      search: "",
+      statusFilter: "",
+      travelTypeFilter: "",
+      fromDate: null,
+      sortBy: "created_at",
+      sortOrder: "DESC",
+      currentPage: 1,
+    });
+
+    get().fetchRequests();
+  },
+
   fetchRequests: async () => {
+    if (get().loading) return;
     set({ loading: true });
     const {
       currentPage,
@@ -101,6 +126,7 @@ export const useRequestPageStore = create<RequestPageState>((set, get) => ({
       travelTypeFilter,
       sortBy,
       sortOrder,
+      fromDate,
     } = get();
 
     const params = new URLSearchParams();
@@ -109,19 +135,15 @@ export const useRequestPageStore = create<RequestPageState>((set, get) => ({
     params.append("sortBy", sortBy);
     params.append("sortOrder", sortOrder);
 
-    if (search && search.trim() !== "") {
-      params.append("search", search);
-    }
-    if (travelTypeFilter && travelTypeFilter !== "") {
+    if (fromDate) params.append("from_date", fromDate);
+
+    if (search && search.trim() !== "") params.append("search", search);
+
+    if (travelTypeFilter && travelTypeFilter !== "")
       params.append("travel_type", travelTypeFilter);
-    }
 
     if (statusFilter !== "" && !isNaN(Number(statusFilter))) {
-      params.append("status", statusFilter.toString());
-    } else if (statusFilter === "") {
-      [ROUTE_STATUS.PENDING, ROUTE_STATUS.CANCELLED].forEach((s) =>
-        params.append("status", s.toString()),
-      );
+      params.append("status", String(statusFilter));
     }
 
     try {

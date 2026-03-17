@@ -26,6 +26,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { FILE_BASE_URL } from "../../../../api/base";
 import { cn, DRIVER_STATUS, DriverStatus } from "../../../../utils/helper";
+import { NoDataFound } from "../../../../components";
 
 interface Driver {
   id: string | number;
@@ -46,10 +47,14 @@ interface LeaveApprovalModalProps {
       name: string;
     };
     total_days?: number;
-    current_assignment?: {
-      schedule_id: string | number;
-      route_name: string;
-    };
+    routes_during_leave?:
+      | {
+          schedule_id: string | number;
+          route_name: string;
+        }
+      | undefined;
+    startDate: string | null;
+    endDate: string | null;
   };
   onSuccess: () => void;
 }
@@ -65,7 +70,7 @@ export const LeaveApprovalModal = ({
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const isAssigned = !!leaveData?.current_assignment;
+  const isAssigned = !!leaveData?.routes_during_leave;
 
   useEffect(() => {
     if (isOpen && isAssigned) {
@@ -83,10 +88,19 @@ export const LeaveApprovalModal = ({
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get(
-        `${FILE_BASE_URL}/api/drivers/all-drivers?status=1&search=${search}`,
-        { headers: { Authorization: `TMS ${token}` } },
-      );
+      const params: any = {};
+      if (search) params.search = search;
+      if (leaveData?.startDate) {
+        params.startDatetime = new Date(leaveData?.startDate).toISOString();
+      }
+
+      if (leaveData?.endDate) {
+        params.endDatetime = new Date(leaveData?.endDate).toISOString();
+      }
+      const res = await axios.get(`${FILE_BASE_URL}/api/drivers/all-drivers`, {
+        params,
+        headers: { Authorization: `TMS ${token}` },
+      });
       setDrivers(res.data.data);
     } finally {
       setLoading(false);
@@ -104,16 +118,16 @@ export const LeaveApprovalModal = ({
     try {
       const token = localStorage.getItem("token");
       if (isAssigned) {
-        if (!leaveData.current_assignment || !selectedDriver)
+        if (!leaveData.routes_during_leave || !selectedDriver)
           return toast.error(
-            !leaveData.current_assignment
+            !leaveData.routes_during_leave
               ? "No active assignment found"
               : "Please select a replacement driver",
           );
         await axios.patch(
           `${FILE_BASE_URL}/request/update-driver-assign`,
           {
-            schedule_id: leaveData.current_assignment?.schedule_id,
+            schedule_id: leaveData.routes_during_leave?.schedule_id,
             new_driver_id: selectedDriver.id,
           },
           { headers: { Authorization: `TMS ${token}` } },
@@ -206,7 +220,7 @@ export const LeaveApprovalModal = ({
                         <p className="text-xs text-amber-700 leading-relaxed">
                           Assigned to:{" "}
                           <span className="font-semibold">
-                            {leaveData.current_assignment?.route_name}
+                            {leaveData.routes_during_leave?.route_name}
                           </span>
                           . Replacement is required before approval.
                         </p>
@@ -357,9 +371,7 @@ export const LeaveApprovalModal = ({
                                 </div>
                               ))
                             ) : (
-                              <div className="p-8 text-center text-slate-400 text-sm">
-                                No drivers found.
-                              </div>
+                              <NoDataFound data={"No Drivers Found."} />
                             )}
                           </ScrollShadow>
                         </PopoverContent>

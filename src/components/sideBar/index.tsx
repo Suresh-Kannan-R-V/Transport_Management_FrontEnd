@@ -1,25 +1,30 @@
 import {
+  BusFront,
   CalendarCheck2,
-  Car,
   CircleCheckBig,
   Compass,
   GitPullRequest,
   LayoutDashboard,
   LogOut,
-  Settings
+  Settings,
 } from "lucide-react";
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useCommonStore, useUserStore } from "../../store";
+import { usePermissionStore } from "../../store/permissionStore";
 import { cn } from "../../utils/helper";
 
-const menu = [
+const fullMenu: {
+  name: string;
+  icon: React.ComponentType<{ size?: number; strokeWidth?: number }>;
+  path: string;
+}[] = [
   { name: "DashBoard", icon: LayoutDashboard, path: "/dashboard" },
   { name: "Assignment", icon: CircleCheckBig, path: "/assignment" },
-  { name: "Driver", icon: Car, path: "/driver" },
   { name: "Mission", icon: Compass, path: "/mission" },
   { name: "Request", icon: GitPullRequest, path: "/request" },
   { name: "Schedule", icon: CalendarCheck2, path: "/schedule" },
+  { name: "Vehicle", icon: BusFront, path: "/vehicle" },
   { name: "Settings", icon: Settings, path: "/settings" },
 ];
 
@@ -37,6 +42,15 @@ export default function Sidebar({ className }: { className?: string }) {
     logout();
     navigate("/auth/web-qr-login");
   };
+
+  const permissions = usePermissionStore((state) => state.permissions);
+
+  const menu = fullMenu.filter((item) =>
+    permissions.some((p) => {
+      const basePath = p.split("/:")[0];
+      return item.path.startsWith(basePath);
+    }),
+  );
 
   return (
     <>
@@ -57,14 +71,15 @@ export default function Sidebar({ className }: { className?: string }) {
           className,
         )}
       >
-        
         <div
           className={cn(
             " p-4 px-1 min-h-80 transition-transform duration-300 flex flex-col items-center bg-white rounded-2xl shadow-md",
             "border border-white/40 dark:border-slate-700/50",
           )}
         >
-          <nav className={`flex flex-col gap-3 grow pb-10 mb-2 border-b-2 border-slate-200`}>
+          <nav
+            className={`flex flex-col gap-3 grow pb-10 mb-2 border-b-2 border-slate-200`}
+          >
             {menu.map((item) => (
               <SidebarItem
                 key={item.name}
@@ -81,7 +96,6 @@ export default function Sidebar({ className }: { className?: string }) {
             ))}
           </nav>
           <SidebarItem
-          
             item={{ name: "Logout", icon: LogOut, path: "" }}
             isLogout={true}
             isActive={false}
@@ -129,7 +143,7 @@ const SidebarItem = ({
   onClick,
   isLogout = false,
 }: {
-  item: (typeof menu)[0];
+  item: (typeof fullMenu)[number];
   isActive: boolean;
   onClick: () => void;
   isLogout?: boolean;

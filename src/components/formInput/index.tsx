@@ -4,7 +4,7 @@ export const FormInput = ({ label, icon: Icon, ...props }: any) => (
       {label}
     </label>
     <div className="relative group">
-      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors">
+      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-600 group-focus-within:text-indigo-600 transition-colors">
         <Icon size={18} />
       </div>
       <input

@@ -64,7 +64,7 @@ export const WebQrLogin = () => {
           localStorage.setItem("token", res.data.token);
           localStorage.setItem("user", res.data.user);
           cleanup();
-          navigate("/dashboard", { replace: true });
+          navigate("/request", { replace: true });
         }
       } catch (err: any) {
         if (err.response?.status === 410) handleExpiry();

@@ -25,7 +25,7 @@ interface UserState {
   loading: boolean;
   totalItems: number;
   totalPages: number;
-  fetchUsers: (query: string) => Promise<void>;
+  fetchUsers: (page: number, limit: number, filters?: any) => Promise<void>;
   fetchRoles: () => Promise<void>;
   changeUserRole: (payload: any) => Promise<boolean>;
   logout: (id: string | number, Name: string) => Promise<boolean>;
@@ -38,21 +38,39 @@ export const useRoleManagementStore = create<UserState>((set) => ({
   totalItems: 0,
   totalPages: 1,
 
-  fetchUsers: async (query) => {
+  fetchUsers: async (page: number, limit: number, filters: any = {}) => {
+    const state = useRoleManagementStore.getState();
+
+    if (state.loading) return;
+
     set({ loading: true });
+
     try {
-      const res = await axios.get(`${FILE_BASE_URL}/auth/users${query}`, {
-        headers: { Authorization: `TMS ${localStorage.getItem("token")}` },
+      const token = localStorage.getItem("token");
+
+      const params = Object.fromEntries(
+        Object.entries({
+          page,
+          limit,
+          search: filters.search,
+          role_name: filters.role_name,
+          isLogin: filters.isLogin,
+        }).filter(([_, v]) => v !== undefined && v !== null && v !== ""),
+      );
+
+      const res = await axios.get(`${FILE_BASE_URL}/auth/users`, {
+        params,
+        headers: { Authorization: `TMS ${token}` },
       });
+
       if (res.data.success) {
-        // FIX: Access fields directly from res.data as per your JSON structure
         set({
           users: res.data.data || [],
           totalPages: Number(res.data.totalPages) || 1,
           totalItems: Number(res.data.totalItems) || 0,
         });
       }
-    } catch (err) {
+    } catch {
       toast.error("Failed to fetch users");
     } finally {
       set({ loading: false });

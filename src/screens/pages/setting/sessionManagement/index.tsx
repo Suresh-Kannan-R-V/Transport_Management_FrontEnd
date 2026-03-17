@@ -24,13 +24,14 @@ import {
   UserCircle,
   UserCog,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FILE_BASE_URL } from "../../../../api/base";
 import {
   BackButton,
   CustomPagination,
   GenericFilterDropdown,
+  NoDataFound,
   TransportLoader,
   type FilterItem,
 } from "../../../../components";
@@ -38,8 +39,6 @@ import { useRoleManagementStore } from "../../../../store";
 import { cn } from "../../../../utils/helper";
 import { selectorStyles } from "../../../../utils/style";
 
-let searchTimeout: ReturnType<typeof setTimeout>;
-// --- Types ---
 interface User {
   id: number;
   name: string;
@@ -57,42 +56,47 @@ interface Role {
 }
 
 const RoleManagement = () => {
+  const LIMIT = 10;
   const { users, loading, fetchUsers, totalPages, totalItems, logout } =
     useRoleManagementStore();
-  const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
   const [roleFilter, setRoleFilter] = useState("");
   const [isLoginFilter, setIsLoginFilter] = useState<boolean | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    const isDefaultState =
+      page === 1 && !debouncedSearch && !roleFilter && isLoginFilter === null;
+
+    if (isDefaultState && users.length > 0) return;
+
+    fetchUsers(page, LIMIT, {
+      search: debouncedSearch || undefined,
+      role_name: roleFilter || undefined,
+      isLogin: isLoginFilter ?? undefined,
+    });
+  }, [page, debouncedSearch, roleFilter, isLoginFilter, fetchUsers]);
+
   const handleLogout = async (id: string | number, Name: string) => {
     setShowLogout(false);
     logout(id, Name).then((success) => {
       if (success) {
-        loadData();
+        fetchUsers(page, LIMIT);
       }
     });
-  };
-
-  const LIMIT = 8;
-
-  const loadData = useCallback(() => {
-    let query = `?page=${page}&limit=${LIMIT}&search=${searchTerm}`;
-    if (roleFilter) query += `&role_name=${roleFilter}`;
-    if (isLoginFilter !== null) query += `&isLogin=${isLoginFilter}`;
-    fetchUsers(query);
-  }, [page, searchTerm, roleFilter, isLoginFilter, fetchUsers]);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-  const handleSearch = (val: string) => {
-    setSearchTerm(val);
-    setPage(1);
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {}, 500);
   };
 
   const filterConfig = [
@@ -124,6 +128,13 @@ const RoleManagement = () => {
     }
   };
 
+  const handleReset = () => {
+    setSearchTerm("");
+    setRoleFilter("");
+    setIsLoginFilter(null);
+    setPage(1);
+  };
+
   return (
     <div className="p-4 pb-0 space-y-3 animate-in fade-in duration-500">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -139,27 +150,20 @@ const RoleManagement = () => {
             </h1>
           </div>
         </div>
-      </header>
-      <div className="flex gap-2 items-center w-full justify-between mb-2">
-        <div className="w-full md:w-80">
-          <Input
-            isClearable
-            placeholder="Search by name or email..."
-            startContent={<Search size={18} className="text-slate-400" />}
-            value={searchTerm}
-            onValueChange={handleSearch}
-            className="rounded-2xl shadow"
-          />
-        </div>
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-3">
+          <div className="w-full md:w-80">
+            <Input
+              isClearable
+              placeholder="Search by name or email..."
+              startContent={<Search size={18} className="text-slate-400" />}
+              value={searchTerm}
+              onValueChange={setSearchTerm}
+              className="rounded-2xl shadow"
+            />
+          </div>
           <Button
             isIconOnly
-            onPress={() => {
-              fetchUsers(`?page=${page}&limit=${LIMIT}&search=${searchTerm}`);
-              setSearchTerm("");
-              setRoleFilter("");
-              setIsLoginFilter(null);
-            }}
+            onPress={handleReset}
             variant="flat"
             className="bg-white border border-slate-200 text-slate-600 font-semibold rounded-xl h-9 text-xs"
             startContent={<RefreshCcw size={16} strokeWidth={2} />}
@@ -167,22 +171,18 @@ const RoleManagement = () => {
           <GenericFilterDropdown
             sections={filterConfig}
             onFilterSelect={handleFilterSelection}
-            onReset={() => {
-              setSearchTerm("");
-              setRoleFilter("");
-              setIsLoginFilter(null);
-            }}
+            onReset={handleReset}
           />
         </div>
-      </div>
+      </header>
 
-      <div className=" overflow-y-auto h-[calc(100vh-320px)] p-1 custom-scrollbar pr-2">
+      <div className=" overflow-y-auto h-[calc(100vh-270px)] p-1 custom-scrollbar pr-2">
         {loading ? (
           <div className="col-span-full flex justify-center items-center h-full">
             <TransportLoader size={60} />
           </div>
         ) : users.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {users.map((user) => (
               <Card
                 key={user.id}
@@ -194,36 +194,36 @@ const RoleManagement = () => {
               >
                 <CardBody className="p-4">
                   <div className="flex justify-between items-start mb-2">
-                    <div className="relative">
+                    <div className=" flex gap-4">
                       <div
                         className={cn(
-                          "size-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors duration-300",
+                          "relative size-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors duration-300",
                           user.isLogin
                             ? "bg-emerald-100 text-emerald-500"
                             : "bg-slate-100 text-slate-400",
                         )}
                       >
                         <UserCircle size={32} />
+                        <div
+                          className={cn(
+                            "absolute bottom-0 right-0 size-4 rounded-full border-4 border-white",
+                            user.isLogin ? "bg-green-600" : "bg-indigo-600",
+                          )}
+                        />
                       </div>
-                      <div
-                        className={cn(
-                          "absolute bottom-1 right-0 size-4 rounded-full border-4 border-white",
-                          user.isLogin ? "bg-green-600" : "bg-indigo-600",
-                        )}
-                      />
+
+                      <div className="space-y-1 mb-4">
+                        <h3 className="font-bold text-slate-800 text-lg line-clamp-1 capitalize">
+                          {user.name}
+                        </h3>
+                        <p className="text-[10px] font-semibold text-slate-400 tracking-widest">
+                          User Name: # {user.user_name}
+                        </p>
+                      </div>
                     </div>
                     <span className="font-bold uppercase text-[10px] bg-indigo-50 text-indigo-600 px-2 pt-0.5 rounded-full">
                       {user.Role?.name || "No Role"}
                     </span>
-                  </div>
-
-                  <div className="space-y-1 mb-4">
-                    <h3 className="font-bold text-slate-800 text-lg line-clamp-1">
-                      {user.name}
-                    </h3>
-                    <p className="text-[10px] font-semibold text-slate-400 tracking-widest">
-                      User Name: # {user.user_name}
-                    </p>
                   </div>
 
                   <div className="space-y-2">
@@ -253,6 +253,7 @@ const RoleManagement = () => {
                     Manage Role
                   </Button>
                   <Button
+                    isDisabled={!user.isLogin}
                     fullWidth
                     size="sm"
                     variant="flat"
@@ -324,11 +325,7 @@ const RoleManagement = () => {
             ))}
           </div>
         ) : (
-          <div className="col-span-full py-20 text-center">
-            <p className="text-slate-400 font-medium italic">
-              No users found matching your search.
-            </p>
-          </div>
+          <NoDataFound data={"No Users Found."} />
         )}
       </div>
 
@@ -344,7 +341,7 @@ const RoleManagement = () => {
         isOpen={isModalOpen}
         onOpenChange={() => setIsModalOpen(false)}
         user={selectedUser}
-        onSuccess={loadData}
+        onSuccess={() => fetchUsers(page, LIMIT)}
       />
     </div>
   );
@@ -444,7 +441,9 @@ const ChangeRoleModal = ({
               <UserCircle size={32} />
             </div>
             <div>
-              <p className="text-sm font-black text-slate-800">{user?.name}</p>
+              <p className="text-sm font-black text-slate-800 capitalize">
+                {user?.name}
+              </p>
               <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">
                 Current: {user?.role_name}
               </p>

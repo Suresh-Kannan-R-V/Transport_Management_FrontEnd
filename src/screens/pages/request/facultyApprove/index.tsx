@@ -30,6 +30,11 @@ export const FacultyApprovalModal = ({
   const [remark, setRemark] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const handleClose = () => {
+    setRemark("");
+    onOpenChange();
+  };
+
   const handleConfirm = async () => {
     if (!routeId) return;
     let decodedRouteId;
@@ -46,23 +51,16 @@ export const FacultyApprovalModal = ({
 
     setLoading(true);
     try {
-      const response = await axios.patch(
-        `${FILE_BASE_URL}/request/change-route-status`,
-        {
-          route_id: decodedRouteId,
-          status: ROUTE_STATUS.FACULTY_APPROVED,
-          remark: remark || "All details verified by faculty",
-        },
-        {
-          headers: { Authorization: `TMS ${localStorage.getItem("token")}` },
-        },
+      const response = await axios.post(
+        `${FILE_BASE_URL}/request/auto-assign-driver`,
+        { route_id: decodedRouteId },
+        { headers: { Authorization: `TMS ${localStorage.getItem("token")}` } },
       );
 
       if (response.data.success) {
         toast.success("Route confirmed successfully!");
         onSuccess();
-        onOpenChange(); // Close modal
-        setRemark(""); // Reset remark
+        handleClose();
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to confirm route");
@@ -74,7 +72,7 @@ export const FacultyApprovalModal = ({
   return (
     <Modal
       isOpen={isOpen}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleClose}
       isDismissable={false}
       size="xl"
       classNames={{
@@ -88,65 +86,58 @@ export const FacultyApprovalModal = ({
       }}
     >
       <ModalContent>
-        {(onClose) => (
-          <>
-            <ModalHeader className="flex flex-col gap-1 pt-4 pb-2">
-              <div className="flex items-center gap-3">
-                <div className="bg-emerald-100 p-2 rounded-xl text-emerald-600">
-                  <CheckCircle2 size={24} />
-                </div>
-                <div>
-                  <h1 className="text-xl text-slate-900 font-bold">
-                    Faculty Confirmation
-                  </h1>
-                  <p className="text-xs text-slate-500 font-medium">
-                    Please verify the details before confirming the route.
-                  </p>
-                </div>
-              </div>
-            </ModalHeader>
-            <ModalBody className="py-4">
-              <Textarea
-                label="Confirmation Remarks"
-                variant="bordered"
-                labelPlacement="outside"
-                placeholder="e.g., All details verified by faculty"
-                disableAnimation
-                disableAutosize
-                classNames={{
-                  input: "min-h-[120px] text-sm text-slate-700",
-                  label: "font-bold text-indigo-600 ml-1",
-                  inputWrapper:
-                    "rounded-2xl border-2 border-slate-200 shadow focus-within:border-indigo-500 transition-all",
-                }}
-                startContent={
-                  <MessageSquareText
-                    className="text-slate-400 mt-1"
-                    size={18}
-                  />
-                }
-                value={remark}
-                onValueChange={setRemark}
-              />
-            </ModalBody>
-            <ModalFooter className="flex gap-3 pb-3 pt-2 w-full">
-              <Button
-                variant="flat"
-                className="flex-1 font-bold text-slate-500 rounded-xl"
-                onPress={onClose}
-              >
-                Cancel
-              </Button>
-              <Button
-                isLoading={loading}
-                className="flex-1 bg-indigo-600 text-white font-bold rounded-xl shadow-lg shadow-indigo-200"
-                onPress={handleConfirm}
-              >
-                Confirm Status
-              </Button>
-            </ModalFooter>
-          </>
-        )}
+        <ModalHeader className="flex flex-col gap-1 pt-4 pb-2">
+          <div className="flex items-center gap-3">
+            <div className="bg-emerald-100 p-2 rounded-xl text-emerald-600">
+              <CheckCircle2 size={24} />
+            </div>
+            <div>
+              <h1 className="text-xl text-slate-900 font-bold">
+                Faculty Confirmation
+              </h1>
+              <p className="text-xs text-slate-500 font-medium">
+                Please verify the details before confirming the route.
+              </p>
+            </div>
+          </div>
+        </ModalHeader>
+        <ModalBody className="py-4">
+          <Textarea
+            label="Confirmation Remarks"
+            variant="bordered"
+            labelPlacement="outside"
+            placeholder="e.g., All details verified by faculty"
+            disableAnimation
+            disableAutosize
+            classNames={{
+              input: "min-h-[120px] text-sm text-slate-700",
+              label: "font-bold text-indigo-600 ml-1",
+              inputWrapper:
+                "rounded-2xl border-2 border-slate-200 shadow focus-within:border-indigo-500 transition-all",
+            }}
+            startContent={
+              <MessageSquareText className="text-slate-400 mt-1" size={18} />
+            }
+            value={remark}
+            onValueChange={setRemark}
+          />
+        </ModalBody>
+        <ModalFooter className="flex gap-3 pb-3 pt-2 w-full">
+          <Button
+            variant="flat"
+            className="flex-1 font-bold text-slate-500 rounded-xl"
+            onPress={handleClose}
+          >
+            Cancel
+          </Button>
+          <Button
+            isLoading={loading}
+            className="flex-1 bg-indigo-600 text-white font-bold rounded-xl shadow-lg shadow-indigo-200"
+            onPress={handleConfirm}
+          >
+            Confirm Status
+          </Button>
+        </ModalFooter>
       </ModalContent>
     </Modal>
   );

@@ -37,6 +37,7 @@ import {
 import { VehicleAssignmentPopup } from "../assignVehicle";
 import { AssignDriverModal } from "../assignDriver";
 import { FacultyApprovalModal } from "../facultyApprove";
+import { statusStyles } from "../../../../utils/style";
 
 export interface MappedStop {
   id: string;
@@ -120,27 +121,17 @@ interface RouteData {
   schedules: Schedule[];
 }
 
-const statusStyles: Record<number, string> = {
-  1: "bg-amber-50 text-amber-500 border-amber-200 border", // Pending
-  2: "bg-purple-50 text-purple-500 border-purple-200 border", // Vehicle Assigned
-  3: "bg-purple-50 text-purple-500 border-purple-200 border", // Vehicle Reassigned
-  4: "bg-indigo-50 text-indigo-500 border-indigo-200 border", // Faculty Approved
-  5: "bg-teal-50 text-teal-500 border-teal-200 border", // Driver Assigned
-  6: "bg-teal-50 text-teal-500 border-teal-200 border", // Driver Reassigned
-  7: "bg-blue-50 text-blue-500 border-blue-200 border", // Started
-  8: "bg-emerald-50 text-emerald-500 border-emerald-200 border", // Completed
-  9: "bg-slate-50 text-slate-500 border-slate-200 border", // Cancelled
-};
-
 const ViewRequest = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const isRequestPath = window.location.pathname.includes("/request/");
+  const isMissionPath = window.location.pathname.includes("/mission/");
   const roleName = useUserStore((state) => state.roleName);
   const [data, setData] = useState<RouteData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [mappedStops, setMappedStops] = useState<MappedStop[]>([]);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
-  const [selectedScheduleId, setSelectedScheduleId] = useState<number | null>(
+  const [_selectedScheduleId, setSelectedScheduleId] = useState<number | null>(
     null,
   );
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -188,7 +179,6 @@ const ViewRequest = () => {
 
   const handleAction = async (action: "cancel" | "uncancel" | "delete") => {
     const realId = parseInt(atob(id || ""));
-    console.log(realId);
 
     try {
       const config = {
@@ -220,8 +210,6 @@ const ViewRequest = () => {
 
         if (action === "delete") {
           navigate("/request");
-        } else {
-          fetchData();
         }
       } else {
         toast.error(res.data?.message || `Failed to ${action} request`);
@@ -247,7 +235,7 @@ const ViewRequest = () => {
 
   return (
     <div className="px-4 py-2 animate-in fade-in duration-500">
-      <div className="flex flex-wrap items-center justify-between gap-5 mb-3">
+      <div className="flex flex-wrap items-center justify-between gap-5 mb-3 px-4 py-3 rounded-2xl shadow-sm border border-slate-200">
         <div className="flex gap-4">
           <BackButton />
           <div>
@@ -286,23 +274,22 @@ const ViewRequest = () => {
             />
             {RouteStatus[data?.route_status] || "Unknown"}
           </div>
-          {roleName === "Faculty" &&
-            (data?.route_status === ROUTE_STATUS.VEHICLE_ASSIGNED ||
-              data?.route_status === ROUTE_STATUS.VEHICLE_REASSIGNED) && (
-              <Button
-                variant="faded"
-                size="sm"
-                startContent={<CheckCheck size={14} />}
-                isDisabled={
-                  data?.route_status !== ROUTE_STATUS.VEHICLE_ASSIGNED &&
-                  data?.route_status !== ROUTE_STATUS.VEHICLE_REASSIGNED
-                }
-                className="font-bold text-violet-600 rounded-lg bg-violet-50 text-xs"
-                onPress={() => setIsApprovalOpen(true)}
-              >
-                Approve Route
-              </Button>
-            )}
+          {(data?.route_status === ROUTE_STATUS.VEHICLE_ASSIGNED ||
+            data?.route_status === ROUTE_STATUS.VEHICLE_REASSIGNED) && (
+            <Button
+              variant="faded"
+              size="sm"
+              startContent={<CheckCheck size={14} />}
+              isDisabled={
+                data?.route_status !== ROUTE_STATUS.VEHICLE_ASSIGNED &&
+                data?.route_status !== ROUTE_STATUS.VEHICLE_REASSIGNED
+              }
+              className="font-bold text-violet-600 rounded-lg bg-violet-50 text-xs"
+              onPress={() => setIsApprovalOpen(true)}
+            >
+              Approve Route
+            </Button>
+          )}
           {data?.route_status === ROUTE_STATUS.PENDING && (
             <Button
               onPress={() => handleAction("cancel")}
@@ -328,25 +315,26 @@ const ViewRequest = () => {
             )}
           {(roleName === "Transport Admin" ||
             (roleName === "Faculty" &&
-              data.route_status <= ROUTE_STATUS.VEHICLE_REASSIGNED)) && (
-            <Button
-              onPress={() => setConfirmDelete(true)}
-              size="sm"
-              startContent={<Trash2 size={14} />}
-              isDisabled={
-                schedule?.status !== 1 && roleName !== "Transport Admin"
-              }
-              className="text-white bg-rose-500 rounded-lg px-5 text-sm shadow-sm hover:bg-rose-600 transition-all active:scale-95 tracking-wider"
-            >
-              Delete
-            </Button>
-          )}
+              data.route_status <= ROUTE_STATUS.VEHICLE_REASSIGNED)) &&
+            data.route_status <= ROUTE_STATUS.STARTED && (
+              <Button
+                onPress={() => setConfirmDelete(true)}
+                size="sm"
+                startContent={<Trash2 size={14} />}
+                isDisabled={
+                  schedule?.status !== 1 && roleName !== "Transport Admin"
+                }
+                className="text-white bg-rose-500 rounded-lg px-5 text-sm shadow-sm hover:bg-rose-600 transition-all active:scale-95 tracking-wider"
+              >
+                Delete
+              </Button>
+            )}
         </div>
       </div>
 
       <div className="grid grid-cols-12 gap-3">
         <div className="col-span-12 lg:col-span-5 space-y-3">
-          <div className="h-80 bg-white shadow-md rounded-3xl overflow-hidden border-4 border-white">
+          <div className="h-80 bg-white shadow-md rounded-3xl overflow-hidden ">
             <MapViewer stops={mappedStops} />
           </div>
 
@@ -520,7 +508,7 @@ const ViewRequest = () => {
                   const canSee =
                     (roleName === "Transport Admin" &&
                       status >= ROUTE_STATUS.PENDING &&
-                      status < ROUTE_STATUS.FACULTY_APPROVED) ||
+                      status < ROUTE_STATUS.VEHICLE_APPROVED) ||
                     (roleName === "Faculty" && isReassign);
 
                   if (!canSee) return null;
@@ -529,10 +517,6 @@ const ViewRequest = () => {
                     <Button
                       size="sm"
                       onPress={() => setShowPopup(true)}
-                      isDisabled={[
-                        ROUTE_STATUS.COMPLETED,
-                        ROUTE_STATUS.CANCELLED,
-                      ].includes(status)}
                       className={cn(
                         "text-xs font-medium px-3 h-6 rounded-3xl",
                         isReassign
@@ -576,31 +560,31 @@ const ViewRequest = () => {
               </ScrollShadow>
             </div>
           </div>
-          {showPopup && (
-            <VehicleAssignmentPopup
-              routeId={id}
-              guests={data?.guests}
-              existingSchedules={
-                data?.schedules?.map((schedule) => ({
-                  schedule_id: schedule.schedule_id,
-                  vehicle: schedule.vehicle
-                    ? {
-                        id: schedule.vehicle.id,
-                        vehicle_number: schedule.vehicle.vehicle_number,
-                        vehicle_type: schedule.vehicle.vehicle_type,
-                        capacity: Number(schedule.vehicle.vehicle_capacity),
-                        status: "active" as const,
-                      }
-                    : null,
-                  guests: schedule.guests || [],
-                })) as any
-              }
-              onClose={() => {
-                setShowPopup(false);
-                fetchData();
-              }}
-            />
-          )}
+          {(isRequestPath || (isMissionPath && roleName === "Faculty")) &&
+            showPopup && (
+              <VehicleAssignmentPopup
+                routeId={id}
+                guests={data?.guests}
+                existingSchedules={
+                  data?.schedules?.map((schedule) => ({
+                    schedule_id: schedule.schedule_id,
+                    vehicle: schedule.vehicle
+                      ? {
+                          id: schedule.vehicle.id,
+                          vehicle_number: schedule.vehicle.vehicle_number,
+                          vehicle_type: schedule.vehicle.vehicle_type,
+                          capacity: Number(schedule.vehicle.vehicle_capacity),
+                          status: "active" as const,
+                        }
+                      : null,
+                    guests: schedule.guests || [],
+                  })) as any
+                }
+                onClose={() => {
+                  setShowPopup(false);
+                }}
+              />
+            )}
           <div className="relative group">
             <ScrollShadow
               className={cn(
@@ -623,12 +607,14 @@ const ViewRequest = () => {
                   <Card
                     isDisabled={
                       roleName !== "Transport Admin" ||
-                      data.route_status < ROUTE_STATUS.FACULTY_APPROVED ||
+                      !isRequestPath ||
+                      data.route_status < ROUTE_STATUS.VEHICLE_APPROVED ||
                       data.route_status > ROUTE_STATUS.DRIVER_REASSIGNED
                     }
                     isPressable={
+                      isRequestPath &&
                       roleName === "Transport Admin" &&
-                      data.route_status >= ROUTE_STATUS.FACULTY_APPROVED &&
+                      data.route_status >= ROUTE_STATUS.VEHICLE_APPROVED &&
                       data.route_status <= ROUTE_STATUS.DRIVER_REASSIGNED
                     }
                     onPress={() => handleCardClick(schedule.schedule_id)}
@@ -644,7 +630,8 @@ const ViewRequest = () => {
                           <SectionTitle
                             icon={<Car className="text-indigo-600" />}
                             title={
-                              schedule?.vehicle?.vehicle_number || "unDefined"
+                              schedule?.vehicle?.vehicle_number ||
+                              "Vehicle Assign"
                             }
                           />
                           {schedule?.vehicle?.vehicle_type && (
@@ -740,35 +727,35 @@ const ViewRequest = () => {
                       )}
                     </div>
                   </Card>
-                  {data.route_status >= ROUTE_STATUS.FACULTY_APPROVED &&
+                  {isRequestPath &&
+                    data.route_status >= ROUTE_STATUS.VEHICLE_APPROVED &&
                     data.route_status <= ROUTE_STATUS.DRIVER_REASSIGNED && (
                       <AssignDriverModal
                         isOpen={isOpen}
                         onOpenChange={onOpenChange}
-                        scheduleId={selectedScheduleId}
+                        scheduleId={schedule.schedule_id}
                         VehicleId={schedule.vehicle?.vehicle_number || null}
                         currentDriverId={schedule.driver?.id || null}
-                        onSuccess={() => {
-                          fetchData();
-                        }}
+                        startDate={data.travel_info.start_date}
+                        endDate={data.travel_info.end_date}
+                        onSuccess={fetchData}
                       />
                     )}
                 </div>
               ))}
             </ScrollShadow>
           </div>
-          {roleName === "Faculty" &&
-            (data?.route_status === ROUTE_STATUS.VEHICLE_ASSIGNED ||
-              data?.route_status === ROUTE_STATUS.VEHICLE_REASSIGNED) && (
-              <FacultyApprovalModal
-                isOpen={isApprovalOpen}
-                onOpenChange={() => setIsApprovalOpen(false)}
-                routeId={id || null}
-                onSuccess={() => {
-                  fetchData();
-                }}
-              />
-            )}
+          {(data?.route_status === ROUTE_STATUS.VEHICLE_ASSIGNED ||
+            data?.route_status === ROUTE_STATUS.VEHICLE_REASSIGNED) && (
+            <FacultyApprovalModal
+              isOpen={isApprovalOpen}
+              onOpenChange={() => setIsApprovalOpen(false)}
+              routeId={id || null}
+              onSuccess={() => {
+                fetchData();
+              }}
+            />
+          )}
         </div>
         <div className="p-5 rounded-3xl border border-slate-200 shadow-md col-span-12">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

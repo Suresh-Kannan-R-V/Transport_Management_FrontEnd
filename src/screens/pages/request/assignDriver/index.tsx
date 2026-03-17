@@ -16,6 +16,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { FILE_BASE_URL } from "../../../../api/base";
 import { cn, DRIVER_STATUS, DriverStatus } from "../../../../utils/helper";
+import { NoDataFound } from "../../../../components";
 
 interface Driver {
   id: number;
@@ -30,8 +31,9 @@ interface AssignDriverModalProps {
   onOpenChange: () => void;
   scheduleId: number | null;
   VehicleId: string | null;
-  // Added currentDriverId to differentiate between Assign and Reassign
   currentDriverId?: number | null;
+  startDate: string | null;
+  endDate: string | null;
   onSuccess: () => void;
 }
 
@@ -42,6 +44,8 @@ export const AssignDriverModal = ({
   VehicleId,
   currentDriverId,
   onSuccess,
+  startDate,
+  endDate,
 }: AssignDriverModalProps) => {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(false);
@@ -51,9 +55,8 @@ export const AssignDriverModal = ({
 
   // Logic to clear state when modal opens/closes
   useEffect(() => {
-    if (!isOpen) {
-      setSelectedDriver(null);
-      setSearchTerm("");
+    if (isOpen) {
+      fetchDrivers(searchTerm);
     }
   }, [isOpen]);
 
@@ -61,10 +64,21 @@ export const AssignDriverModal = ({
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      // status=1 usually implies Available
+
+      const params: any = {};
+
+      if (search) params.search = search;
+      if (startDate) {
+        params.startDatetime = new Date(startDate).toISOString();
+      }
+
+      if (endDate) {
+        params.endDatetime = new Date(endDate).toISOString();
+      }
+
       const response = await axios.get(
-        `${FILE_BASE_URL}/api/drivers/all-drivers?status=1&search=${search}`,
-        { headers: { Authorization: `TMS ${token}` } },
+        `${FILE_BASE_URL}/api/drivers/all-drivers`,
+        { params, headers: { Authorization: `TMS ${token}` } },
       );
       if (response.data.success) {
         setDrivers(response.data.data);
@@ -308,9 +322,7 @@ export const AssignDriverModal = ({
                           </div>
                         ))
                       ) : (
-                        <div className="p-8 text-center text-slate-400 text-sm">
-                          No drivers found.
-                        </div>
+                        <NoDataFound data={"No Drivers Found."} />
                       )}
                     </ScrollShadow>
                   </PopoverContent>

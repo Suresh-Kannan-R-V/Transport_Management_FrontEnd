@@ -30,6 +30,7 @@ import {
   BackButton,
   CustomPagination,
   GenericFilterDropdown,
+  NoDataFound,
   TransportLoader,
 } from "../../../components";
 import { useLeaveStore, useUserStore } from "../../../store";
@@ -37,6 +38,7 @@ import type { Leave } from "../../../store/ScheduleStore/LeaveStore";
 import {
   cn,
   formatDateTime,
+  getLeaveTimingStatus,
   LEAVE_TYPE,
   RouteStatus,
 } from "../../../utils/helper";
@@ -78,7 +80,7 @@ const LeaveManagement = () => {
   const navigate = useNavigate();
   const roleName = useUserStore((state) => state.roleName);
   const {
-    leaves = [],
+    leaves,
     loading,
     totalPages,
     totalItems,
@@ -95,25 +97,50 @@ const LeaveManagement = () => {
 
   const [statusFilter, setStatusFilter] = useState<number | null>(null);
   const [typeFilter, setTypeFilter] = useState<number | null>(null);
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
   const [dateRange, setDateRange] = useState<RangeValue<DateValue> | null>(
     null,
   );
   const limit = 10;
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
     const formatDate = (date: DateValue | null | undefined) => {
       if (!date) return undefined;
       return `${date.year}-${String(date.month).padStart(2, "0")}-${String(date.day).padStart(2, "0")}`;
     };
+    if (!roleName) return;
+    const isDefaultState =
+      page === 1 &&
+      !statusFilter &&
+      !typeFilter &&
+      !debouncedSearch &&
+      !dateRange;
+
+    if (isDefaultState && leaves.length > 0) return;
 
     fetchLeaves(page, limit, {
-      search: search || undefined,
+      search: debouncedSearch || undefined,
       status: statusFilter ?? undefined,
       leave_type: typeFilter ?? undefined,
       from_date: formatDate(dateRange?.start),
       to_date: formatDate(dateRange?.end),
     });
-  }, [page, search, statusFilter, typeFilter, dateRange]);
+  }, [
+    page,
+    statusFilter,
+    typeFilter,
+    debouncedSearch,
+    dateRange?.start,
+    dateRange?.end,
+  ]);
 
   const statusMap: Record<number, StatusConfig> = {
     1: {
@@ -154,6 +181,7 @@ const LeaveManagement = () => {
     setDateRange(null);
     setSearch("");
     setPage(1);
+    fetchLeaves(page, limit);
   };
 
   const handleDeleteLeave = async (id: number) => {
@@ -211,7 +239,7 @@ const LeaveManagement = () => {
         <div className="flex gap-2">
           <Button
             isIconOnly
-            onPress={() => fetchLeaves(page, limit)}
+            onPress={handleReset}
             variant="flat"
             className="bg-white border border-slate-200 text-slate-600 font-semibold rounded-xl h-9 text-xs"
             startContent={<RefreshCcw size={16} strokeWidth={2} />}
@@ -251,66 +279,168 @@ const LeaveManagement = () => {
         </div>
       ) : (
         <>
-          <ScrollShadow className="flex flex-col gap-3 h-[calc(100vh-320px)] pr-2 pb-6 overflow-y-scroll custom-scrollbar">
-            {leaves.map((leave) => (
-              <div
-                key={leave.id}
-                className="w-full bg-white border-2 border-slate-100 rounded-3xl p-5 hover:border-indigo-500 transition-all shadow-sm"
-              >
-                <div className="flex flex-col gap-4">
-                  <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-                    <div className="flex gap-4 items-center lg:w-1/4">
-                      <div className="p-3 rounded-2xl bg-slate-50 text-slate-600">
-                        <UserIcon size={24} />
-                      </div>
-                      <div className="overflow-hidden">
-                        <h3 className="text-lg font-bold text-slate-800 uppercase leading-tight truncate">
-                          {leave.driver?.name}
-                        </h3>
-                        <p className="text-[10px] text-slate-400 truncate mb-1">
-                          {leave.driver?.email}
-                        </p>
-                        <span
-                          className={cn(
-                            "px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border inline-block",
-                            statusMap[leave.status ?? 1]?.bg,
-                            statusMap[leave.status ?? 1]?.color,
-                            statusMap[leave.status ?? 1]?.border,
-                          )}
-                        >
-                          {statusMap[leave.status ?? 1]?.label || "Pending"}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 flex-1 gap-4 w-full">
-                      <div className="flex gap-10">
-                        <DataMetric
-                          label="Leave Period"
-                          value={`${formatDateTime(leave.from_date)} - ${formatDateTime(leave.to_date)}`}
-                          icon={<Calendar size={12} />}
-                        />
-                        <DataMetric
-                          label="Duration"
-                          value={`${leave.total_days} Days`}
-                          icon={<Clock size={12} />}
-                        />
-                      </div>
-                      <div className="flex gap-16">
-                        <DataMetric
-                          label="Type"
-                          value={
-                            LEAVE_TYPE[Number(leave.leave_type)] || "Unknown"
-                          }
-                          icon={<Briefcase size={12} />}
-                        />
-
-                        <div className="flex flex-col justify-center max-w-36">
-                          <p className="text-[9px] font-bold uppercase text-slate-400 flex items-center gap-1 mb-0.5">
-                            <ClipboardList size={12} /> Reason
+          <ScrollShadow className="grid gap-3 h-[calc(100vh-315px)] pr-2 pb-6 overflow-y-scroll custom-scrollbar">
+            {leaves.length == 0 && (
+              <NoDataFound data={"No Leave Requests Found"} />
+            )}
+            <>
+              {leaves.map((leave) => (
+                <div
+                  key={leave.id}
+                  className="w-full bg-white border-2 border-slate-100 rounded-3xl p-5 hover:border-indigo-500 transition-all shadow-sm"
+                >
+                  <div className="flex flex-col gap-4">
+                    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                      <div className="flex gap-4 items-center lg:w-1/4">
+                        <div className="p-3 rounded-2xl bg-slate-50 text-slate-600">
+                          <UserIcon size={24} />
+                        </div>
+                        <div className="overflow-hidden">
+                          <h3 className="text-lg font-bold text-slate-800 uppercase leading-tight truncate">
+                            {leave.driver?.name}
+                          </h3>
+                          <p className="text-[10px] text-slate-400 truncate mb-1">
+                            {leave.driver?.email}
                           </p>
+                          <div className="flex gap-2">
+                            <span
+                              className={cn(
+                                "px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border inline-block",
+                                statusMap[leave.status ?? 1]?.bg,
+                                statusMap[leave.status ?? 1]?.color,
+                                statusMap[leave.status ?? 1]?.border,
+                              )}
+                            >
+                              {statusMap[leave.status ?? 1]?.label || "Pending"}
+                            </span>
+                            <>
+                              {(() => {
+                                const timingStatus = getLeaveTimingStatus(
+                                  leave.from_date,
+                                  leave.to_date,
+                                ) as keyof typeof displayConfig;
+
+                                const displayConfig = {
+                                  OVER: {
+                                    label: "Leave Over",
+                                    color: "text-slate-500",
+                                  },
+                                  IN_LEAVE: {
+                                    label: "Currently on Leave",
+                                    color: "text-emerald-600",
+                                  },
+                                };
+
+                                if (
+                                  leave.status === 2 &&
+                                  timingStatus &&
+                                  displayConfig[timingStatus]
+                                ) {
+                                  return (
+                                    <span
+                                      className={cn(
+                                        "text-[9px] font-bold uppercase",
+                                        displayConfig[timingStatus].color,
+                                      )}
+                                    >
+                                      {displayConfig[timingStatus].label}
+                                    </span>
+                                  );
+                                }
+                                return null;
+                              })()}
+                            </>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 flex-1 gap-4 w-full">
+                        <div className="flex gap-10">
+                          <DataMetric
+                            label="Leave Period"
+                            value={`${formatDateTime(leave.from_date)} - ${formatDateTime(leave.to_date)}`}
+                            icon={<Calendar size={12} />}
+                          />
+                          <DataMetric
+                            label="Duration"
+                            value={`${leave.total_days} Days`}
+                            icon={<Clock size={12} />}
+                          />
+                        </div>
+                        <div className="flex gap-16">
+                          <DataMetric
+                            label="Type"
+                            value={
+                              LEAVE_TYPE[Number(leave.leave_type)] || "Unknown"
+                            }
+                            icon={<Briefcase size={12} />}
+                          />
+
+                          <div className="flex flex-col justify-center max-w-36">
+                            <p className="text-[9px] font-bold uppercase text-slate-400 flex items-center gap-1 mb-0.5">
+                              <ClipboardList size={12} /> Reason
+                            </p>
+                            <Tooltip
+                              content={
+                                <div className="flex flex-col gap-1 px-1 py-1">
+                                  <p className="text-[11px] leading-relaxed">
+                                    <span className="text-indigo-600 font-bold uppercase mr-1 flex items-center gap-1">
+                                      <ClipboardList size={12} /> Driver's
+                                      Reason
+                                    </span>
+                                    <span className="text-slate-500 font-semibold block mt-0.5 italic text-[10px]">
+                                      "{leave.reason}"
+                                    </span>
+                                  </p>
+                                </div>
+                              }
+                              placement="top"
+                              classNames={{
+                                content: [
+                                  "py-1 px-2 shadow-sm bg-white border-2 border-indigo-500 ",
+                                  "rounded-xl w-[250px] break-words text-xs font-medium leading-relaxed text-left",
+                                  "text-slate-700 text-left justify-start items-start",
+                                ],
+                              }}
+                              showArrow={true}
+                            >
+                              <p className="text-xs font-bold text-slate-700 cursor-pointer truncate italic">
+                                "{leave.reason}"
+                              </p>
+                            </Tooltip>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        {leave.status === 1 &&
+                        roleName === "Transport Admin" ? (
+                          <>
+                            <Button
+                              isIconOnly
+                              size="sm"
+                              className="bg-green-50 text-green-600 rounded-full"
+                              onPress={() => {
+                                setSelectedLeave(leave);
+                                setIsApproveOpen(true);
+                              }}
+                            >
+                              <CheckCircle size={18} />
+                            </Button>
+                            <Button
+                              isIconOnly
+                              size="sm"
+                              className="bg-rose-50 text-rose-600 rounded-full"
+                              onPress={() => {
+                                setLeaveToReject(leave);
+                                setIsRejectOpen(true);
+                              }}
+                            >
+                              <XCircle size={18} />
+                            </Button>
+                          </>
+                        ) : (
                           <Tooltip
-                            content={leave.reason}
                             placement="top"
                             classNames={{
                               content: [
@@ -320,29 +450,42 @@ const LeaveManagement = () => {
                               ],
                             }}
                             showArrow={true}
+                            content={
+                              <div className="flex flex-col gap-0.5 px-1 py-1">
+                                {leave.status === 2 ? (
+                                  <p className="text-[11px] leading-relaxed">
+                                    <span className="text-green-600 font-bold uppercase mr-1">
+                                      Approved by
+                                    </span>
+                                    <span className="text-black font-extrabold mr-1">
+                                      {leave.approver?.name || "Admin"}
+                                    </span>
+                                    <br />
+                                    <span className="text-slate-500 font-medium">
+                                      {formatDateTime(leave.updated_at)}
+                                    </span>
+                                  </p>
+                                ) : (
+                                  <p className="text-[11px] leading-relaxed">
+                                    <span className="text-rose-600 font-bold uppercase mr-1">
+                                      Request Rejected
+                                    </span>
+                                    <br />
+                                    <span className="text-slate-500 font-medium">
+                                      {formatDateTime(leave.updated_at)}
+                                    </span>
+                                  </p>
+                                )}
+                              </div>
+                            }
                           >
-                            <p className="text-xs font-bold text-slate-700 cursor-pointer truncate italic">
-                              "{leave.reason}"
-                            </p>
+                            <div className="p-2 bg-slate-50 rounded-full text-slate-400 cursor-help">
+                              <Info size={18} />
+                            </div>
                           </Tooltip>
-                        </div>
-                      </div>
-                    </div>
+                        )}
 
-                    <div className="flex gap-2">
-                      {leave.status === 1 && roleName === "Transport Admin" ? (
-                        <>
-                          <Button
-                            isIconOnly
-                            size="sm"
-                            className="bg-green-50 text-green-600 rounded-full"
-                            onPress={() => {
-                              setSelectedLeave(leave);
-                              setIsApproveOpen(true);
-                            }}
-                          >
-                            <CheckCircle size={18} />
-                          </Button>
+                        {roleName === "Driver" && leave.status === 1 && (
                           <Button
                             isIconOnly
                             size="sm"
@@ -354,123 +497,94 @@ const LeaveManagement = () => {
                           >
                             <XCircle size={18} />
                           </Button>
-                        </>
-                      ) : (
-                        <Tooltip
-                          placement="top"
-                          classNames={{
-                            content: [
-                              "py-2 px-3 shadow-sm bg-white border-2 border-indigo-500 ",
-                              "rounded-xl w-[250px] break-words text-xs font-medium leading-relaxed text-left",
-                              "text-slate-700 text-left justify-start items-start",
-                            ],
-                          }}
-                          showArrow={true}
-                          content={
-                            leave.status === 2
-                              ? `Approved by ${leave.approver?.name || "Admin"} at ${formatDateTime(leave.updated_at)}`
-                              : "Request Rejected"
-                          }
-                        >
-                          <div className="p-2 bg-slate-50 rounded-full text-slate-400 cursor-help">
-                            <Info size={18} />
-                          </div>
-                        </Tooltip>
-                      )}
-
-                      {roleName === "Driver" && leave.status === 1 && (
-                        <Button
-                          isIconOnly
-                          size="sm"
-                          className="bg-rose-50 text-rose-600 rounded-full"
-                          onPress={() => {
-                            setLeaveToReject(leave);
-                            setIsRejectOpen(true);
-                          }}
-                        >
-                          <XCircle size={18} />
-                        </Button>
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex flex-wrap gap-x-8 gap-y-2 px-4 py-2 bg-slate-50/50 rounded-xl border border-slate-100 items-center">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[9px] font-bold text-slate-400 uppercase">
-                        Requested On:
-                      </span>
-                      <span className="text-[10px] font-bold text-slate-600">
-                        {formatDateTime(leave.created_at)}
-                      </span>
-                    </div>
-                    {leave.status === 2 && (
-                      <div className="flex items-center gap-2 border-l border-slate-200 pl-8">
+                    <div className="flex flex-wrap gap-x-8 gap-y-2 px-4 py-2 bg-slate-50/50 rounded-xl border border-slate-100 items-center">
+                      <div className="flex items-center gap-2">
                         <span className="text-[9px] font-bold text-slate-400 uppercase">
-                          Approved At:
+                          Requested On:
                         </span>
-                        <span className="text-[10px] font-bold text-green-600">
-                          {formatDateTime(leave.updated_at)}
+                        <span className="text-[10px] font-bold text-slate-600">
+                          {formatDateTime(leave.created_at)}
                         </span>
                       </div>
-                    )}
-                  </div>
-
-                  {leave.current_assignment && (
-                    <div className="flex flex-col gap-3 p-2 bg-indigo-50/30 border-2 border-dashed border-indigo-100 rounded-2xl">
-                      <div className="flex items-center justify-between gap-6">
-                        <div className="flex items-center gap-2 bg-indigo-50 rounded-lg px-3 py-2">
-                          <div className="p-1.5 bg-indigo-500 text-white rounded-lg">
-                            <MapPin size={14} />
-                          </div>
-                          <span className="text-xs font-bold text-indigo-900 uppercase tracking-tighter text-nowrap">
-                            Assigned Route
+                      {leave.status === 2 && (
+                        <div className="flex items-center gap-2 border-l border-slate-200 pl-8">
+                          <span className="text-[9px] font-bold text-slate-400 uppercase">
+                            Approved At:
+                          </span>
+                          <span className="text-[10px] font-bold text-green-600">
+                            {formatDateTime(leave.updated_at)}
                           </span>
                         </div>
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 w-full">
-                          <DataMetric
-                            label="Route"
-                            value={leave.current_assignment.route_name}
-                            icon={<MapPin size={12} />}
-                          />
-                          <DataMetric
-                            label="Vehicle"
-                            value={
-                              leave.current_assignment.vehicle?.vehicle_number
-                            }
-                            icon={<Truck size={12} />}
-                          />
-                          <DataMetric
-                            label="Vehicle Type"
-                            value={
-                              leave.current_assignment.vehicle?.vehicle_type
-                            }
-                            icon={<Briefcase size={12} />}
-                          />
-                          <DataMetric
-                            label="Start Time"
-                            value={formatDateTime(
-                              leave.current_assignment.start_datetime,
-                            )}
-                            icon={<Clock size={12} />}
-                          />
-                          <DataMetric
-                            label="End Time"
-                            value={formatDateTime(
-                              leave.current_assignment.end_datetime,
-                            )}
-                            icon={<Clock size={12} />}
-                          />
-                        </div>
-                        <span className="px-3 py-1 bg-indigo-100 text-nowrap text-indigo-700 rounded-full text-[10px] font-bold uppercase tracking-widest">
-                          {RouteStatus[leave.current_assignment.route_status] ||
-                            "Unknown"}
-                        </span>
-                      </div>
+                      )}
                     </div>
-                  )}
+
+                    {leave.routes_during_leave &&
+                      leave.routes_during_leave.length > 0 && (
+                        <div className="flex flex-col gap-3 p-4 py-2 bg-indigo-50/30 border-2 border-dashed border-indigo-400 rounded-2xl">
+                          <div className="flex items-center justify-between gap-6">
+                            <div className="flex items-center gap-2 bg-indigo-50 rounded-lg px-3 py-2">
+                              <div className="p-1.5 bg-indigo-500 text-white rounded-lg">
+                                <MapPin size={14} />
+                              </div>
+                              <span className="text-xs font-bold text-indigo-900 uppercase tracking-tighter text-nowrap">
+                                Conflicting Route
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 w-full">
+                              <DataMetric
+                                label="Route"
+                                value={leave.routes_during_leave[0].route_name}
+                                icon={<MapPin size={12} />}
+                              />
+                              <DataMetric
+                                label="Vehicle"
+                                value={
+                                  leave.routes_during_leave[0].vehicle
+                                    ?.vehicle_number
+                                }
+                                icon={<Truck size={12} />}
+                              />
+                              <DataMetric
+                                label="Type"
+                                value={
+                                  leave.routes_during_leave[0].vehicle
+                                    ?.vehicle_type
+                                }
+                                icon={<Briefcase size={12} />}
+                              />
+                              <DataMetric
+                                label="Start Time"
+                                value={formatDateTime(
+                                  leave.routes_during_leave[0].start_datetime,
+                                )}
+                                icon={<Clock size={12} />}
+                              />
+                              <DataMetric
+                                label="End Time"
+                                value={formatDateTime(
+                                  leave.routes_during_leave[0].end_datetime,
+                                )}
+                                icon={<Clock size={12} />}
+                              />
+                            </div>
+
+                            <span className="px-3 py-1 bg-indigo-100 text-nowrap text-indigo-700 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                              {RouteStatus[
+                                leave.routes_during_leave[0].route_status
+                              ] || "Unknown"}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </>
           </ScrollShadow>
 
           <CustomPagination
@@ -493,7 +607,10 @@ const LeaveManagement = () => {
           id: selectedLeave?.id ?? 0,
           driver: selectedLeave?.driver,
           total_days: selectedLeave?.total_days,
-          current_assignment: selectedLeave?.current_assignment,
+          routes_during_leave: selectedLeave?.routes_during_leave[0],
+          startDate:
+            selectedLeave?.routes_during_leave[0]?.start_datetime ?? null,
+          endDate: selectedLeave?.routes_during_leave[0]?.end_datetime ?? null,
         }}
         onSuccess={() => fetchLeaves(page, limit)}
       />
@@ -560,7 +677,7 @@ const LeaveManagement = () => {
                         } else {
                           await handleDeleteLeave(Number(leaveToReject.id));
                         }
-                        fetchLeaves(page, limit);
+                        setPage(1);
                         onClose();
                       }
                     }}

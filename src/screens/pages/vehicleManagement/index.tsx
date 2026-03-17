@@ -1,5 +1,5 @@
 import type { DateValue } from "@heroui/react";
-import { Button, DatePicker, ScrollShadow } from "@heroui/react";
+import { Button, Card, DatePicker, ScrollShadow } from "@heroui/react";
 import {
   Calendar,
   Car,
@@ -11,18 +11,20 @@ import {
   ShieldCheck,
   Trash2,
   Upload,
-  Users
+  Users,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   BackButton,
   CustomPagination,
   GenericFilterDropdown,
+  NoDataFound,
   TransportLoader,
-} from "../../../../components";
-import { useVehicleStore } from "../../../../store/SettingStore/VehicleStore";
-import { cn } from "../../../../utils/helper";
-import { pickerStyles } from "../../../../utils/style";
+} from "../../../components";
+import { useVehicleStore } from "../../../store/VehicleManagementStore/VehicleStore";
+import { cn } from "../../../utils/helper";
+import { pickerStyles } from "../../../utils/style";
+import { useNavigate } from "react-router-dom";
 
 const vehicleFilterConfig = [
   {
@@ -53,9 +55,10 @@ const vehicleFilterConfig = [
 ];
 
 const VehicleManagement = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"list" | "create">("list");
   const {
-    vehicles = [],
+    vehicles,
     fetchVehicles,
     loading,
     deleteVehicle,
@@ -98,7 +101,15 @@ const VehicleManagement = () => {
   };
 
   useEffect(() => {
-    loadVehicles();
+    if (vehicles.length === 0) {
+      loadVehicles();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (vehicles.length !== 0) {
+      loadVehicles();
+    }
   }, [page, search, statusFilter, typeFilter, capacityFilter]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -131,6 +142,7 @@ const VehicleManagement = () => {
   };
 
   const handleReset = () => {
+    fetchVehicles(`?page=${page}&limit=${limit}&search=${search}`);
     setSearch("");
     setPage(1);
     setStatusFilter("all");
@@ -197,12 +209,7 @@ const VehicleManagement = () => {
             <div className="flex gap-2">
               <Button
                 isIconOnly
-                onPress={() => {
-                  fetchVehicles(
-                    `?page=${page}&limit=${limit}&search=${search}`,
-                  );
-                  handleReset();
-                }}
+                onPress={handleReset}
                 variant="flat"
                 className="bg-white border border-slate-200 text-slate-600 font-semibold rounded-xl h-9 text-xs"
                 startContent={<RefreshCcw size={16} strokeWidth={2} />}
@@ -225,8 +232,10 @@ const VehicleManagement = () => {
               <ScrollShadow className="flex flex-col gap-3 h-[calc(100vh-340px)] px-2 custom-scrollbar mb-0 pb-4 overflow-y-auto">
                 {vehicles.length > 0 ? (
                   vehicles.map((v) => (
-                    <div
+                    <Card
+                      isPressable
                       key={v.id}
+                      onPress={() => navigate("/vehicle/vehicle-dashboard")}
                       className="w-full bg-white border-2 border-slate-50 rounded-2xl p-4 hover:border-indigo-500 hover:shadow-xl hover:shadow-indigo-500/5 transition-all group h-fit flex-shrink-0"
                     >
                       <div className="flex flex-col lg:flex-row justify-between gap-6">
@@ -321,14 +330,10 @@ const VehicleManagement = () => {
                           />
                         </div>
                       </div>
-                    </div>
+                    </Card>
                   ))
                 ) : (
-                  <div className="bg-slate-50 rounded-2xl py-20 text-center border-2 border-dashed border-slate-200">
-                    <p className="text-slate-400 font-bold uppercase tracking-widest">
-                      No assets found
-                    </p>
-                  </div>
+                  <NoDataFound data={"No Vehicles Found."} />
                 )}
               </ScrollShadow>
               <CustomPagination

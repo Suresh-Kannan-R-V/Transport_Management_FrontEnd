@@ -6,6 +6,7 @@ interface TokenPayload {
 }
 import axios from "axios";
 import { clsx, type ClassValue } from "clsx";
+import toast from "react-hot-toast";
 import { twMerge } from "tailwind-merge";
 
 export const encryptId = (id: number) => {
@@ -95,6 +96,7 @@ export const formatDateTime = (dateString: string | undefined) => {
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
+    timeZone: "UTC",
   })
     .format(date)
     .replace(",", " -")
@@ -113,6 +115,7 @@ export const formatDate = (dateString: string) => {
     day: "2-digit",
     month: "2-digit",
     year: "2-digit",
+    timeZone: "UTC",
   }).format(date);
 };
 
@@ -120,6 +123,7 @@ export const formatTimeOnly = (dateStr: string) => {
   return new Date(dateStr).toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "UTC",
     hour12: true,
   });
 };
@@ -152,9 +156,9 @@ export const geocodeLocations = async (locations: string[]) => {
           };
         }
       } catch (err) {
+        toast.error("Geocoding Failed For Routes");
         console.error("Geocoding failed for:", address);
       }
-      // Fallback for BIT if geocoding fails, otherwise 0
       const isBIT = address.includes("Bannari Amman");
       return {
         id: `stop-${idx}`,
@@ -167,11 +171,30 @@ export const geocodeLocations = async (locations: string[]) => {
   return coords;
 };
 
+export const getLeaveTimingStatus = (
+  fromDate: string | undefined,
+  toDate: string | undefined,
+): string | null => {
+  if (!fromDate || !toDate) return null;
+
+  const now = new Date();
+  const start = new Date(fromDate);
+  const end = new Date(toDate);
+
+  if (now > end) {
+    return "OVER";
+  } else if (now >= start && now <= end) {
+    return "IN_LEAVE";
+  } else {
+    return "UPCOMING";
+  }
+};
+
 export const RouteStatus: Record<number, string> = {
   1: "Pending",
   2: "Vehicle Assigned",
   3: "Vehicle Reassigned",
-  4: "Faculty Approved",
+  4: "Vehicle Approved",
   5: "Driver Assigned",
   6: "Driver Reassigned",
   7: "Started",
@@ -183,7 +206,7 @@ export const ROUTE_STATUS: Record<string, number> = {
   PENDING: 1,
   VEHICLE_ASSIGNED: 2,
   VEHICLE_REASSIGNED: 3,
-  FACULTY_APPROVED: 4,
+  VEHICLE_APPROVED: 4,
   DRIVER_ASSIGNED: 5,
   DRIVER_REASSIGNED: 6,
   STARTED: 7,

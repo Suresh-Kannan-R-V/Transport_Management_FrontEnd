@@ -1,11 +1,12 @@
-import { Button, Card, ScrollShadow } from "@heroui/react";
-import { GitPullRequest, RefreshCcw, Search } from "lucide-react";
+import { Button, ScrollShadow } from "@heroui/react";
+import { GitPullRequest, Plus, RefreshCcw, Search } from "lucide-react";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  AssignmentCard,
   CustomPagination,
   GenericFilterDropdown,
-  RequestCard,
+  NoDataFound,
   TransportLoader,
 } from "../../../components";
 import { useApproveMissionStore } from "../../../store";
@@ -30,8 +31,21 @@ const missionFilterConfig = [
     ],
   },
   {
+    title: "Routes Timeline",
+    items: [
+      { key: "date-all", label: "All Dates", value: "", type: "date" },
+      { key: "upcoming", label: "Upcoming Routes", value: "", type: "date" },
+    ],
+  },
+  {
     title: "Mission Status",
     items: [
+      {
+        key: "pending",
+        label: "Pending",
+        value: ROUTE_STATUS.PENDING,
+        type: "filter",
+      },
       {
         key: "vehicle1",
         label: "Vehicle Assigned",
@@ -45,27 +59,9 @@ const missionFilterConfig = [
         type: "filter",
       },
       {
-        key: "driver1",
-        label: "Driver Assigned",
-        value: ROUTE_STATUS.DRIVER_ASSIGNED,
-        type: "filter",
-      },
-      {
-        key: "driver2",
-        label: "Driver Reassigned",
-        value: ROUTE_STATUS.DRIVER_REASSIGNED,
-        type: "filter",
-      },
-      {
-        key: "start",
-        label: "Started",
-        value: ROUTE_STATUS.STARTED,
-        type: "filter",
-      },
-      {
-        key: "completed",
-        label: "Completed",
-        value: ROUTE_STATUS.COMPLETED,
+        key: "vehicle3",
+        label: "Vehicle Approved",
+        value: ROUTE_STATUS.VEHICLE_APPROVED,
         type: "filter",
       },
     ],
@@ -93,8 +89,10 @@ const MissionPage = () => {
   };
 
   useEffect(() => {
-    fetchMission();
-  }, [fetchMission]);
+    if (items.length === 0) {
+      fetchMission();
+    }
+  }, []);
 
   const handleFilterSelect = (_sectionTitle: string, item: any) => {
     setPage(1);
@@ -102,16 +100,18 @@ const MissionPage = () => {
     if (item.type === "sort") {
       const order = item.key === "name-az" ? "ASC" : "DESC";
       setSort(item.value, order);
+    } else if (item.type === "date") {
+      const isUpcoming = item.key === "upcoming";
+      setFilters(undefined, undefined, isUpcoming);
     } else {
-      setFilters(item.value, undefined);
+      setFilters(item.value, undefined, false);
     }
   };
 
   const handleReset = () => {
     setSearch("");
-    setPage(1);
-    setFilters("", "");
-    setSort("created_at");
+    setFilters("", "", false);
+    setSort("created_at", "DESC");
   };
 
   return (
@@ -122,16 +122,16 @@ const MissionPage = () => {
             Transport System
           </p>
           <h1 className="text-2xl md:text-4xl text-slate-900 tracking-tight font-bold">
-            Approved Missions
+            All Missions
           </h1>
         </div>
         <div className="flex gap-3">
           <Button
-            onPress={() => navigate("/request")}
-            startContent={<GitPullRequest size={18} strokeWidth={3} />}
+            onPress={() => navigate("/request/new-request")}
+            startContent={<Plus size={18} strokeWidth={3} />}
             className="bg-indigo-600 text-white font-semibold text-sm px-5 shadow-md rounded-lg duration-200"
           >
-            Requests
+            New
           </Button>
         </div>
       </div>
@@ -153,10 +153,7 @@ const MissionPage = () => {
             <div className="flex gap-2">
               <Button
                 isIconOnly
-                onPress={() => {
-                  fetchMission();
-                  handleReset();
-                }}
+                onPress={handleReset}
                 variant="flat"
                 className="bg-white border border-slate-200 text-slate-600 font-semibold rounded-xl h-9 text-xs"
                 startContent={<RefreshCcw size={16} strokeWidth={2} />}
@@ -175,27 +172,19 @@ const MissionPage = () => {
             </div>
           ) : (
             <>
-              <ScrollShadow className="h-[calc(100vh-300px)] custom-scrollbar p-1 pr-2">
+              <ScrollShadow className="h-[calc(100vh-295px)] custom-scrollbar p-1 pr-2">
                 {items.length == 0 && (
-                  <div className="flex items-center justify-center py-20 px-4 text-center bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-200 h-full">
-                    <h3 className="text-xl font-bold text-slate-800 mb-2">
-                      No Approved Missions Found
-                    </h3>
-                  </div>
+                  <NoDataFound data={"No Approved Missions Found."} />
                 )}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 ">
+                <div className="grid grid-cols-1 gap-3 ">
                   {items.map((req) => (
-                    <Card
-                      isPressable
+                    <AssignmentCard
                       key={req.id}
+                      item={req}
                       onPress={() =>
                         navigate(`view-request/${btoa(req.id.toString())}`)
                       }
-                    >
-                      <RequestCard
-                        item={{ ...req, status: parseInt(req.status) }}
-                      />
-                    </Card>
+                    />
                   ))}
                 </div>
               </ScrollShadow>

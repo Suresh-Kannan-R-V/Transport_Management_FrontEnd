@@ -5,6 +5,7 @@ import { toast } from "react-hot-toast";
 
 interface Driver {
   id: number;
+  user_id: number;
   name: string;
   user_name: string;
   email: string;
@@ -21,7 +22,7 @@ interface DriverStore {
   drivers: Driver[];
   totalDrivers: number;
   loading: boolean;
-
+  lastQuery: string;
   // Actions
   fetchDrivers: (queryParams?: string) => Promise<void>;
   deleteDriver: (ids: number) => Promise<void>;
@@ -31,9 +32,12 @@ export const useDriverStore = create<DriverStore>((set, get) => ({
   drivers: [],
   totalDrivers: 0,
   loading: false,
+  lastQuery: "",
 
   fetchDrivers: async (queryParams = "") => {
-    set({ loading: true });
+    if (get().loading) return;
+
+    set({ loading: true, lastQuery: queryParams });
     try {
       const response = await axios.get(
         `${FILE_BASE_URL}/api/drivers/all-drivers${queryParams}`,

@@ -9,6 +9,7 @@ import {
   Spinner,
 } from "@heroui/react";
 import { cn } from "../../utils/helper";
+import { NoDataFound } from "../NoDataFound";
 
 interface Column {
   key: string;
@@ -55,7 +56,7 @@ export const GenericTable = <T extends { id: string | number }>({
           ],
         }}
       >
-        <TableHeader columns={allColumns} >
+        <TableHeader columns={allColumns}>
           {(column) => (
             <TableColumn
               key={column.key}
@@ -77,11 +78,7 @@ export const GenericTable = <T extends { id: string | number }>({
             </div>
           }
           isLoading={loading}
-          emptyContent={
-            <div className="flex items-center justify-center absolute inset-0 text-slate-400 font-medium">
-              No records found.
-            </div>
-          }
+          emptyContent={<NoDataFound data=" No records found." />}
         >
           {(item) => {
             const index = items.indexOf(item);

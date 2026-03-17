@@ -1,4 +1,4 @@
-import { Button, ScrollShadow } from "@heroui/react";
+import { Button, Card, ScrollShadow } from "@heroui/react";
 import {
   BellRing,
   Calendar,
@@ -16,10 +16,12 @@ import {
   BackButton,
   CustomPagination,
   GenericFilterDropdown,
+  NoDataFound,
   TransportLoader,
 } from "../../../../components";
 import { useDriverStore } from "../../../../store/SettingStore/DriverStore";
 import { cn, DRIVER_STATUS } from "../../../../utils/helper";
+import { useNavigate } from "react-router-dom";
 
 const filterConfig = [
   {
@@ -48,16 +50,10 @@ const filterConfig = [
 ];
 
 const DriverManagement = () => {
-  // Store Hooks
-  const {
-    drivers = [],
-    fetchDrivers,
-    loading,
-    deleteDriver,
-    totalDrivers,
-  } = useDriverStore();
+  const navigate = useNavigate();
+  const { drivers, fetchDrivers, loading, deleteDriver, totalDrivers } =
+    useDriverStore();
 
-  // Filter States
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<string>("all");
@@ -79,7 +75,15 @@ const DriverManagement = () => {
   };
 
   useEffect(() => {
-    loadDrivers();
+    if (drivers.length === 0) {
+      loadDrivers();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (drivers.length > 0 || page > 1 || search !== "" || status !== "all") {
+      loadDrivers();
+    }
   }, [page, search, status, isLogin, pushStatus]);
 
   const handleFilterSelection = (sectionTitle: string, item: any) => {
@@ -102,6 +106,7 @@ const DriverManagement = () => {
     setStatus("all");
     setIsLogin("all");
     setPushStatus("all");
+    fetchDrivers(`?page=1&limit=${limit}`);
   };
 
   return (
@@ -140,11 +145,7 @@ const DriverManagement = () => {
         <div className="flex gap-2">
           <Button
             isIconOnly
-            onPress={() => {
-              loadDrivers();
-              handleReset();
-            }}
-            variant="flat"
+            onPress={handleReset}
             size="md"
             className="bg-white border border-slate-200 text-slate-600 font-semibold rounded-xl h-9 text-xs"
             startContent={<RefreshCcw size={16} strokeWidth={2} />}
@@ -168,9 +169,13 @@ const DriverManagement = () => {
             {" "}
             {drivers.length > 0 ? (
               drivers.map((d) => (
-                <div
+                <Card
                   key={d.id}
-                  className="w-full bg-white border-2 border-slate-100 rounded-2xl p-4 hover:border-indigo-500 hover:shadow-xl hover:shadow-indigo-500/5 transition-all group h-fit flex-shrink-0"
+                  isPressable
+                  onPress={() =>
+                    navigate(`/driver/${btoa(d.user_id.toString())}`)
+                  }
+                  className="w-full bg-white text-left border-2 border-slate-100 rounded-2xl p-4 hover:border-indigo-500 hover:shadow-xl hover:shadow-indigo-500/5 transition-all group h-fit flex-shrink-0"
                 >
                   <div className="flex flex-col lg:flex-row justify-between gap-6">
                     <div className="flex gap-4 items-center lg:w-1/3">
@@ -254,14 +259,10 @@ const DriverManagement = () => {
                       />
                     </div>
                   </div>
-                </div>
+                </Card>
               ))
             ) : (
-              <div className="bg-slate-50 rounded-4xl py-20 text-center border-2 border-dashed border-slate-200">
-                <p className="text-slate-400 font-bold uppercase tracking-widest">
-                  No drivers matching filters
-                </p>
-              </div>
+              <NoDataFound data={"No Driver Found."} />
             )}
           </ScrollShadow>
 

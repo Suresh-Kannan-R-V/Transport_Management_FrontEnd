@@ -6,9 +6,9 @@ export interface User {
   id: number;
   role_id: number;
   name: string;
-  user_name:string;
+  user_name: string;
   email: string;
-  password:string;
+  password: string;
   phone: string;
   isLogin: boolean;
   created_at: string;
@@ -27,7 +27,7 @@ interface UserState {
   logout: () => void;
 }
 
-export const useUserStore = create<UserState>((set) => ({
+export const useUserStore = create<UserState>((set, get) => ({
   user: null,
   roleName: null,
   loading: false,
@@ -41,18 +41,15 @@ export const useUserStore = create<UserState>((set) => ({
     set({ loading: true });
 
     try {
-      const response = await fetch(
-        `${FILE_BASE_URL}/auth/user/${id}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `TMS ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${FILE_BASE_URL}/auth/user/${id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `TMS ${token}`,
+        },
+      });
 
-      const result = await response.json();    
+      const result = await response.json();
 
       if (result.success) {
         set({

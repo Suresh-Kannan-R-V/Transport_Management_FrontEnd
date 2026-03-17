@@ -8,6 +8,7 @@ import {
   DropdownTrigger,
 } from "@heroui/react";
 import { Filter, RotateCcw } from "lucide-react";
+import { cn } from "../../utils/helper";
 
 // Define the shape of a single filter item
 export interface FilterItem {
@@ -45,11 +46,11 @@ export const GenericFilterDropdown = ({
   className,
 }: GenericFilterDropdownProps) => {
   return (
-    <Dropdown className={className}>
+    <Dropdown className={cn("z-0",className)}>
       <DropdownTrigger>
         <Button
           variant="flat"
-          className="bg-white border border-slate-200 text-slate-600 font-semibold rounded-xl h-9 text-xs"
+          className="z-0 bg-white border border-slate-200 text-slate-600 font-semibold rounded-xl h-9 text-xs"
           startContent={<Filter size={16} />}
         >
           {buttonLabel}

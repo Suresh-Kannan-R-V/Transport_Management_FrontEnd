@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { FILE_BASE_URL } from "../../api/base";
-import { ROUTE_STATUS } from "../../utils/helper";
+import { privateGet, ROUTE_STATUS } from "../../utils/helper";
 
 let searchTimeout: ReturnType<typeof setTimeout>;
 
@@ -8,6 +8,7 @@ interface MissionItem {
   id: number;
   routeName: string;
   createdBy: {
+    user_id: number;
     name: string;
     faculty_id: string | null;
     roles: {
@@ -15,15 +16,7 @@ interface MissionItem {
       role: string;
     };
   };
-  status:
-    | "Pending"
-    | "Approved"
-    | "Vehicle Assigned"
-    | "Faculty Confirmed"
-    | "Driver Assigned"
-    | "Completed"
-    | "Rejected"
-    | "Cancelled";
+  status: number;
   travelType: "One Way" | "Two Way" | "Multi Day";
   start_datetime: string;
   end_datetime: string | null;
@@ -33,6 +26,12 @@ interface MissionItem {
   destinationLocation: string;
   intermediateStops: string[];
   vehicleAssigned: string | null;
+  driverAssigned: number | null;
+  drivers: {
+    driver_id: number;
+    name: string;
+    phone: string;
+  }[];
 }
 
 interface ApproveMissionState {
@@ -44,12 +43,13 @@ interface ApproveMissionState {
   search: string;
   statusFilter: number | "";
   travelTypeFilter: string;
+  fromDate?: string | null;
   sortBy: string;
   sortOrder: "ASC" | "DESC";
 
   setSort: (column: string, order?: "ASC" | "DESC") => void;
   setSearch: (val: string) => void;
-  setFilters: (status?: string, type?: string) => void;
+  setFilters: (status?: string, type?: string, dateFilter?: boolean) => void;
   setPage: (page: number) => void;
   fetchMission: () => Promise<void>;
 }
@@ -64,13 +64,16 @@ export const useApproveMissionStore = create<ApproveMissionState>(
     search: "",
     statusFilter: "",
     travelTypeFilter: "",
+    fromDate: null,
     sortBy: "created_at",
     sortOrder: "DESC",
 
-    setFilters: (status, type) => {
+    setFilters: (status, type, dateFilter) => {
       set({
         statusFilter: status ? Number(status) : "",
         travelTypeFilter: type ?? "",
+        fromDate: dateFilter ? new Date().toISOString().split("T")[0] : null,
+
         currentPage: 1,
       });
 
@@ -104,7 +107,10 @@ export const useApproveMissionStore = create<ApproveMissionState>(
     },
 
     fetchMission: async () => {
+      const id = privateGet("id");
+      if (get().loading) return;
       set({ loading: true });
+
       const {
         currentPage,
         search,
@@ -112,32 +118,52 @@ export const useApproveMissionStore = create<ApproveMissionState>(
         travelTypeFilter,
         sortBy,
         sortOrder,
+        fromDate,
       } = get();
 
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: "10",
-        sortBy,
-        sortOrder,
+        sortBy: sortBy || "id",
+        sortOrder: sortOrder || "desc",
       });
 
+      if (fromDate) {
+        params.append("from_date", fromDate);
+      }
+
+      if (id) {
+        params.append("user_id", String(id));
+      }
+
       if (search) params.append("search", search);
-      if (travelTypeFilter) params.append("travel_type", travelTypeFilter);
 
-      if (statusFilter !== "" && !isNaN(Number(statusFilter))) {
-        params.append("status", String(statusFilter));
+      if (travelTypeFilter) {
+        params.append("travel_type", travelTypeFilter);
+      }
+
+      const allowedStatuses = [
+        ROUTE_STATUS.PENDING,
+        ROUTE_STATUS.VEHICLE_ASSIGNED,
+        ROUTE_STATUS.VEHICLE_REASSIGNED,
+        ROUTE_STATUS.VEHICLE_APPROVED,
+        ROUTE_STATUS.CANCELLED,
+      ];
+
+      if (
+        statusFilter !== "" &&
+        statusFilter !== null &&
+        !isNaN(Number(statusFilter))
+      ) {
+        const selectedStatus = Number(statusFilter);
+
+        if (allowedStatuses.includes(selectedStatus)) {
+          params.append("status", String(selectedStatus));
+        }
       } else {
-        const missionStatuses = [
-          ROUTE_STATUS.VEHICLE_ASSIGNED,
-          ROUTE_STATUS.VEHICLE_REASSIGNED,
-          ROUTE_STATUS.FACULTY_APPROVED,
-          ROUTE_STATUS.DRIVER_ASSIGNED,
-          ROUTE_STATUS.DRIVER_REASSIGNED,
-          ROUTE_STATUS.STARTED,
-          ROUTE_STATUS.COMPLETED,
-        ];
-
-        missionStatuses.forEach((s) => params.append("status", String(s)));
+        allowedStatuses.forEach((status) => {
+          params.append("status", String(status));
+        });
       }
 
       try {
@@ -147,7 +173,9 @@ export const useApproveMissionStore = create<ApproveMissionState>(
             headers: { Authorization: `TMS ${localStorage.getItem("token")}` },
           },
         );
+
         const data = await response.json();
+
         if (data.success) {
           set({
             items: data.items,

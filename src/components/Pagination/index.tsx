@@ -17,7 +17,7 @@ export const CustomPagination = ({
   onPageChange,
 }: CustomPaginationProps) => {
   return (
-    <div className="bg-white p-2 rounded-2xl border border-slate-100 shadow-sm mt-2">
+    <div className="bg-white p-2 rounded-2xl mt-2">
       <div className="flex flex-col sm:flex-row justify-between items-center px-2 w-full gap-4">
         <div className="flex items-center gap-2 text-xs font-semibold order-2 sm:order-1">
           <div className="h-2 w-2 rounded-full bg-indigo-600 animate-pulse" />

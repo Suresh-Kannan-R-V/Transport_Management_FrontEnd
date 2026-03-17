@@ -87,7 +87,6 @@ export const useRequestCreationStore = create<RequestState>((set, get) => ({
         const count = Math.max(1, parseInt(String(value)) || 0);
         let newGuests = [...state.guests];
 
-        // Backend requires at least 1 guest if count=1, and at least 2 guests if count >= 2
         const autoNeeded = count === 1 ? 1 : 2;
 
         if (newGuests.length < autoNeeded) {
@@ -95,8 +94,6 @@ export const useRequestCreationStore = create<RequestState>((set, get) => ({
             newGuests.push({ name: "", phone: "", country_code: "+91" });
           }
         } else if (newGuests.length > count) {
-          // Keep the guest list size in sync with passenger count to avoid
-          // "Guest count exceeds passenger count" error from backend
           newGuests = newGuests.slice(0, count);
         }
 
@@ -107,8 +104,8 @@ export const useRequestCreationStore = create<RequestState>((set, get) => ({
         return {
           ...state,
           isBulkUpload: value as boolean,
-          guestFile: null, // Clear file if switching to manual
-          guests: [{ name: "", phone: "", country_code: "+91" }], // Reset guests if switching
+          guestFile: null,
+          guests: [{ name: "", phone: "", country_code: "+91" }],
         };
       }
 
@@ -163,14 +160,13 @@ export const useRequestCreationStore = create<RequestState>((set, get) => ({
 
   setRouteMetrics: (distance, duration) =>
     set({
-      distance: (distance / 1000).toFixed(2), // Convert meters to km
-      duration: (duration / 60).toFixed(2), // Convert seconds to mins
+      distance: (distance / 1000).toFixed(2),
+      duration: (duration / 60).toFixed(2),
     }),
 
   submitRequest: async () => {
     const state = get();
 
-    // 1. Validation Logic
     if (!state.routeName.trim())
       return { success: false, message: "Route Name is required." };
     if (!state.startDate)
@@ -180,7 +176,8 @@ export const useRequestCreationStore = create<RequestState>((set, get) => ({
       route_name: state.routeName,
       type: state.travelType,
       start_date: state.startDate,
-      end_date: state.travelType === "Multi Day" ? state.endDate : null,
+      end_date:
+        state.travelType === "Multi Day" ? state.endDate : state.startDate,
     };
 
     const route_details = {
@@ -214,16 +211,13 @@ export const useRequestCreationStore = create<RequestState>((set, get) => ({
 
         const formData = new FormData();
         formData.append("file", state.guestFile);
-        // As per your backend: req.file presence triggers JSON.parse() on these fields:
         formData.append("travel_info", JSON.stringify(travel_info));
         formData.append("route_details", JSON.stringify(route_details));
         formData.append("vehicle_config", JSON.stringify(vehicle_config));
         formData.append("additional_info", JSON.stringify(additional_info));
 
         body = formData;
-        // Browser sets Content-Type to multipart/form-data automatically
       } else {
-        // Manual validation
         const requiredCount = state.passengerCount === 1 ? 1 : 2;
         const validGuests = state.guests.filter(
           (g) => g.name.trim() !== "" && g.phone.trim() !== "",
@@ -258,7 +252,7 @@ export const useRequestCreationStore = create<RequestState>((set, get) => ({
       const result = await response.json();
 
       if (response.ok) {
-        get().reset(); // Clears everything including the file
+        get().reset();
         return {
           success: true,
           message: "Transport request created successfully",

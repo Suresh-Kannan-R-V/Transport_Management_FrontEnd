@@ -21,6 +21,7 @@ interface VehicleState {
   totalVehicles: number;
   currentPage: number;
   loading: boolean;
+  lastQuery: string;
   // Actions
   fetchVehicles: (params?: string) => Promise<void>;
   addVehicle: (data: Omit<Vehicle, "id">) => Promise<void>;
@@ -37,9 +38,11 @@ export const useVehicleStore = create<VehicleState>((set, get) => ({
   totalVehicles: 0,
   currentPage: 1,
   loading: false,
+  lastQuery: "",
 
   fetchVehicles: async (params = "") => {
-    set({ loading: true });
+    if (get().loading) return;
+    set({ loading: true, lastQuery: params });
     try {
       const res = await fetch(
         `${FILE_BASE_URL}/api/vehicles/get-all${params}`,
@@ -60,7 +63,7 @@ export const useVehicleStore = create<VehicleState>((set, get) => ({
       } else {
         set({ vehicles: [], loading: false });
       }
-    } catch (err:any) {
+    } catch (err: any) {
       console.error("Fetch failed:", err);
       toast.error(err.response?.data?.message || "Failed to fetch vehicles");
       set({ vehicles: [], loading: false });

@@ -3,9 +3,10 @@ import { Plus, RefreshCcw, Search } from "lucide-react";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  AssignmentCard,
   CustomPagination,
   GenericFilterDropdown,
-  RequestCard,
+  NoDataFound,
   TransportLoader,
 } from "../../../components";
 import { useRequestPageStore } from "../../../store";
@@ -21,7 +22,12 @@ const requestFilterConfig = [
         value: "created_at",
         type: "sort",
       },
-      { key: "oldest", label: "Oldest First", value: "oldest", type: "sort" },
+      {
+        key: "oldest",
+        label: "Oldest First",
+        value: "created_at",
+        type: "sort",
+      },
       {
         key: "name-az",
         label: "Route (A-Z)",
@@ -48,6 +54,13 @@ const requestFilterConfig = [
       },
     ],
   },
+  {
+    title: "Routes Timeline",
+    items: [
+      { key: "date-all", label: "All Dates", value: "", type: "date" },
+      { key: "upcoming", label: "Upcoming Routes", value: "", type: "date" },
+    ],
+  },
 ];
 
 const RequestPage = () => {
@@ -62,6 +75,7 @@ const RequestPage = () => {
     setSearch,
     setSort,
     setFilters,
+    resetFilters,
     fetchRequests,
   } = useRequestPageStore();
 
@@ -70,8 +84,10 @@ const RequestPage = () => {
   };
 
   useEffect(() => {
-    fetchRequests();
-  }, [fetchRequests]);
+    if (items.length === 0) {
+      fetchRequests();
+    }
+  }, []);
 
   const handleFilterSelect = (_sectionTitle: string, item: any) => {
     setPage(1);
@@ -79,16 +95,12 @@ const RequestPage = () => {
     if (item.type === "sort") {
       const order = item.key === "name-az" ? "ASC" : "DESC";
       setSort(item.value, order);
+    } else if (item.type === "date") {
+      const isUpcoming = item.key === "upcoming";
+      setFilters(undefined, undefined, isUpcoming);
     } else {
-      setFilters(item.value, undefined);
+      setFilters(item.value, undefined, false);
     }
-  };
-
-  const handleReset = () => {
-    setSearch("");
-    setPage(1);
-    setFilters("", "");
-    setSort("created_at");
   };
 
   return (
@@ -99,70 +111,53 @@ const RequestPage = () => {
             Transport System
           </p>
           <h1 className="text-2xl md:text-4xl text-slate-900 tracking-tight font-bold">
-            Pending Requests
+            All Requests
           </h1>
         </div>
         <div className="flex gap-3">
+          <div className="relative hidden lg:block">
+            <Search
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+              size={18}
+            />
+            <input
+              type="text"
+              placeholder="Quick search request..."
+              onChange={handleSearchChange}
+              className="pl-12 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-sm w-72 shadow-sm"
+            />
+          </div>
           <Button
-            onPress={() => navigate("/request/new-request")}
-            startContent={<Plus size={18} strokeWidth={3} />}
-            className="bg-indigo-600 text-white font-semibold text-sm px-5 shadow-md rounded-lg duration-200"
-          >
-            New
-          </Button>
+            isIconOnly
+            onPress={resetFilters}
+            variant="flat"
+            className="bg-white border border-slate-200 text-slate-600 font-semibold rounded-xl h-9 text-xs"
+            startContent={<RefreshCcw size={16} strokeWidth={2} />}
+          />
+          <GenericFilterDropdown
+            sections={requestFilterConfig}
+            onFilterSelect={handleFilterSelect}
+            onReset={resetFilters}
+            buttonLabel="Filter & Sort"
+          />
         </div>
       </div>
       <div className="grid grid-cols-1 gap-4">
         <div>
-          <div className="flex justify-between items-center mb-1 mr-4 w-full">
-            <div className="relative hidden lg:block">
-              <Search
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                size={18}
-              />
-              <input
-                type="text"
-                placeholder="Quick search request..."
-                onChange={handleSearchChange}
-                className="pl-12 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-sm w-72 shadow-sm"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button
-                isIconOnly
-                onPress={() => {
-                  fetchRequests();
-                  handleReset();
-                }}
-                variant="flat"
-                className="bg-white border border-slate-200 text-slate-600 font-semibold rounded-xl h-9 text-xs"
-                startContent={<RefreshCcw size={16} strokeWidth={2} />}
-              />
-              <GenericFilterDropdown
-                sections={requestFilterConfig}
-                onFilterSelect={handleFilterSelect}
-                onReset={handleReset}
-                buttonLabel="Filter & Sort"
-              />
-            </div>
-          </div>
+          <div className="flex justify-between items-center mb-1 mr-4 w-full"></div>
           {loading ? (
             <div className="h-[calc(100vh-380px)] overflow-hidden">
               <TransportLoader size={60} />
             </div>
           ) : (
             <>
-              <ScrollShadow className="h-[calc(100vh-300px)] custom-scrollbar p-1 pr-2">
+              <ScrollShadow className="h-[calc(100vh-250px)] custom-scrollbar p-1 pr-2 pb-2">
                 {items.length == 0 && (
-                  <div className="flex items-center justify-center py-20 px-4 text-center bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-200 h-full">
-                    <h3 className="text-xl font-bold text-slate-800 mb-2">
-                      No Transport Requests Found
-                    </h3>
-                  </div>
+                  <NoDataFound data={" No Transport Requests Found"} />
                 )}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 ">
+                <div className="grid grid-cols-1  gap-3 ">
                   {items.map((req) => (
-                    <RequestCard
+                    <AssignmentCard
                       isPressable
                       key={req.id}
                       item={req}
@@ -178,7 +173,9 @@ const RequestPage = () => {
                 totalPages={totalPages}
                 totalItems={totalItems}
                 limit={10}
-                onPageChange={setPage}
+                onPageChange={(page) => {
+                  setPage(page);
+                }}
               />
             </>
           )}
