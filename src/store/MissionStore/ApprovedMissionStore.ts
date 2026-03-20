@@ -31,6 +31,7 @@ interface MissionItem {
     driver_id: number;
     name: string;
     phone: string;
+    status: number | null;
   }[];
 }
 

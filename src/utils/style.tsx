@@ -33,18 +33,28 @@ export const DateRangePickerStyles = {
 };
 
 export const selectorStyles = {
-  base: "w-full",
+  base: "w-full flex flex-col gap-1.5",
+  label:
+    "text-[11px] font-bold text-slate-500 uppercase tracking-widest ml-1 block",
   trigger: [
-    " h-[52px] border-2 border-white rounded-2xl transition-all shadow-sm ",
-    " data-[focused=true]:bg-white data-[focused=true]:border-indigo-500 data-[focused=true]:ring-4",
-    "data-[focused=true]:ring-indigo-50 hover:bg-slate-50 hover:border-indigo-500",
+    "h-[48px] border bg-slate-50 border-slate-200/60 rounded-lg transition-all shadow-none",
+    "hover:bg-slate-100 hover:border-indigo-500",
+    "data-[open=true]:bg-white data-[open=true]:border-indigo-500 data-[open=true]:ring-2 data-[open=true]:ring-indigo-500/10",
+    "data-[focus=true]:bg-white data-[focus=true]:border-indigo-500 data-[focus=true]:ring-2 data-[focus=true]:ring-indigo-500/10",
   ],
-  value: "text-slate-700 font-bold text-sm ml-1",
-  placeholder: "text-slate-400 font-medium text-sm ml-1",
+  value: "text-slate-700 font-semibold text-sm ml-1",
+  placeholder: "text-slate-400 font-normal text-sm ml-1",
   popoverContent: [
-    "bg-white/90 backdrop-blur-xl border border-slate-200/60 shadow rounded-[24px] p-2",
+    "bg-white/90 backdrop-blur-xl border border-slate-200/60 shadow-2xl rounded-[24px] p-2 mt-2",
   ],
-  listbox: "gap-1",
+
+  listboxWrapper: "max-h-[300px] overflow-y-scroll custom-scrollbar",
+  listbox: "p-0 gap-1 overflow-y-scroll custom-scrollbar",
+
+  listboxItem: [
+    "flex items-center gap-2 px-2 py-2 rounded-md transition-all duration-200 cursor-pointer data-[hover=true]:bg-indigo-50 data-[hover=true]:text-indigo-600 data-[selected=true]:bg-indigo-100 data-[selected=true]:text-indigo-700 data-[selected=true]:font-bold",
+    "outline-none",
+  ],
   selectorIcon: "text-indigo-500 w-5 h-5",
 };
 

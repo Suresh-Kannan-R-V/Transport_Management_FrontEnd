@@ -78,7 +78,6 @@ const AssignmentPage = () => {
     loading,
     totalPages,
     currentPage,
-    otpLoading,
     setPage,
     setSearch,
     setSort,
@@ -194,6 +193,7 @@ const AssignmentPage = () => {
                 <div className="grid grid-cols-1 gap-3">
                   {items.map((req) => (
                     <AssignmentCard
+                      isPressable
                       key={req.id}
                       item={req}
                       onPress={() => handleAction(req)}

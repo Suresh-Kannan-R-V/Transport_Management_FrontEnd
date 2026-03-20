@@ -7,8 +7,7 @@ import Sidebar from "../../components/sideBar";
 import Topbar from "../../components/topBar";
 import {
   useCommonStore,
-  useRoleManagementStore,
-  useUserStore,
+  useUserStore
 } from "../../store";
 import { cn } from "../../utils/helper";
 
@@ -16,10 +15,12 @@ const Layout = () => {
   // const isOpen = useCommonStore((state) => state.isOpen);
   const setCommonStates = useCommonStore((state) => state.setCommonStates);
   const fetchProfile = useUserStore((state) => state.fetchProfile);
+  const fetchMasterData = useUserStore((state) => state.fetchMasterData);
 
   React.useEffect(() => {
     fetchProfile();
-  }, [fetchProfile]);
+    fetchMasterData();
+  }, []);
 
   React.useEffect(() => {
     const handleResize = () => {

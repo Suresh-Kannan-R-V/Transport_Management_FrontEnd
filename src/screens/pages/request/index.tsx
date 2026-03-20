@@ -1,5 +1,5 @@
 import { Button, ScrollShadow } from "@heroui/react";
-import { Plus, RefreshCcw, Search } from "lucide-react";
+import { RefreshCcw, Search } from "lucide-react";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {

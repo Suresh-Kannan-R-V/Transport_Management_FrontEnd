@@ -26,10 +26,11 @@ interface RequestItem {
   intermediateStops: string[];
   vehicleAssigned: number | null;
   driverAssigned: number | null;
-  drivers: {
+  drivers?: {
     driver_id: number;
     name: string;
     phone: string;
+    status: number | null;
   }[];
 }
 

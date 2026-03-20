@@ -1,6 +1,5 @@
 export { default as Dashboard } from "./dashboard";
 export { default as AssignmentPage } from "./assignment";
-export { default as DriverDashBoard } from "./driver";
 export { default as MissionPage } from "./missions";
 export { default as RequestPage } from "./request";
 export { default as NewRequest } from "./request/newRequest";
@@ -10,5 +9,6 @@ export { default as CreateLeave } from "./schedule/CreateLeave";
 export { default as Setting } from "./setting";
 export { default as AddUser } from "./setting/addUser";
 export { default as RoleManagement } from "./setting/sessionManagement";
+export { default as DriverDashBoard } from "./setting/driverManagement/driverDashboard";
 export { default as VehicleManagement } from "./vehicleManagement";
 export { default as DriverManagement } from "./setting/driverManagement";

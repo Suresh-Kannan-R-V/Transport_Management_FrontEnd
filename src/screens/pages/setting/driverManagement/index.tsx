@@ -59,11 +59,15 @@ const DriverManagement = () => {
   const [status, setStatus] = useState<string>("all");
   const [isLogin, setIsLogin] = useState<string>("all");
   const [pushStatus, setPushStatus] = useState<string>("all");
+
+  // 1. Update limit to 10 to see more than one record at a time
   const limit = 10;
 
-  const totalPages = Math.ceil(totalDrivers / limit);
+  // 2. Ensure totalPages calculation is based on the updated limit
+  const totalPages = Math.max(1, Math.ceil(totalDrivers / limit));
 
   const loadDrivers = () => {
+    // This query string will now correctly ask for page X with 10 records
     let query = `?page=${page}&limit=${limit}`;
     if (search) query += `&search=${search}`;
     if (status !== "all") query += `&status=${status}`;
@@ -75,16 +79,15 @@ const DriverManagement = () => {
   };
 
   useEffect(() => {
-    if (drivers.length === 0) {
-      loadDrivers();
-    }
-  }, []);
-
-  useEffect(() => {
-    if (drivers.length > 0 || page > 1 || search !== "" || status !== "all") {
-      loadDrivers();
-    }
+    loadDrivers();
   }, [page, search, status, isLogin, pushStatus]);
+
+  // Handle page out of bounds (e.g., after a deletion)
+  useEffect(() => {
+    if (page > totalPages && totalPages > 0) {
+      setPage(totalPages);
+    }
+  }, [totalPages, page]);
 
   const handleFilterSelection = (sectionTitle: string, item: any) => {
     setPage(1);
@@ -173,7 +176,9 @@ const DriverManagement = () => {
                   key={d.id}
                   isPressable
                   onPress={() =>
-                    navigate(`/driver/${btoa(d.user_id.toString())}`)
+                    navigate(
+                      `/settings/driver-management/${btoa(d.user_id.toString())}`,
+                    )
                   }
                   className="w-full bg-white text-left border-2 border-slate-100 rounded-2xl p-4 hover:border-indigo-500 hover:shadow-xl hover:shadow-indigo-500/5 transition-all group h-fit flex-shrink-0"
                 >
@@ -271,7 +276,12 @@ const DriverManagement = () => {
             totalPages={totalPages}
             totalItems={totalDrivers}
             limit={limit}
-            onPageChange={setPage}
+            onPageChange={(newPage) => {
+              setPage(newPage);
+              const scrollContainer =
+                document.querySelector(".custom-scrollbar");
+              if (scrollContainer) scrollContainer.scrollTop = 0;
+            }}
           />
         </>
       )}

@@ -7,7 +7,7 @@ export interface Vehicle {
   vehicle_number: string;
   vehicle_type: string;
   capacity: number;
-  status: "active" | "maintenance" | "assign";
+  status: number;
   current_kilometer?: number;
   insurance_date?: string | null;
   pollution_date?: string | null;

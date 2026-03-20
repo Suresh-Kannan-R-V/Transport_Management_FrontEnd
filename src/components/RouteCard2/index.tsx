@@ -32,7 +32,12 @@ interface RouteCardItem {
   intermediateStops: string[];
   vehicleAssigned: number | string | null;
   driverAssigned?: number | string | null;
-  drivers?: Array<{ status: number }>;
+  drivers?: Array<{
+    driver_id: number;
+    name: string;
+    phone: string;
+    status: number | null;
+  }>;
   createdAt?: string;
   updatedAt?: string;
   createdBy: {

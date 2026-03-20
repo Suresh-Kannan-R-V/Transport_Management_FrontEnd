@@ -14,7 +14,7 @@ import {
   Setting,
   VehicleManagement,
   ViewRequest,
-  WebQrLogin,
+  WebQrLogin
 } from "../screens";
 import AssignmentPage from "../screens/pages/assignment";
 import VehicleDashboard from "../screens/pages/vehicleManagement/VehicleDashBoard";
@@ -31,10 +31,7 @@ const privateRoutes = [
     path: "assignment",
     element: <AssignmentPage />,
   },
-  {
-    path: "driver/:driverId",
-    element: <DriverDashBoard />,
-  },
+
   {
     path: "mission",
     element: <MissionPage />,
@@ -65,7 +62,7 @@ const privateRoutes = [
     element: <VehicleManagement />,
   },
   {
-    path: "vehicle/vehicle-dashboard",
+    path: "vehicle/vehicle-dashboard/:vehicle_id",
     element: <VehicleDashboard />,
   },
   {
@@ -90,6 +87,10 @@ const privateRoutes = [
     element: <DriverManagement />,
   },
   {
+    path: "settings/driver-management/:userId",
+    element: <DriverDashBoard />,
+  },
+  {
     path: "settings/session-management",
     element: <RoleManagement />,
   },
@@ -109,3 +110,4 @@ const publicRoutes = [
 ];
 
 export { privateRoutes, publicRoutes };
+

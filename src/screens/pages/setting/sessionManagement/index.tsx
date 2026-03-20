@@ -78,11 +78,6 @@ const RoleManagement = () => {
   }, [searchTerm]);
 
   useEffect(() => {
-    const isDefaultState =
-      page === 1 && !debouncedSearch && !roleFilter && isLoginFilter === null;
-
-    if (isDefaultState && users.length > 0) return;
-
     fetchUsers(page, LIMIT, {
       search: debouncedSearch || undefined,
       role_name: roleFilter || undefined,
@@ -97,6 +92,12 @@ const RoleManagement = () => {
         fetchUsers(page, LIMIT);
       }
     });
+  };
+
+  const onPageChange = (newPage: number) => {
+    setPage(newPage);
+    const scrollContainer = document.querySelector(".custom-scrollbar");
+    if (scrollContainer) scrollContainer.scrollTop = 0;
   };
 
   const filterConfig = [
@@ -334,7 +335,7 @@ const RoleManagement = () => {
         totalPages={totalPages}
         totalItems={totalItems}
         limit={LIMIT}
-        onPageChange={setPage}
+        onPageChange={onPageChange}
       />
 
       <ChangeRoleModal

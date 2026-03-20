@@ -2,7 +2,7 @@ export * from "./sideBar";
 export * from "./topBar";
 export * from "./table";
 export * from "./RouteCard";
-export * from "./formInput";
+export * from "./InputField";
 export * from "./MapComponent";
 export * from "./BackButton";
 export * from "./countryCodeSelector";

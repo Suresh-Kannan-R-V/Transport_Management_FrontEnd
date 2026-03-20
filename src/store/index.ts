@@ -7,5 +7,6 @@ export { useRequestCreationStore } from "./RequestStore/requestCreation";
 export { useRequestPageStore } from "./RequestStore/RequestPageStore";
 export { useLeaveStore } from "./ScheduleStore/LeaveStore";
 export { useVehicleStore } from "./VehicleManagementStore/VehicleStore";
+export { useVehicleDashboardStore } from "./VehicleManagementStore/VehicleDashboardStore";
 export { useRoleManagementStore } from "./SettingStore/RoleManageStore";
 export { useDriverStore } from "./SettingStore/DriverStore";

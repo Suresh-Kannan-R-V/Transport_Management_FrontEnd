@@ -1,5 +1,5 @@
 import { Card, CardBody, cn } from "@heroui/react";
-import { ArrowRight, Car, LogOut, User, Users } from "lucide-react";
+import { ArrowRight, LogOut, User, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Setting = () => {

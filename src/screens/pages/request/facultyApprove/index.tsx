@@ -12,7 +12,6 @@ import { CheckCircle2, MessageSquareText } from "lucide-react";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { FILE_BASE_URL } from "../../../../api/base";
-import { ROUTE_STATUS } from "../../../../utils/helper";
 
 interface FacultyApprovalModalProps {
   isOpen: boolean;

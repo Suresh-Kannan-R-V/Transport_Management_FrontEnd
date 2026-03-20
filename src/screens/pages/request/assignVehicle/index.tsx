@@ -31,7 +31,7 @@ import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { FILE_BASE_URL } from "../../../../api/base";
 import { useUserStore } from "../../../../store";
-import { cn } from "../../../../utils/helper";
+import { cn, ROUTE_STATUS, VEHICLE_STATUS } from "../../../../utils/helper";
 
 interface Guest {
   id: number;
@@ -62,12 +62,14 @@ interface ExistingSchedule {
 }
 
 interface Props {
+  routeStatus: number;
   guests: Guest[];
   onClose: () => void;
   routeId: string | undefined | number;
   existingSchedules?: ExistingSchedule[];
 }
 export const VehicleAssignmentPopup = ({
+  routeStatus,
   guests,
   onClose,
   routeId,
@@ -89,10 +91,9 @@ export const VehicleAssignmentPopup = ({
 
   const fetchVehicles = async (searchTerm: string = "") => {
     try {
-      const params = new URLSearchParams({
-        limit: "100",
-        status: "active",
-      });
+      const params = new URLSearchParams();
+      params.set("limit", "100");
+      params.set("status", String(VEHICLE_STATUS.AVAILABLE));
 
       // Only add search if it exists
       if (searchTerm.trim()) {
@@ -153,6 +154,7 @@ export const VehicleAssignmentPopup = ({
 
   const handleConfirm = async () => {
     let decodedRouteId;
+
     try {
       decodedRouteId = Number(atob(routeId as string));
       if (isNaN(decodedRouteId)) {
@@ -169,6 +171,7 @@ export const VehicleAssignmentPopup = ({
         toast.error("Please select a vehicle for all groups.");
         return;
       }
+
       if (card.assignedGuests.length > card.selectedVehicle.capacity) {
         toast.error(
           `Vehicle ${card.selectedVehicle.vehicle_number} is over capacity! (Max: ${card.selectedVehicle.capacity})`,
@@ -182,15 +185,14 @@ export const VehicleAssignmentPopup = ({
       return;
     }
 
-    if (vehicles.some((v) => !v.selectedVehicle)) {
-      toast.error("Please select a vehicle for all assigned groups.");
-      return;
-    }
-
     const finalRemark = remarks.trim()
       ? remarks.trim()
       : `Remark By ${roleName}.`;
-    const isUpdate = existingSchedules && existingSchedules.length > 0;
+
+    const isUpdate =
+      routeStatus === ROUTE_STATUS.VEHICLE_ASSIGNED ||
+      routeStatus === ROUTE_STATUS.VEHICLE_REASSIGNED;
+
     setIsSubmitting(true);
 
     const apiUrl = isUpdate
@@ -217,12 +219,13 @@ export const VehicleAssignmentPopup = ({
       });
 
       const resData = await response.json();
-      if (resData.success) {
-        toast.success(resData.message || "Assignments saved!");
-        onClose();
-      } else {
+
+      if (!response.ok || !resData.success) {
         throw new Error(resData.message || "Server validation failed");
       }
+
+      toast.success(resData.message || "Assignments saved!");
+      onClose();
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "Failed to save";

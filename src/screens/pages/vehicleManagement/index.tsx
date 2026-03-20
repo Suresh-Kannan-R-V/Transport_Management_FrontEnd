@@ -14,25 +14,30 @@ import {
   Users,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   BackButton,
   CustomPagination,
+  FormInput,
   GenericFilterDropdown,
   NoDataFound,
   TransportLoader,
 } from "../../../components";
 import { useVehicleStore } from "../../../store/VehicleManagementStore/VehicleStore";
-import { cn } from "../../../utils/helper";
+import { cn, VEHICLE_STATUS, VehicleStatus } from "../../../utils/helper";
 import { pickerStyles } from "../../../utils/style";
-import { useNavigate } from "react-router-dom";
 
 const vehicleFilterConfig = [
   {
     title: "Vehicle Status",
     items: [
-      { key: "active", label: "Active", value: "active" },
-      { key: "assign", label: "Assigned", value: "assign" },
-      { key: "maintenance", label: "Maintenance", value: "maintenance" },
+      { key: "active", label: "Active", value: VEHICLE_STATUS.AVAILABLE },
+      { key: "assign", label: "Assigned", value: VEHICLE_STATUS.ASSIGNED },
+      {
+        key: "maintenance",
+        label: "Maintenance",
+        value: VEHICLE_STATUS.MAINTENANCE,
+      },
     ],
   },
   {
@@ -121,7 +126,7 @@ const VehicleManagement = () => {
       vehicle_number: String(baseData.vehicle_number),
       vehicle_type: String(baseData.vehicle_type),
       capacity: Number(baseData.capacity),
-      status: "active" as const,
+      status: 1,
       current_kilometer: Number(baseData.current_kilometer) || undefined,
       insurance_date: dates.insurance_date?.toString() || null,
       pollution_date: dates.pollution_date?.toString() || null,
@@ -235,17 +240,21 @@ const VehicleManagement = () => {
                     <Card
                       isPressable
                       key={v.id}
-                      onPress={() => navigate("/vehicle/vehicle-dashboard")}
-                      className="w-full bg-white border-2 border-slate-50 rounded-2xl p-4 hover:border-indigo-500 hover:shadow-xl hover:shadow-indigo-500/5 transition-all group h-fit flex-shrink-0"
+                      onPress={() =>
+                        navigate(
+                          `/vehicle/vehicle-dashboard/${btoa(v.id.toString())}`,
+                        )
+                      }
+                      className="w-full text-left bg-white border-2 border-slate-200 rounded-2xl p-4 hover:border-indigo-500 hover:shadow-xl hover:shadow-indigo-500/5 transition-all group h-fit flex-shrink-0"
                     >
                       <div className="flex flex-col lg:flex-row justify-between gap-6">
                         <div className="flex gap-4 items-start lg:w-1/4">
                           <div
                             className={cn(
                               "bg-indigo-50 p-4 rounded-2xl text-indigo-600",
-                              v.status === "active"
+                              v.status === 1
                                 ? "bg-green-100 text-green-600"
-                                : v.status === "assign"
+                                : v.status === 2
                                   ? "bg-amber-100 text-amber-600"
                                   : "bg-rose-100 text-rose-600",
                             )}
@@ -272,12 +281,14 @@ const VehicleManagement = () => {
                               <span
                                 className={cn(
                                   "inline-block px-3 py-0.5 rounded-full text-[9px] font-semibold uppercase ",
-                                  v.status === "active"
+                                  v.status === 1
                                     ? "bg-green-100 text-green-600"
-                                    : "bg-amber-100 text-amber-600",
+                                    : v.status === 2
+                                      ? "bg-amber-100 text-amber-600"
+                                      : "bg-rose-100 text-rose-600",
                                 )}
                               >
-                                {v.status}
+                                {VehicleStatus[v.status]}
                               </span>
                             </div>
                           </div>
@@ -496,23 +507,6 @@ const DataMetric = ({
           : value
         : "--"}
     </p>
-  </div>
-);
-
-const FormInput = ({
-  label,
-  ...props
-}: {
-  label: string;
-} & React.InputHTMLAttributes<HTMLInputElement>) => (
-  <div className="space-y-1 h-fit">
-    <label className="text-[10px] font-bold uppercase text-indigo-600 ml-2">
-      {label}
-    </label>
-    <input
-      {...props}
-      className="w-full p-3 shadow-sm bg-slate-50 border border-slate-100 rounded-lg text-sm font-medium outline-none focus:ring-2 ring-indigo-500"
-    />
   </div>
 );
 

@@ -96,7 +96,6 @@ export const formatDateTime = (dateString: string | undefined) => {
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
-    timeZone: "UTC",
   })
     .format(date)
     .replace(",", " -")
@@ -115,7 +114,6 @@ export const formatDate = (dateString: string) => {
     day: "2-digit",
     month: "2-digit",
     year: "2-digit",
-    timeZone: "UTC",
   }).format(date);
 };
 
@@ -123,7 +121,6 @@ export const formatTimeOnly = (dateStr: string) => {
   return new Date(dateStr).toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
-    timeZone: "UTC",
     hour12: true,
   });
 };
@@ -226,6 +223,17 @@ export const DRIVER_STATUS: Record<string, number> = {
   ASSIGNED: 2,
   ON_TRIP: 3,
   ON_LEAVE: 4,
+};
+export const VehicleStatus: Record<number, string> = {
+  1: "Available",
+  2: "Assigned",
+  3: "Maintenance",
+};
+
+export const VEHICLE_STATUS: Record<string, number> = {
+  AVAILABLE: 1,
+  ASSIGNED: 2,
+  MAINTENANCE: 3,
 };
 
 export const LEAVE_TYPE: Record<number, string> = {

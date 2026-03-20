@@ -563,6 +563,7 @@ const ViewRequest = () => {
           {(isRequestPath || (isMissionPath && roleName === "Faculty")) &&
             showPopup && (
               <VehicleAssignmentPopup
+                routeStatus={data.route_status}
                 routeId={id}
                 guests={data?.guests}
                 existingSchedules={
@@ -574,7 +575,7 @@ const ViewRequest = () => {
                           vehicle_number: schedule.vehicle.vehicle_number,
                           vehicle_type: schedule.vehicle.vehicle_type,
                           capacity: Number(schedule.vehicle.vehicle_capacity),
-                          status: "active" as const,
+                          status: 1,
                         }
                       : null,
                     guests: schedule.guests || [],
