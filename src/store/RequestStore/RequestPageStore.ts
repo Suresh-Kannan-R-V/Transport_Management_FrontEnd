@@ -15,7 +15,7 @@ interface RequestItem {
       role: string;
     };
   };
-  status: number;
+  status: string | null;
   travelType: "One Way" | "Two Way" | "Multi Day";
   start_datetime: string;
   end_datetime: string | null;
@@ -149,7 +149,7 @@ export const useRequestPageStore = create<RequestPageState>((set, get) => ({
 
     try {
       const response = await fetch(
-        `${FILE_BASE_URL}/request/get-all?${params.toString()}`,
+        `${FILE_BASE_URL}/api/routes/get-all?${params.toString()}`,
         {
           headers: {
             Authorization: `TMS ${localStorage.getItem("token")}`,
@@ -161,9 +161,9 @@ export const useRequestPageStore = create<RequestPageState>((set, get) => ({
 
       if (data.success) {
         set({
-          items: data.items || [],
-          totalItems: data.totalItems || 0,
-          totalPages: data.totalPages || 1,
+          items: data.data || [],
+          totalItems: data.pagination?.totalItems || 0,
+          totalPages: data.pagination?.totalPages || 1,
         });
       }
     } catch (error) {

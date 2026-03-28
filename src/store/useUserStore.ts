@@ -6,17 +6,28 @@ import toast from "react-hot-toast";
 export interface User {
   id: number;
   role_id: number;
+  department_id: number | null;
   name: string;
-  user_name: string;
+  username: string; // Changed from user_name
   email: string;
-  password: string;
   phone: string;
-  isLogin: boolean;
+  status: string;
+  push_notification_enabled: boolean;
+  is_login: boolean; // Changed from isLogin
+  last_login_at: string;
+  faculty_id: number | null;
+  destination: string | null;
+  age: number;
   created_at: string;
-  Role: {
+  updated_at: string;
+  role: {
+    // Changed from Role (lowercase r)
     id: number;
+    code: string;
     name: string;
   };
+  department: any | null;
+  driverProfile: any | null;
 }
 
 export interface FuelBunk {
@@ -63,7 +74,7 @@ export const useUserStore = create<UserState>((set) => ({
     set({ loading: true });
 
     try {
-      const response = await fetch(`${FILE_BASE_URL}/auth/user/${id}`, {
+      const response = await fetch(`${FILE_BASE_URL}/auth/user/me`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -76,7 +87,7 @@ export const useUserStore = create<UserState>((set) => ({
       if (result.success) {
         set({
           user: result.data,
-          roleName: result.data.Role.name,
+          roleName: result.data.role.name,
           loading: false,
         });
       } else {

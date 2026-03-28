@@ -183,15 +183,17 @@ const DriverManagement = () => {
                   className="w-full bg-white text-left border-2 border-slate-100 rounded-2xl p-4 hover:border-indigo-500 hover:shadow-xl hover:shadow-indigo-500/5 transition-all group h-fit flex-shrink-0"
                 >
                   <div className="flex flex-col lg:flex-row justify-between gap-6">
-                    <div className="flex gap-4 items-center lg:w-1/3">
+                    <div className="flex gap-4 items-center lg:w-1/4">
                       <div
                         className={cn(
                           "p-3 rounded-2xl transition-colors",
-                          d.status === 1
+                          d.status === "AVAILABLE"
                             ? "bg-green-50 text-green-600"
-                            : d.status === 2
+                            : d.status === "ASSIGNED"
                               ? "bg-amber-50 text-amber-600"
-                              : "bg-rose-50 text-rose-600",
+                              : d.status === "ON_TRIP"
+                                ? "bg-cyan-50 text-cyan-600"
+                                : "bg-rose-50 text-rose-600",
                         )}
                       >
                         <User size={24} />
@@ -208,18 +210,22 @@ const DriverManagement = () => {
                           <span
                             className={cn(
                               "px-2 pt-0.5 rounded-full text-[9px] font-semibold uppercase border",
-                              d.status === 1
+                              d.status === "AVAILABLE"
                                 ? "bg-green-50 border-green-100 text-green-600"
-                                : d.status === 2
+                                : d.status === "ASSIGNED"
                                   ? "bg-amber-50 border-amber-100 text-amber-600"
-                                  : "bg-rose-50 border-rose-100 text-rose-600",
+                                  : d.status === "ON_TRIP"
+                                    ? "bg-cyan-50 border-cyan-100 text-cyan-600"
+                                    : "bg-rose-50 border-rose-100 text-rose-600",
                             )}
                           >
-                            {d.status == 1
+                            {d.status === "AVAILABLE"
                               ? "Available"
-                              : d.status === 2
+                              : d.status === "ASSIGNED"
                                 ? "Assign"
-                                : "On Leave"}
+                                : d.status === "ON_TRIP"
+                                  ? "On Trip"
+                                  : "On Leave"}
                           </span>
                           {d.isLogin && (
                             <span className="bg-indigo-50 border border-indigo-100 text-indigo-600 px-2 pt-0.5 rounded-full text-[9px] font-semibold uppercase flex items-center gap-1">
@@ -230,7 +236,12 @@ const DriverManagement = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 flex-1 lg:px-6 border-t lg:border-t-0 lg:border-x border-slate-100 pt-4 lg:pt-0 gap-4">
+                    <div className="grid grid-cols-3 md:grid-cols-6 flex-1 lg:px-6 border-t lg:border-t-0 lg:border-x border-slate-100 pt-4 lg:pt-0 gap-4">
+                      <DataMetric
+                        label="Employee Code"
+                        value={d.employee_code}
+                        icon={<Phone size={12} />}
+                      />
                       <DataMetric
                         label="Contact"
                         value={d.phone}
@@ -244,6 +255,11 @@ const DriverManagement = () => {
                       <DataMetric
                         label="Experience"
                         value={`${d.experience_years} Years`}
+                        icon={<Calendar size={12} />}
+                      />
+                      <DataMetric
+                        label="Total Kilometer"
+                        value={`${d.total_routes} - ${d.total_kilometer_drive} km`}
                         icon={<Calendar size={12} />}
                       />
                       <DataMetric

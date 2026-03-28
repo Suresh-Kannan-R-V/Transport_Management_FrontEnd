@@ -62,7 +62,7 @@ export const WebQrLogin = () => {
         const res = await checkWebSession(id);
         if (res.data.status === "APPROVED") {
           localStorage.setItem("token", res.data.token);
-          localStorage.setItem("user", res.data.user);
+          localStorage.setItem("user", JSON.stringify(res.data.user));
           cleanup();
           navigate("/request", { replace: true });
         }

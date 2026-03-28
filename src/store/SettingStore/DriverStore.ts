@@ -3,19 +3,25 @@ import axios from "axios";
 import { FILE_BASE_URL } from "../../api/base"; // Ensure this path is correct
 import { toast } from "react-hot-toast";
 
-interface Driver {
+export interface Driver {
   id: number;
   user_id: number;
   name: string;
   user_name: string;
   email: string;
   phone: string;
-  status: number;
   isLogin: boolean;
   push_notification_status: boolean;
+  employee_code: string;
   license_number: string;
-  experience_years: number;
   license_expiry: string;
+  experience_years: number;
+  blood_group: string;
+  total_kilometer_drive: string;
+  total_routes: number;
+  status: "AVAILABLE" | "ASSIGNED" | "ON_TRIP" | "ON_LEAVE";
+  created_at: string;
+  updated_at: string;
 }
 
 export interface DriverVehicleAssignment {

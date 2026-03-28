@@ -19,7 +19,7 @@ const Layout = () => {
 
   React.useEffect(() => {
     fetchProfile();
-    fetchMasterData();
+    // fetchMasterData();
   }, []);
 
   React.useEffect(() => {
